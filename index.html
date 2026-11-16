@@ -19,7 +19,17 @@
   .btn.sm { width: 44px; height: 44px; font-size: 12px; position: fixed; top: 10px; right: max(10px, env(safe-area-inset-right)); display: none; }
   .touch .btn.sm { display: flex; }
   #mute { right: calc(max(10px, env(safe-area-inset-right)) + 54px); }
+  #fs { right: calc(max(10px, env(safe-area-inset-right)) + 108px); font-size: 18px; }
+  .nofs #fs { display: none !important; }
+  /* portrait phones: game at the top, controls in the space underneath */
+  body.port { align-items: flex-start; padding-top: env(safe-area-inset-top); box-sizing: border-box; }
+  .port .pad { bottom: max(24px, env(safe-area-inset-bottom)); }
+  .port .btn.sm { top: auto; bottom: calc(max(24px, env(safe-area-inset-bottom)) + 168px); }
 </style>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#100c1c">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -32,6 +42,7 @@
 <div class="pad" id="padR"><div class="btn big" data-k="a">E</div></div>
 <div class="btn sm" data-k="b">BOOK</div>
 <div class="btn sm" id="mute" data-k="m">&#9835;</div>
+<div class="btn sm" id="fs" data-fs="1">&#x2922;</div>
 <script src="src/engine/core.js"></script>
 <script src="src/engine/audio.js"></script>
 <script src="src/engine/topdown.js"></script>

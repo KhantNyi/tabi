@@ -15,7 +15,9 @@ function build(id) {
   M.OBJ.sort((a, b) => a.y - b.y); for (const [x, y, rx, ry] of M.SHD) ell(M.ground.g, x, y, rx, ry, d.indoor ? 'rgba(20,10,30,0.22)' : 'rgba(22,30,50,0.26)');
   return BUILT[id] = M;
 }
-function camSnap() { G.cx = Math.max(0, Math.min(M.w - W, pl.x - W / 2)); G.cy = Math.max(0, Math.min(M.h - H, pl.y - 12 - H / 2)); }
+// follow the player, stop at the map edges, and centre maps smaller than the view (rooms on a wide screen)
+const camX = () => M.w <= W ? (M.w - W) / 2 : Math.max(0, Math.min(M.w - W, pl.x - W / 2)), camY = () => M.h <= H ? (M.h - H) / 2 : Math.max(0, Math.min(M.h - H, pl.y - 12 - H / 2));
+function camSnap() { G.cx = camX(); G.cy = camY(); }
 function go(id, x, y, dir) {
   M = BUILT[id] || build(id); const st = M.st || [160, 182]; pl.x = x != null ? x : st[0]; pl.y = y != null ? y : st[1]; pl.dir = dir || 'd'; pl.mv = false; pl.act = null; G.fade = 1; G.tgt = null; G.fx = []; camSnap();
   if (!M.indoor) { G.dist = id; G.banner = 3.5; save(); } else G.banner = 2.5; Snd.play(M.def.music || 'tokyo');
@@ -40,7 +42,7 @@ function update(dt) {
   G.t += dt; if (G.fade > 0 && G.state !== 'title') G.fade = Math.max(0, G.fade - dt * 2); if (G.flash > 0) G.flash -= dt * 2; if (G.banner > 0) G.banner -= dt;
   if (KP.m) Snd.toggle();
   const st = G.state;
-  if (st === 'title') { if (KP.n && G.hasSave) { G.stamps = {}; G.figs = {}; G.cats = {}; G.fit = 0; G.dist = CITY.start; G.hasSave = false; pl.F = plLook(0); go(CITY.start); G.banner = 0; Snd.fx('ui'); } else if (KP.a) { G.state = 'play'; G.banner = 3.5; G.fade = 0; Snd.play(M.def.music); Snd.fx('ui'); } }
+  if (st === 'title') { if (KP.n && G.hasSave) { G.stamps = {}; G.figs = {}; G.cats = {}; G.fit = 0; G.dist = CITY.start; G.hasSave = false; pl.F = plLook(0); go(CITY.start); G.banner = 0; Snd.fx('ui'); } else if (KP.a) { if (TOUCH) fullscreen(true); G.state = 'play'; G.banner = 3.5; G.fade = 0; Snd.play(M.def.music); Snd.fx('ui'); } }
   else if (st === 'play') {
     let dx = (K.r ? 1 : 0) - (K.l ? 1 : 0), dy = (K.d ? 1 : 0) - (K.u ? 1 : 0); pl.mv = !!(dx || dy);
     if (pl.mv) { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27) && Snd.ctx) Snd.noise(Snd.ctx.currentTime, 0.035, 0.018, 500, 1600, Snd.sfx); } else pl.wt = 0;
@@ -79,7 +81,7 @@ function update(dt) {
     for (const c of M.CARS) { const ahead = (pl.x - c.x) * Math.sign(c.v); if (!(Math.abs(pl.y - 4 - c.y) < 13 && ahead > 0 && ahead < 40)) c.x += c.v * dt; if (c.x > M.w + 40) c.x = -40; if (c.x < -40) c.x = M.w + 40; }
     for (const p of PRT) { p.x += (p.vx + Math.sin(G.t * 1.3 + p.ph) * 6) * dt; p.y += p.vy * dt; if (p.y > H + 4) { p.y = -4; p.x = Math.random() * (W + 60); } if (p.x < -6) p.x = W + 4; }
     for (const f of G.fx) f.t += dt; G.fx = G.fx.filter(f => f.t < 1.1);
-    const tx = Math.max(0, Math.min(M.w - W, pl.x - W / 2)), ty = Math.max(0, Math.min(M.h - H, pl.y - 12 - H / 2)), k = Math.min(1, dt * 7); G.cx += (tx - G.cx) * k; G.cy += (ty - G.cy) * k;
+    const tx = camX(), ty = camY(), k = Math.min(1, dt * 7); G.cx += (tx - G.cx) * k; G.cy += (ty - G.cy) * k;
   }
   for (const q in KP) KP[q] = 0;
 }
@@ -92,7 +94,8 @@ function drawActor(e, cx, cy) {
 }
 function drawWorld() {
   const cx = snap(G.cx), cy = snap(G.cy), t = G.t;
-  ctx.drawImage(M.ground, cx, cy, W, H, 0, 0, W, H);
+  if (cx < 0 || cy < 0 || cx + W > M.w || cy + H > M.h) R(ctx, 0, 0, W, H, '#15101f');
+  ctx.drawImage(M.ground, -cx, -cy);
   if (G.state === 'play') for (const s of M.SPOTS) if (s.stamp && !G.stamps[s.stamp]) for (let k = 0; k < 10; k++) { const a = k * 0.6283 + t * 0.8; R(ctx, s.x - cx + Math.cos(a) * 9, s.y - cy - 1 + Math.sin(a) * 3.5, 1, U, k % 2 ? '#fff8e0' : '#ffd84a'); }
   const list = [pl];
   for (const o of M.OBJ) { const dx = o.x - o.ox - cx, dy = o.y - o.oy - cy; if (dx < W + 2 && dy < H && dx + o.spr.lw > -2 && dy + o.spr.lh > 0) list.push(o); }
@@ -117,33 +120,35 @@ function drawWorld() {
 }
 function ringS(cx, cy, icon, on) { if (on) { disc(ctx, cx, cy, 9, '#c8382e'); disc(ctx, cx, cy, 8, '#f8f0dc'); ctx.drawImage(stampOf(icon), cx - 7, cy - 7); } else { disc(ctx, cx, cy, 9, '#d9cba8'); disc(ctx, cx, cy, 8, '#f8f0dc'); txt(ctx, '?', cx - 1, cy - 2, '#d9cba8'); } }
 function drawRide() {
-  const r = G.ride, t = r.t; R(ctx, 0, 0, W, H, '#2a2a3a'); ctx.save(); ctx.beginPath(); ctx.rect(20, 34, 280, 84); ctx.clip();
+  const r = G.ride, t = r.t, ox = Math.floor((W - W0) / 2), oy = Math.floor((H - H0) / 2); R(ctx, 0, 0, W, H, '#2a2a3a'); R(ctx, 0, oy + 122, W, H, '#3f7a5a'); R(ctx, 0, oy + 122, W, 2, '#5aa85a'); for (let x = ((ox + 30) % 44) - 44; x < W; x += 44) { R(ctx, x, oy + 6, 1, 14, '#c8c0d4'); disc(ctx, x + 0.5, oy + 24 + Math.sin(G.t * 3 + x), 4, '#f4f1e6'); disc(ctx, x + 0.5, oy + 24 + Math.sin(G.t * 3 + x), 2.5, '#2a2a3a'); }
+  ctx.save(); ctx.translate(ox, oy); ctx.save(); ctx.beginPath(); ctx.rect(20, 34, 280, 84); ctx.clip();
   const s = SPR.ride, o = (G.t * 150) % 320; ctx.drawImage(s, o, 0, 320, 84, 20, 34, 320, 84); ctx.drawImage(s, o - 320, 0, 320, 84, 20, 34, 320, 84); for (let x = 300 - (G.t * 420) % 90; x > 0; x -= 90) R(ctx, x, 34, 3, 84, '#3a3a4e'); ctx.restore();
-  for (const x of [20, 112, 206, 298]) R(ctx, x - 2, 30, 4, 92, '#c8c0d4'); R(ctx, 16, 30, 288, 4, '#c8c0d4'); R(ctx, 16, 118, 288, 4, '#c8c0d4'); R(ctx, 0, 122, W, 58, '#3f7a5a'); R(ctx, 0, 122, W, 2, '#5aa85a'); for (let x = 30; x < W; x += 44) { R(ctx, x, 6, 1, 14, '#c8c0d4'); disc(ctx, x + 0.5, 24 + Math.sin(G.t * 3 + x) * 1, 4, '#f4f1e6'); disc(ctx, x + 0.5, 24 + Math.sin(G.t * 3 + x), 2.5, '#2a2a3a'); }
-  panel(70, 136, 180, 32); txtC(ctx, 'NEXT STOP', 160, 142, '#8a7a6a'); txtC(ctx, STN[r.to][1], 160, 152, '#3f9a5a', null, 2);
+  for (const x of [20, 112, 206, 298]) R(ctx, x - 2, 30, 4, 92, '#c8c0d4'); R(ctx, 16, 30, 288, 4, '#c8c0d4'); R(ctx, 16, 118, 288, 4, '#c8c0d4');
+  panel(70, 136, 180, 32); txtC(ctx, 'NEXT STOP', 160, 142, '#8a7a6a'); txtC(ctx, STN[r.to][1], 160, 152, '#3f9a5a', null, 2); ctx.restore();
   const a = t < 0.4 ? 1 - t / 0.4 : t > 3 ? (t - 3) / 0.4 : 0; if (a > 0) { ctx.globalAlpha = Math.min(1, a); R(ctx, 0, 0, W, H, '#100c1c'); ctx.globalAlpha = 1; }
 }
+function at(dx, dy, fn) { ctx.save(); ctx.translate(dx, dy); fn(); ctx.restore(); }
 function drawUI() {
-  const st = G.state, t = G.t;
+  const st = G.state, t = G.t, ox = Math.floor((W - W0) / 2), oy = Math.floor((H - H0) / 2);
   if (G.flash > 0) { ctx.globalAlpha = Math.min(1, G.flash); R(ctx, 0, 0, W, H, '#ffffff'); ctx.globalAlpha = 1; }
   if (st === 'play') { panel(4, 4, 44, 15); ctx.drawImage(stampOf('torii'), 6, 4.5); txt(ctx, count(G.stamps) + '/' + NST, 21, 9, '#c8382e'); if (!M.indoor) txt(ctx, M.def.name, W - 5 - tw(M.def.name), 7, '#fff8e8', '#1d1626'); }
   if (st === 'play' && G.tgt) { const g = G.tgt, w = tw('E') + 9 + tw(g.label), ax = g.x != null ? g.x : pl.x, ay = g.x != null ? g.y : pl.y, x = Math.max(3, Math.min(W - w - 3, ax - snap(G.cx) - w / 2)), y = Math.max(22, ay - snap(G.cy) - 43); const kw = keycap(x, y, 'E'); txt(ctx, g.label, x + kw + 3, y + 2, '#fff8e8', '#1d1626'); }
-  if (st === 'play' && G.banner > 0) { const a = Math.min(1, G.banner, (3.5 - G.banner) * 2 + 0.3); ctx.globalAlpha = Math.max(0, Math.min(1, a)); R(ctx, 0, 60, W, M.def.sub ? 30 : 20, 'rgba(29,22,38,0.75)'); txtC(ctx, M.def.name, 160, 65, '#fff8e8', '#1d1626', 2); if (M.def.sub) txtC(ctx, M.def.sub, 160, 80, '#ffd98a', null); ctx.globalAlpha = 1; }
-  if (st === 'dialog') { const d = G.dlg, L = d.lines[d.i], n = Math.floor(d.t * 42); panel(16, 130, 288, 42); wrap(L, 268).forEach((l, i, a) => { const before = a.slice(0, i).join(' ').length + (i ? 1 : 0); txt(ctx, l.slice(0, Math.max(0, n - before)), 26, 138 + i * 9, '#3a2e40'); }); if (n >= L.length && t % 0.8 < 0.5) { R(ctx, 292, 163, 5, 1, '#c8382e'); R(ctx, 293, 164, 3, 1, '#c8382e'); R(ctx, 294, 165, 1, 1, '#c8382e'); } }
-  if (st === 'got') { const s = STAMPS[G.got.id], k = Math.min(1, G.got.t * 5), y = 22 - (1 - k) * 30; panel(74, y, 172, 38); ring(96, y + 19, s[1], true); txt(ctx, 'NEW STAMP!', 114, y + 8, '#c8382e', null, 2); txt(ctx, s[0], 114, y + 24, '#3a2e40'); }
-  if (st === 'mini') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); panel(44, 20, 232, 126); MG[G.mg.k].draw(G.mg); if (!TOUCH) txtC(ctx, 'ESC TO LEAVE', 160, 152, '#c8e0ec', '#1d1626'); }
+  if (st === 'play' && G.banner > 0) { const a = Math.min(1, G.banner, (3.5 - G.banner) * 2 + 0.3); ctx.globalAlpha = Math.max(0, Math.min(1, a)); R(ctx, 0, 60, W, M.def.sub ? 30 : 20, 'rgba(29,22,38,0.75)'); txtC(ctx, M.def.name, W / 2, 65, '#fff8e8', '#1d1626', 2); if (M.def.sub) txtC(ctx, M.def.sub, W / 2, 80, '#ffd98a', null); ctx.globalAlpha = 1; }
+  if (st === 'dialog') at(ox, H - H0, () => { const d = G.dlg, L = d.lines[d.i], n = Math.floor(d.t * 42); panel(16, 130, 288, 42); wrap(L, 268).forEach((l, i, a) => { const before = a.slice(0, i).join(' ').length + (i ? 1 : 0); txt(ctx, l.slice(0, Math.max(0, n - before)), 26, 138 + i * 9, '#3a2e40'); }); if (n >= L.length && t % 0.8 < 0.5) { R(ctx, 292, 163, 5, 1, '#c8382e'); R(ctx, 293, 164, 3, 1, '#c8382e'); R(ctx, 294, 165, 1, 1, '#c8382e'); } });
+  if (st === 'got') at(ox, 0, () => { const s = STAMPS[G.got.id], k = Math.min(1, G.got.t * 5), y = 22 - (1 - k) * 30; panel(74, y, 172, 38); ring(96, y + 19, s[1], true); txt(ctx, 'NEW STAMP!', 114, y + 8, '#c8382e', null, 2); txt(ctx, s[0], 114, y + 24, '#3a2e40'); });
+  if (st === 'mini') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); at(ox, oy, () => { panel(44, 20, 232, 126); MG[G.mg.k].draw(G.mg); if (!TOUCH) txtC(ctx, 'ESC TO LEAVE', 160, 152, '#c8e0ec', '#1d1626'); }); }
   if (st === 'book') {
-    R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); panel(8, 6, 304, 168); txtC(ctx, CITY.name + ' STAMP BOOK', 160, 12, '#c8382e', null, 2);
+    R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); ctx.save(); ctx.translate(ox, oy); panel(8, 6, 304, 168); txtC(ctx, CITY.name + ' STAMP BOOK', 160, 12, '#c8382e', null, 2);
     STN.forEach(([id, name], i) => { const x = 18 + (i % 2) * 148, y = 30 + (i >> 1) * 32; txt(ctx, name, x, y, '#3a2e40'); if (i >> 1) R(ctx, x, y - 4, 136, 1, '#eadfc4'); Object.keys(STAMPS).filter(k => STAMPS[k][2] === id).forEach((k, j) => ringS(x + 12 + j * 24, y + 17, STAMPS[k][1], !!G.stamps[k])); });
-    R(ctx, 18, 158, 284, 1, '#eadfc4'); txtC(ctx, 'STAMPS ' + count(G.stamps) + '/' + NST + '   FIGURES ' + count(G.figs) + '/6   CATS ' + count(G.cats) + '/' + CITY.cats, 160, 163, '#8a7a6a');
+    R(ctx, 18, 158, 284, 1, '#eadfc4'); txtC(ctx, 'STAMPS ' + count(G.stamps) + '/' + NST + '   FIGURES ' + count(G.figs) + '/6   CATS ' + count(G.cats) + '/' + CITY.cats, 160, 163, '#8a7a6a'); ctx.restore();
   }
   if (st === 'line') {
-    R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(20, 10, 280, 160); txtC(ctx, 'WHERE TO?', 160, 17, '#3f9a5a', null, 2); const L = G.line, n = STN.length, P = i => { const a = -1.5708 + i / n * 6.2832; return [160 + Math.cos(a) * 86, 92 + Math.sin(a) * 40]; };
+    R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); ctx.save(); ctx.translate(ox, oy); panel(20, 10, 280, 160); txtC(ctx, 'WHERE TO?', 160, 17, '#3f9a5a', null, 2); const L = G.line, n = STN.length, P = i => { const a = -1.5708 + i / n * 6.2832; return [160 + Math.cos(a) * 86, 92 + Math.sin(a) * 40]; };
     for (let k = 0; k < 120; k++) { const a = k / 120 * 6.2832; R(ctx, 160 + Math.cos(a) * 86 - 1, 92 + Math.sin(a) * 40 - 1, 3, 3, '#5aa85a'); }
     STN.forEach(([id, name], i) => { const [x, y] = P(i), on = i === L.sel, here = id === M.id, got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length; disc(ctx, x, y, on ? 6 : 4.5, '#1d1626'); disc(ctx, x, y, on ? 5 : 3.5, here ? '#f2c14e' : on ? '#e0452f' : '#fff8e8'); const ty = y + (Math.sin(-1.5708 + i / n * 6.2832) < -0.2 ? -19 : 8), txx = Math.max(26 + tw(name) / 2, Math.min(294 - tw(name) / 2, x + Math.cos(-1.5708 + i / n * 6.2832) * 22)); txtC(ctx, name, txx, ty, on ? '#c8382e' : '#3a2e40'); txtC(ctx, have + '/' + got.length, txx, ty + 7, have === got.length ? '#3f9a5a' : '#b8a888'); });
-    ctx.drawImage(ICON.train, 153, 80); txtC(ctx, STN[L.sel][0] === M.id ? 'YOU ARE HERE' : 'TO ' + STN[L.sel][1], 160, 98, '#3a2e40'); txtC(ctx, '< >  CHOOSE     E  RIDE     ESC  BACK', 160, 160, '#8a7a6a');
+    ctx.drawImage(ICON.train, 153, 80); txtC(ctx, STN[L.sel][0] === M.id ? 'YOU ARE HERE' : 'TO ' + STN[L.sel][1], 160, 98, '#3a2e40'); txtC(ctx, '< >  CHOOSE     E  RIDE     ESC  BACK', 160, 160, '#8a7a6a'); ctx.restore();
   }
-  if (st === 'title') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.5)'); txtO(ctx, GAME.title + ' ' + CITY.name, 160, 40, '#fff8e8', '#1d1626', 4); txtO(ctx, CITY.tagline, 160, 72, '#ffd98a', '#1d1626'); if (t % 1 < 0.65) txtO(ctx, TOUCH ? 'TAP TO START' : 'PRESS E TO START', 160, 102, '#fff8e8', '#1d1626', 2); txtO(ctx, TOUCH ? 'PAD TO WALK - E TO INTERACT - BOOK FOR STAMPS' : 'ARROWS/WASD WALK - E INTERACT - TAB STAMP BOOK - M MUSIC', 160, 156, '#fff8e8', '#1d1626'); if (G.hasSave) txtO(ctx, 'YOUR STAMPS ARE SAVED - N TO START OVER', 160, 166, '#c8e0ec', '#1d1626'); }
+  if (st === 'title') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.5)'); ctx.save(); ctx.translate(ox, oy); txtO(ctx, GAME.title + ' ' + CITY.name, 160, 40, '#fff8e8', '#1d1626', 4); txtO(ctx, CITY.tagline, 160, 72, '#ffd98a', '#1d1626'); if (t % 1 < 0.65) txtO(ctx, TOUCH ? 'TAP TO START' : 'PRESS E TO START', 160, 102, '#fff8e8', '#1d1626', 2); txtO(ctx, TOUCH ? 'PAD TO WALK - E TO INTERACT - BOOK FOR STAMPS' : 'ARROWS/WASD WALK - E INTERACT - TAB BOOK - M MUSIC - F FULLSCREEN', 160, 156, '#fff8e8', '#1d1626'); if (G.hasSave) txtO(ctx, 'YOUR STAMPS ARE SAVED - N TO START OVER', 160, 166, '#c8e0ec', '#1d1626'); ctx.restore(); }
   if (G.fade > 0 && st !== 'title') { ctx.globalAlpha = G.fade; R(ctx, 0, 0, W, H, '#100c1c'); ctx.globalAlpha = 1; }
 }
 

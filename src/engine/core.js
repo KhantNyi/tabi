@@ -1,6 +1,6 @@
 'use strict';
 // ---------- core drawing helpers (everything is drawn in code, no image files) ----------
-const W = 320, H = 180, GY = 152; // screen size and ground line
+let W = 320, H = 180; const GY = 152; // view size in world units (fit() resizes it to the screen) and the side-view ground line
 
 const S = 2; // device pixels per world unit: all art is drawn on a half-unit grid
 function mk(w, h) {

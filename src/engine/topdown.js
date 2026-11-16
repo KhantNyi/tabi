@@ -1,11 +1,39 @@
 'use strict';
 // ---------- top-down basics: canvas, input, noise, people seen from front/back/side, UI bits ----------
 const cv = document.getElementById('game'), ctx = cv.getContext('2d');
-cv.width = W * S; cv.height = H * S; ctx.imageSmoothingEnabled = false; ctx.scale(S, S);
-function fit() { const q = Math.min(innerWidth / (W * S), innerHeight / (H * S)), k = q >= 1 ? Math.floor(q) : q; cv.style.width = Math.floor(W * S * k) + 'px'; cv.style.height = Math.floor(H * S * k) + 'px'; }
-addEventListener('resize', fit); fit();
 const TOUCH = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
 if (TOUCH) document.body.classList.add('touch');
+// The view fills the screen. Landscape: pick a whole-number zoom (screen pixels per canvas pixel) that keeps at least
+// 320x180 world units visible, then show as much of the world as fits, so bigger screens see more rather than bigger pixels.
+// Portrait phones: the game sits at the top, 320 units wide and up to 360 tall, with the touch controls underneath.
+const PORT_PAD = 250; // css px kept free under the game for the controls in portrait
+function fit() {
+  const dpr = window.devicePixelRatio || 1, vw = innerWidth, vh = innerHeight, port = TOUCH && vh > vw;
+  document.body.classList.toggle('port', port);
+  let cssW, cssH;
+  if (port) {
+    W = 320; H = Math.max(180, Math.min(360, Math.floor(320 * (vh - PORT_PAD) / vw)));
+    cssW = vw; cssH = vw * H / W;
+  } else {
+    const pw = vw * dpr, ph = vh * dpr, k = Math.min(pw / (W0 * S), ph / (H0 * S)), z = k >= 1 ? Math.floor(k) : k;
+    W = Math.min(640, Math.floor(pw / (z * S))); H = Math.min(360, Math.floor(ph / (z * S)));
+    cssW = W * S * z / dpr; cssH = H * S * z / dpr;
+  }
+  cv.width = W * S; cv.height = H * S; ctx.imageSmoothingEnabled = false; ctx.setTransform(S, 0, 0, S, 0, 0);
+  cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
+}
+const W0 = 320, H0 = 180; // the smallest view the menus are laid out for
+addEventListener('resize', fit); fit();
+// fullscreen: F on a keyboard, the corner button on touch, and automatically when a touch player starts the game
+const FS_OK = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+function fullscreen(on) {
+  const d = document, el = d.documentElement, isOn = !!(d.fullscreenElement || d.webkitFullscreenElement);
+  if (on === undefined) on = !isOn; if (on === isOn || !FS_OK) return;
+  try { const p = on ? (el.requestFullscreen || el.webkitRequestFullscreen).call(el) : (d.exitFullscreen || d.webkitExitFullscreen).call(d); if (p && p.catch) p.catch(() => { }); } catch (e) { }
+}
+if (!FS_OK) document.body.classList.add('nofs');
+addEventListener('keydown', e => { if (e.code === 'KeyF' && !e.repeat) fullscreen(); });
+for (const el of document.querySelectorAll('[data-fs]')) el.addEventListener('pointerdown', e => { e.preventDefault(); fullscreen(); });
 
 // ---------- input ----------
 const K = {}, KP = {};

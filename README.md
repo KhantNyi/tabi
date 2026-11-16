@@ -21,6 +21,7 @@ You can also serve the folder with any static server if you prefer, for example 
 | Stamp book | Tab / B | BOOK |
 | Back out of menus and minigames | Esc | - |
 | Music on/off | M | ♫ |
+| Fullscreen | F | ⤢ (turns on by itself when you start on a phone) |
 | New game (on the title screen) | N | - |
 
 ## Tokyo
@@ -36,6 +37,14 @@ There are 21 stamps to collect, along with capsule figures and cats to pet. The 
 - a capsule machine
 - a fortune slip
 - a fitting room, which changes your outfit
+
+## Screens and phones
+
+The view fills the window. Pixels are always a whole-number size, and a bigger or wider screen shows more of the city rather than bigger pixels. Menus stay centred, and rooms smaller than the screen sit in the middle of it.
+
+On a phone held sideways, the game fills the screen and the touch controls float over the corners. Held upright, the game sits at the top with the controls underneath.
+
+On iPhone, Safari can't make a web page fullscreen. Use Share, then Add to Home Screen, and open it from there instead.
 
 ## Project layout
 
