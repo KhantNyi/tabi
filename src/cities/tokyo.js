@@ -14,8 +14,8 @@
     tower: ['TOKYO TOWER', 'tower', 'tower'], zojo: ['ZOJOJI TEMPLE', 'buddha', 'tower']
   };
 
-  MAPS.shibuya = { name: 'SHIBUYA', sub: 'THE BUSIEST CROSSING IN THE WORLD', tw: 40, th: 24, music: 'tokyo',
-    lay() { tRect(PV, 0, 0, 40, 24); tRect(PL, 8, 9, 17.5, 12.5); roads([[13, 3]], [[18, 3]]); },
+  MAPS.shibuya = { name: 'SHIBUYA', sub: 'THE BUSIEST CROSSING IN THE WORLD', tw: 40, th: 28, music: 'tokyo',
+    lay() { tRect(PV, 0, 0, 40, 28); tRect(PL, 8, 9, 17.5, 12.5); roads([[13, 3]], [[18, 3]]); },
     deco() {
       const g = M.ground.g; for (let k = 0; k < 9; k++) { R(g, 291 + k * 5, 211 + k * 5, 4, 2, '#e8e4f0'); R(g, 331 - k * 5, 211 + k * 5, 4, 2, '#e8e4f0'); }
       station(70, 192, 'SHIBUYA');
@@ -25,7 +25,7 @@
       tower(474, 192, 76, 92, { c: '#6a7a94', scr: [8, 8, 60, 34], sign: 'BOOKS', sc: '#3f7ab0' });
       house(570, 192, 64, 30, { sign: 'RAMEN', noren: '#c8382e', roofCol: '#3d3852', rh: 16, lantern: true, to: 'ramen' });
       cityEdge(0, 70); prop('vend', 430, 190, 6); prop('vend2', 612, 190, 6);
-      for (const [x, y] of [[90, 300], [200, 310], [420, 300], [540, 312], [600, 290]]) plant('ginkgo', x, y, 1); prop('bench', 140, 300, 9); prop('bench', 480, 296, 9); prop('vend3', 250, 290, 6);
+      for (const [x, y] of [[90, 300], [200, 310], [420, 300], [540, 312], [600, 290]]) plant('ginkgo', x, y, 1); plaza(392); prop('bench', 140, 300, 9); prop('bench', 480, 296, 9); prop('vend3', 250, 290, 6);
       stampSpot('hachi', 206, 188, 'TAKE A PHOTO', 'snap', ['HACHIKO WAITED HERE FOR HIS OWNER EVERY DAY FOR TEN YEARS.', 'EVERYONE IN TOKYO MEETS THEIR FRIENDS BY THIS STATUE.']);
       stampSpot('scramble', 312, 232, 'TAKE A PHOTO', 'snap', ['THE LIGHTS CHANGE AND A THOUSAND PEOPLE CROSS AT ONCE.', 'SOMEHOW NOBODY BUMPS INTO ANYBODY.'], 13);
       cars(228, -1, 3); cars(251, 1, 3); crowd(3, 280, 200, 280, 266, 6); crowd(3, 344, 266, 344, 200, 6); crowd(6, 40, 200, 600, 200, 6); crowd(6, 600, 266, 40, 266, 8); crowd(3, 296, 214, 328, 250, 4);
@@ -48,8 +48,8 @@
       cars(342, -1, 2); cars(350, 1, 2); crowd(6, 232, 200, 232, 300, 10); crowd(6, 264, 300, 264, 200, 10); crowd(5, 40, 314, 470, 314, 5); crowd(3, 248, 120, 248, 190, 8);
       npc('teen', 300, 300, { lines: ['WELCOME! TRY OUR RAINBOW COTTON CANDY!', 'IT IS BIGGER THAN YOUR HEAD!'], tint: '#8a6aff' }); npc('monk', 290, 112, { lines: ['WALK ON THE SIDE OF THE PATH. THE MIDDLE IS FOR THE GODS.'] }); M.ACT.push({ cat: true, x: 380, y: 400, k: 1 });
     } };
-  MAPS.shinjuku = { name: 'SHINJUKU', sub: 'NEON, TOWERS AND TINY ALLEY BARS', tw: 40, th: 24, music: 'osaka', night: 1, tint: '#7078c0',
-    lay() { tRect(PV, 0, 0, 40, 24); roads([[13, 3]], [[9, 3]]); },
+  MAPS.shinjuku = { name: 'SHINJUKU', sub: 'NEON, TOWERS AND TINY ALLEY BARS', tw: 40, th: 28, music: 'osaka', night: 1, tint: '#7078c0',
+    lay() { tRect(PV, 0, 0, 40, 28); roads([[13, 3]], [[9, 3]]); },
     deco() {
       station(70, 192, 'SHINJUKU');
       tower(262, 192, 96, 150, { c: '#8a94b0', sign: 'CITY HALL', sc: '#5a6a9a', to: 'deck', lab: 'GO UP', gx: 4, ww: 2, gy: 5, top: false, art: (g, x, t) => { R(g, x + 30, t, 36, 40, 'rgba(0,0,0,0)'); g.clearRect(x + 32, t - 2, 32, 44); } });
@@ -57,12 +57,12 @@
       house(500, 192, 52, 28, { sign: 'YAKITORI', noren: '#8a2a24', rh: 14, lantern: true, to: 'izakaya' }); house(562, 192, 50, 28, { sign: 'BAR', noren: '#3d5a80', rh: 14, lantern: '#f2c14e' }); house(612, 192, 40, 28, { noren: '#5a8a5a', rh: 14, lantern: true });
       cityEdge(); lamps(206); lamps(272, '#ffd0f0');
       for (const [x, c] of [[110, '#f06a8c'], [240, '#5ad8f0'], [380, '#ffd84a'], [520, '#8a6aff']]) { tower(x, 330, 46, 50, { c: '#4a4a6a', sign: ['KARAOKE', 'PACHINKO', 'CURRY', 'HOTEL'][x % 4], sc: c, vs: 4, vc: c }); }
-      prop('vend', 318, 190, 6); prop('vend3', 466, 190, 6);
+      prop('vend', 318, 190, 6); prop('vend3', 466, 190, 6); plaza(396);
       cars(228, -1, 4); cars(251, 1, 4); crowd(8, 40, 200, 610, 200, 6); crowd(8, 610, 266, 40, 266, 8); crowd(4, 138, 200, 138, 268, 6); crowd(4, 214, 268, 214, 200, 6);
       npc('salary', 520, 200, { lines: ['ONE MORE SKEWER AND THEN I GO HOME. PROBABLY.', 'THE LAST TRAIN IS A SUGGESTION.'] }); npc('office', 300, 200, { lines: ['THE VIEW FROM THE TOP IS FREE, YOU KNOW.'] }); M.ACT.push({ cat: true, x: 590, y: 200, k: 2 });
     } };
-  MAPS.akiba = { name: 'AKIHABARA', sub: 'ELECTRIC TOWN', tw: 40, th: 24, music: 'osaka', night: 1, tint: '#9088c8',
-    lay() { tRect(PV, 0, 0, 40, 24); roads([[13, 3]], [[24, 3]]); },
+  MAPS.akiba = { name: 'AKIHABARA', sub: 'ELECTRIC TOWN', tw: 40, th: 28, music: 'osaka', night: 1, tint: '#9088c8',
+    lay() { tRect(PV, 0, 0, 40, 28); roads([[13, 3]], [[24, 3]]); },
     deco() {
       station(70, 192, 'AKIHABARA');
       tower(168, 192, 60, 96, { c: '#f2c14e', sign: 'FIGURES', sc: '#e0563f', to: 'figures', vs: 8, vc: '#5ad8f0' });
@@ -71,7 +71,7 @@
       tower(482, 192, 70, 100, { c: '#8a6aff', sign: 'GAME CENTER', sc: '#5ad88a', st: '#1d1626', to: 'arcade', vs: 8, vc: '#f06a8c' }); tower(566, 192, 64, 70, { c: '#3a3a5a', sign: 'RETRO GAMES', sc: '#f2a03a', vs: 5, vc: '#5ad88a' });
       cityEdge(); lamps(206, '#d0e8ff'); lamps(272, '#ffd0f0');
       for (const [x, c] of [[120, '#5ad8f0'], [250, '#f06a8c'], [520, '#ffd84a']]) tower(x, 330, 50, 56, { c: '#4a4a6a', sign: ['PC PARTS', 'IDOL CAFE', 'CARDS'][x % 3], sc: c, vs: 5, vc: c });
-      M.SPOTS.push({ x: 566, y: 199, r: 12, label: 'LOOK', lines: ['SHELVES OF GREY CARTRIDGES FROM THIRTY YEARS AGO.', 'YOU CAN HEAR SOMEONE PLAYING A FAMILIAR TUNE INSIDE.'] });
+      plaza(396); M.SPOTS.push({ x: 566, y: 199, r: 12, label: 'LOOK', lines: ['SHELVES OF GREY CARTRIDGES FROM THIRTY YEARS AGO.', 'YOU CAN HEAR SOMEONE PLAYING A FAMILIAR TUNE INSIDE.'] });
       stampSpot('denki', 268, 204, 'TAKE A PHOTO', 'snap', ['EIGHT FLOORS OF CABLES, CHIPS AND BLINKING LIGHTS.', 'IF IT RUNS ON ELECTRICITY, SOMEBODY HERE SELLS IT.'], 13);
       cars(228, -1, 3); cars(251, 1, 3); crowd(7, 40, 200, 610, 200, 6); crowd(7, 610, 266, 40, 266, 8); crowd(4, 378, 200, 378, 268, 6); crowd(4, 438, 268, 438, 200, 6);
       npc('maiko', 320, 200, { lines: ['WELCOME HOME, TRAVELLER! THE CAFE IS UPSTAIRS!', 'TODAY\'S SPECIAL IS OMELETTE RICE WITH A KETCHUP CAT!'], tint: '#3a3a4e' }); npc('kid', 200, 200, { lines: ['I HAVE BEEN TRYING FOR THE GOLD DRAGON ALL WEEK.'] });
@@ -122,8 +122,8 @@
       cars(438, -1, 2); cars(446, 1, 2); crowd(5, 40, 394, 600, 394, 5); crowd(4, 240, 330, 420, 356, 8); crowd(2, 480, 300, 590, 320, 6);
       npc('tourist', 290, 344, { lines: ['IT IS THIRTEEN METRES TALLER THAN THE ONE IN PARIS.', 'THEY PAINT IT ORANGE AND WHITE SO PLANES CAN SEE IT.'] }); npc('kimono', 370, 350, { lines: ['IT LIGHTS UP WHEN THE SUN GOES DOWN. JUST WAIT.'] }); M.ACT.push({ cat: true, x: 500, y: 300, k: 1 });
     } };
-  MAPS.tokyo = { name: 'TOKYO STATION', sub: 'RED BRICK, GINZA GLASS', tw: 42, th: 26, music: 'tokyo',
-    lay() { tRect(PV, 0, 0, 42, 26); tRect(PL, 2, 16, 23, 17); roads([[17, 3]], [[24, 3]]); },
+  MAPS.tokyo = { name: 'TOKYO STATION', sub: 'RED BRICK, GINZA GLASS', tw: 42, th: 28, music: 'tokyo',
+    lay() { tRect(PV, 0, 0, 42, 28); tRect(PL, 2, 16, 23, 17); roads([[17, 3]], [[24, 3]]); },
     deco() {
       put(SPR.brick, 196, 256, 150, 95); block(52, 238, 340, 256); M.SPOTS.push({ x: 196, y: 263, r: 14, label: 'TRAINS', train: 1 }); M.st = [196, 268];
       house(470, 256, 60, 28, { sign: 'SUSHI', noren: '#3d5a80', rh: 14, lantern: true, to: 'sushi' }); put(SPR.clock, 580, 256, 35, 118); block(551, 240, 609, 256); door(580, 256, 'mall', 'ENTER STORE');

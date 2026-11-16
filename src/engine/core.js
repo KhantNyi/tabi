@@ -154,13 +154,22 @@ function _txt(g, s, x, y, col, sc) {
     x += (f.w + 1) * sc;
   }
 }
-function txt(g, s, x, y, col, sh, sc = 1) { s = String(s).toUpperCase(); x = Math.round(x); y = Math.round(y); if (sh) _txt(g, s, x + sc, y + sc, sh, sc); _txt(g, s, x, y, col, sc); }
+// Text on the main screen is drawn once into a small sprite and reused, since the bitmap font costs one fillRect per pixel.
+const _TC = new Map();
+function _tspr(key, w, h, fn) { let c = _TC.get(key); if (c) return c; if (_TC.size > 600) _TC.clear(); c = mk(Math.max(1, w), Math.max(1, h)); fn(c.g); _TC.set(key, c); return c; }
+const _onScreen = g => typeof ctx !== 'undefined' && g === ctx;
+function txt(g, s, x, y, col, sh, sc = 1) {
+  s = String(s).toUpperCase(); x = Math.round(x); y = Math.round(y); if (!s) return;
+  if (!_onScreen(g)) { if (sh) _txt(g, s, x + sc, y + sc, sh, sc); _txt(g, s, x, y, col, sc); return; }
+  g.drawImage(_tspr(s + '|' + col + '|' + (sh || '') + '|' + sc, tw(s, sc) + (sh ? sc : 0), 5 * sc + (sh ? sc : 0), t => { if (sh) _txt(t, s, sc, sc, sh, sc); _txt(t, s, 0, 0, col, sc); }), x, y);
+}
 function txtC(g, s, cx, y, col, sh, sc = 1) { txt(g, s, cx - tw(s, sc) / 2, y, col, sh, sc); }
 function txtO(g, s, cx, y, col, oc, sc = 1) { // centred with full outline
   s = String(s).toUpperCase(); const x = Math.round(cx - tw(s, sc) / 2);
-  const o = sc > 2 ? 2 : 1;
-  for (const [a, b] of [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1], [-1, 1], [1, -1], [-1, -1], [0, 2], [1, 2], [-1, 2]]) _txt(g, s, x + a * o, y + b * o, oc, sc);
-  _txt(g, s, x, y, col, sc);
+  const o = sc > 2 ? 2 : 1, OFF = [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1], [-1, 1], [1, -1], [-1, -1], [0, 2], [1, 2], [-1, 2]];
+  const draw = (t, x0, y0) => { for (const [a, b] of OFF) _txt(t, s, x0 + a * o, y0 + b * o, oc, sc); _txt(t, s, x0, y0, col, sc); };
+  if (!_onScreen(g)) { draw(g, x, y); return; }
+  g.drawImage(_tspr('O' + s + '|' + col + '|' + oc + '|' + sc, tw(s, sc) + 2 * o, 5 * sc + 3 * o, t => draw(t, o, o)), x - o, Math.round(y) - o);
 }
 function wrap(s, maxw) {
   const out = []; let cur = '';

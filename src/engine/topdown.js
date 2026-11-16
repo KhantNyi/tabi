@@ -5,14 +5,14 @@ const TOUCH = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window
 if (TOUCH) document.body.classList.add('touch');
 // The view fills the screen. Landscape: pick a whole-number zoom (screen pixels per canvas pixel) that keeps at least
 // 320x180 world units visible, then show as much of the world as fits, so bigger screens see more rather than bigger pixels.
-// Portrait phones: the game sits at the top, 320 units wide and up to 360 tall, with the touch controls underneath.
-const PORT_PAD = 250; // css px kept free under the game for the controls in portrait
+// Portrait phones: the game fills the screen too, showing a narrower, taller slice (216 units wide); controls sit on top.
+const PORT_W = 216;
 function fit() {
   const dpr = window.devicePixelRatio || 1, vw = innerWidth, vh = innerHeight, port = TOUCH && vh > vw;
   document.body.classList.toggle('port', port);
   let cssW, cssH;
   if (port) {
-    W = 320; H = Math.max(180, Math.min(360, Math.floor(320 * (vh - PORT_PAD) / vw)));
+    W = PORT_W; H = Math.floor(PORT_W * vh / vw);
     cssW = vw; cssH = vw * H / W;
   } else {
     const pw = vw * dpr, ph = vh * dpr, k = Math.min(pw / (W0 * S), ph / (H0 * S)), z = k >= 1 ? Math.floor(k) : k;
@@ -44,10 +44,36 @@ addEventListener('keyup', e => { const k = KEYS[e.code]; if (k) K[k] = 0; });
 addEventListener('blur', () => { for (const k in K) K[k] = 0; });
 for (const el of document.querySelectorAll('[data-k]')) {
   const k = el.dataset.k;
-  el.addEventListener('pointerdown', e => { e.preventDefault(); press(k); el.classList.add('on'); });
-  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) el.addEventListener(ev, () => { K[k] = 0; el.classList.remove('on'); });
+  el.addEventListener('pointerdown', e => { e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (err) { } press(k); el.classList.add('on'); buzz(8); });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) el.addEventListener(ev, () => { K[k] = 0; el.classList.remove('on'); });
 }
-cv.addEventListener('pointerdown', () => { if (G.state === 'title') press('a'); else Snd.init(); });
+// taps on the screen, in world units, for menus that can be tapped (title, dialogue, the train line, the stamp book)
+let TAP = null;
+const TAPPY = () => ['title', 'dialog', 'got', 'line', 'book'].includes(G.state);
+function tapAt(e) { const r = cv.getBoundingClientRect(); TAP = { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H }; Snd.init(); }
+cv.addEventListener('pointerdown', e => { if (TAPPY()) tapAt(e); else Snd.init(); });
+const buzz = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { } };
+// floating joystick: touch anywhere in the left part of the screen and drag; the ring follows if you drag past its edge
+const JOY = { on: false, x: 0, y: 0 };
+(function () {
+  const zone = document.getElementById('joy'), base = document.getElementById('joyB'), knob = document.getElementById('joyK'); if (!zone) return;
+  const RAD = 48, DEAD = 0.18; let id = null, bx = 0, by = 0;
+  const keys = (x, y) => { const set = (k, on) => { if (on && !K[k]) KP[k] = 1; K[k] = on ? 1 : 0; }; set('l', x < -0.5); set('r', x > 0.5); set('u', y < -0.5); set('d', y > 0.5); };
+  const place = () => { base.style.left = bx + 'px'; base.style.top = by + 'px'; };
+  const move = e => {
+    let dx = e.clientX - bx, dy = e.clientY - by, d = Math.hypot(dx, dy);
+    if (d > RAD) { bx += dx * (1 - RAD / d); by += dy * (1 - RAD / d); place(); dx = e.clientX - bx; dy = e.clientY - by; d = RAD; }
+    knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    const m = d / RAD; JOY.x = m < DEAD ? 0 : dx / RAD; JOY.y = m < DEAD ? 0 : dy / RAD; keys(JOY.x, JOY.y);
+  };
+  const end = e => { if (e.pointerId !== id) return; id = null; JOY.on = false; JOY.x = JOY.y = 0; keys(0, 0); knob.style.transform = ''; base.classList.remove('on'); base.style.left = base.style.top = ''; };
+  zone.addEventListener('pointerdown', e => {
+    e.preventDefault(); Snd.init(); if (TAPPY()) { tapAt(e); return; } if (id !== null) return;
+    id = e.pointerId; try { zone.setPointerCapture(id); } catch (err) { } bx = e.clientX; by = e.clientY; place(); base.classList.add('on'); JOY.on = true; move(e);
+  });
+  zone.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) zone.addEventListener(ev, end);
+})();
 addEventListener('contextmenu', e => e.preventDefault());
 const hsh = (x, y) => { let n = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) | 0; n = Math.imul(n ^ n >>> 13, 1274126177); return ((n ^ n >>> 16) >>> 0) / 4294967296; };
 function vn(x, y) { const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), a = hsh(xi, yi), b = hsh(xi + 1, yi), c = hsh(xi, yi + 1), d = hsh(xi + 1, yi + 1); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; }

@@ -8,23 +8,24 @@
   html, body { margin: 0; height: 100%; background: #100c1c; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
   body { display: flex; align-items: center; justify-content: center; }
   canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; background: #100c1c; }
-  .pad { display: none; position: fixed; bottom: 14px; z-index: 2; }
+  /* touch controls float over the game */
+  #joy { display: none; position: fixed; left: 0; top: 64px; bottom: 0; width: 55%; z-index: 2; touch-action: none; }
+  .touch #joy { display: block; }
+  #joyB { position: absolute; left: 96px; top: calc(100% - 110px); width: 108px; height: 108px; margin: -54px 0 0 -54px; border-radius: 50%; border: 3px solid rgba(255, 248, 232, .28); background: rgba(29, 22, 38, .22); box-sizing: border-box; pointer-events: none; opacity: .55; transition: opacity .15s; }
+  #joyB.on { opacity: 1; border-color: rgba(255, 248, 232, .5); background: rgba(29, 22, 38, .32); transition: none; }
+  #joyK { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: rgba(255, 248, 232, .6); box-shadow: 0 2px 0 rgba(29, 22, 38, .45); }
+  .pad { display: none; position: fixed; z-index: 3; }
   .touch .pad { display: block; }
-  #padL { left: max(14px, env(safe-area-inset-left)); width: 156px; height: 156px; }
-  #padR { right: max(14px, env(safe-area-inset-right)); }
-  .btn { width: 52px; height: 52px; border-radius: 14px; border: 3px solid rgba(255, 248, 232, .55); background: rgba(40, 28, 64, .45); color: #fff8e8; font: bold 20px monospace; display: flex; align-items: center; justify-content: center; touch-action: none; box-sizing: border-box; }
-  #padL .btn { position: absolute; }
-  .btn.on { background: rgba(224, 86, 63, .7); }
-  .btn.big { width: 66px; height: 66px; border-radius: 50%; }
-  .btn.sm { width: 44px; height: 44px; font-size: 12px; position: fixed; top: 10px; right: max(10px, env(safe-area-inset-right)); display: none; }
+  #padR { right: max(16px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); width: 156px; height: 132px; }
+  .btn { border: 3px solid rgba(255, 248, 232, .55); background: rgba(29, 22, 38, .38); color: #fff8e8; font: bold 20px monospace; display: flex; align-items: center; justify-content: center; touch-action: none; box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+  .btn.on { background: rgba(224, 86, 63, .75); transform: scale(.94); }
+  #btnA { position: absolute; right: 0; top: 0; width: 80px; height: 80px; border-radius: 50%; font-size: 26px; }
+  #btnB { position: absolute; left: 0; bottom: 0; width: 60px; height: 60px; border-radius: 50%; font-size: 20px; }
+  .btn.sm { width: 44px; height: 44px; border-radius: 12px; font-size: 12px; position: fixed; z-index: 3; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); display: none; }
   .touch .btn.sm { display: flex; }
-  #mute { right: calc(max(10px, env(safe-area-inset-right)) + 54px); }
-  #fs { right: calc(max(10px, env(safe-area-inset-right)) + 108px); font-size: 18px; }
+  #mute { right: calc(max(10px, env(safe-area-inset-right)) + 52px); }
+  #fs { right: calc(max(10px, env(safe-area-inset-right)) + 104px); font-size: 18px; }
   .nofs #fs { display: none !important; }
-  /* portrait phones: game at the top, controls in the space underneath */
-  body.port { align-items: flex-start; padding-top: env(safe-area-inset-top); box-sizing: border-box; }
-  .port .pad { bottom: max(24px, env(safe-area-inset-bottom)); }
-  .port .btn.sm { top: auto; bottom: calc(max(24px, env(safe-area-inset-bottom)) + 168px); }
 </style>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,13 +34,8 @@
 </head>
 <body>
 <canvas id="game"></canvas>
-<div class="pad" id="padL">
-  <div class="btn" data-k="u" style="left:52px;top:0">&#9650;</div>
-  <div class="btn" data-k="l" style="left:0;top:52px">&#9664;</div>
-  <div class="btn" data-k="r" style="left:104px;top:52px">&#9654;</div>
-  <div class="btn" data-k="d" style="left:52px;top:104px">&#9660;</div>
-</div>
-<div class="pad" id="padR"><div class="btn big" data-k="a">E</div></div>
+<div id="joy"><div id="joyB"><div id="joyK"></div></div></div>
+<div class="pad" id="padR"><div class="btn" id="btnA" data-k="a">E</div><div class="btn" id="btnB" data-k="x">&#x2715;</div></div>
 <div class="btn sm" data-k="b">BOOK</div>
 <div class="btn sm" id="mute" data-k="m">&#9835;</div>
 <div class="btn sm" id="fs" data-fs="1">&#x2922;</div>

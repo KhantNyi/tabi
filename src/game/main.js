@@ -42,10 +42,13 @@ function update(dt) {
   G.t += dt; if (G.fade > 0 && G.state !== 'title') G.fade = Math.max(0, G.fade - dt * 2); if (G.flash > 0) G.flash -= dt * 2; if (G.banner > 0) G.banner -= dt;
   if (KP.m) Snd.toggle();
   const st = G.state;
+  if (TAP) { const tp = TAP; TAP = null; if (st === 'title' || st === 'dialog' || st === 'got') KP.a = 1; else if (st === 'book') KP.b = 1; else if (st === 'line') { const i = lineHit(tp); if (i < 0) { if (!lineBox().inside(tp)) KP.x = 1; } else if (i === G.line.sel) KP.a = 1; else { G.line.sel = i; Snd.fx('ui'); } } }
   if (st === 'title') { if (KP.n && G.hasSave) { G.stamps = {}; G.figs = {}; G.cats = {}; G.fit = 0; G.dist = CITY.start; G.hasSave = false; pl.F = plLook(0); go(CITY.start); G.banner = 0; Snd.fx('ui'); } else if (KP.a) { if (TOUCH) fullscreen(true); G.state = 'play'; G.banner = 3.5; G.fade = 0; Snd.play(M.def.music); Snd.fx('ui'); } }
   else if (st === 'play') {
-    let dx = (K.r ? 1 : 0) - (K.l ? 1 : 0), dy = (K.d ? 1 : 0) - (K.u ? 1 : 0); pl.mv = !!(dx || dy);
-    if (pl.mv) { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27) && Snd.ctx) Snd.noise(Snd.ctx.currentTime, 0.035, 0.018, 500, 1600, Snd.sfx); } else pl.wt = 0;
+    let dx = (K.r ? 1 : 0) - (K.l ? 1 : 0), dy = (K.d ? 1 : 0) - (K.u ? 1 : 0);
+    if (JOY.on) { dx = JOY.x; dy = JOY.y; const m = Math.hypot(dx, dy); if (m > 1) { dx /= m; dy /= m; } }
+    pl.mv = !!(dx || dy);
+    if (pl.mv) { if (JOY.on) { if (Math.abs(dx) > Math.abs(dy) * 1.15) pl.dir = dx < 0 ? 'l' : 'r'; else if (Math.abs(dy) > Math.abs(dx) * 1.15) pl.dir = dy < 0 ? 'u' : 'd'; } else { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27) && Snd.ctx) Snd.noise(Snd.ctx.currentTime, 0.035, 0.018, 500, 1600, Snd.sfx); } else pl.wt = 0;
     if (M.indoor && pl.y > 188 && G.back) { const b = G.back; G.back = null; Snd.fx('page'); go(b.map, b.x, b.y, 'd'); G.banner = 0; }
     let best = null, bd = 1e9; const tryT = (x, y, r, o) => { const d = Math.hypot(x - pl.x, (y - pl.y) * 1.3); if (d < r && d < bd) { bd = d; best = o; } };
     for (const s of M.SPOTS) tryT(s.x, s.y, s.r, { spot: s, label: s.label });
@@ -63,7 +66,7 @@ function update(dt) {
   } else if (st === 'got') { G.got.t += dt; pl.act = 'cheer'; pl.dir = 'd'; if (G.got.t > 2.6 || (G.got.t > 0.6 && KP.a)) { pl.act = null; G.state = 'play'; if (count(G.stamps) === NST && !G.done) { G.done = 1; Snd.fx('yay'); dialog(['THAT IS EVERY STAMP IN ' + CITY.name + '!', 'THE CITY IS STILL YOURS TO WANDER FOR AS LONG AS YOU LIKE.']); } } }
   else if (st === 'book') { if (KP.b || KP.a || KP.x) { G.state = 'play'; Snd.fx('page'); } }
   else if (st === 'mini') { G.mg.t += dt; const m = G.mg; MG[m.k].update(m, dt); if (G.mg === m && KP.x && m.k !== 'dress') { G.mg = null; G.state = 'play'; } }
-  else if (st === 'line') { const n = STN.length, L = G.line; if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === M.id) G.state = 'play'; else { G.state = 'ride'; G.ride = { to: L.sel, t: 0 }; Snd.play(null); Snd.fx('train'); } } }
+  else if (st === 'line') { const n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === M.id) G.state = 'play'; else { G.state = 'ride'; G.ride = { to: L.sel, t: 0 }; Snd.play(null); Snd.fx('train'); } } }
   else if (st === 'ride') { G.ride.t += dt; if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > 3.4) { G.state = 'play'; go(STN[G.ride.to][0]); } }
 
   if (st !== 'ride' && st !== 'line' && st !== 'mini') {
@@ -95,7 +98,7 @@ function drawActor(e, cx, cy) {
 function drawWorld() {
   const cx = snap(G.cx), cy = snap(G.cy), t = G.t;
   if (cx < 0 || cy < 0 || cx + W > M.w || cy + H > M.h) R(ctx, 0, 0, W, H, '#15101f');
-  ctx.drawImage(M.ground, -cx, -cy);
+  if (cx >= 0 && cy >= 0 && cx + W <= M.w && cy + H <= M.h) ctx.drawImage(M.ground, cx, cy, W, H, 0, 0, W, H); else ctx.drawImage(M.ground, -cx, -cy);
   if (G.state === 'play') for (const s of M.SPOTS) if (s.stamp && !G.stamps[s.stamp]) for (let k = 0; k < 10; k++) { const a = k * 0.6283 + t * 0.8; R(ctx, s.x - cx + Math.cos(a) * 9, s.y - cy - 1 + Math.sin(a) * 3.5, 1, U, k % 2 ? '#fff8e0' : '#ffd84a'); }
   const list = [pl];
   for (const o of M.OBJ) { const dx = o.x - o.ox - cx, dy = o.y - o.oy - cy; if (dx < W + 2 && dy < H && dx + o.spr.lw > -2 && dy + o.spr.lh > 0) list.push(o); }
@@ -127,28 +130,50 @@ function drawRide() {
   panel(70, 136, 180, 32); txtC(ctx, 'NEXT STOP', 160, 142, '#8a7a6a'); txtC(ctx, STN[r.to][1], 160, 152, '#3f9a5a', null, 2); ctx.restore();
   const a = t < 0.4 ? 1 - t / 0.4 : t > 3 ? (t - 3) / 0.4 : 0; if (a > 0) { ctx.globalAlpha = Math.min(1, a); R(ctx, 0, 0, W, H, '#100c1c'); ctx.globalAlpha = 1; }
 }
+// the train line as a list (narrow screens) and which row a tap hit; on wide screens a tap on a stop's name picks it
+function lineBox() { const w = W < W0 ? W - 24 : 280, h = W < W0 ? 44 + STN.length * 24 : 160, x = Math.floor((W - w) / 2), y = Math.max(4, Math.floor((H - h) / 2)); return { x, y, w, h, inside: p => p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h }; }
+function lineHit(p) {
+  const b = lineBox(), n = STN.length;
+  if (W < W0) { const i = Math.floor((p.y - b.y - 26) / 24); return p.x >= b.x && p.x <= b.x + b.w && i >= 0 && i < n ? i : -1; }
+  const ox = Math.floor((W - W0) / 2), oy = Math.floor((H - H0) / 2); let best = -1, bd = 22;
+  for (let i = 0; i < n; i++) { const a = -1.5708 + i / n * 6.2832, x = ox + 160 + Math.cos(a) * 86, y = oy + 92 + Math.sin(a) * 40, d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = i; } }
+  return best;
+}
 function at(dx, dy, fn) { ctx.save(); ctx.translate(dx, dy); fn(); ctx.restore(); }
 function drawUI() {
   const st = G.state, t = G.t, ox = Math.floor((W - W0) / 2), oy = Math.floor((H - H0) / 2);
   if (G.flash > 0) { ctx.globalAlpha = Math.min(1, G.flash); R(ctx, 0, 0, W, H, '#ffffff'); ctx.globalAlpha = 1; }
-  if (st === 'play') { panel(4, 4, 44, 15); ctx.drawImage(stampOf('torii'), 6, 4.5); txt(ctx, count(G.stamps) + '/' + NST, 21, 9, '#c8382e'); if (!M.indoor) txt(ctx, M.def.name, W - 5 - tw(M.def.name), 7, '#fff8e8', '#1d1626'); }
-  if (st === 'play' && G.tgt) { const g = G.tgt, w = tw('E') + 9 + tw(g.label), ax = g.x != null ? g.x : pl.x, ay = g.x != null ? g.y : pl.y, x = Math.max(3, Math.min(W - w - 3, ax - snap(G.cx) - w / 2)), y = Math.max(22, ay - snap(G.cy) - 43); const kw = keycap(x, y, 'E'); txt(ctx, g.label, x + kw + 3, y + 2, '#fff8e8', '#1d1626'); }
+  if (st === 'play') { panel(4, 4, 44, 15); ctx.drawImage(stampOf('torii'), 6, 4.5); txt(ctx, count(G.stamps) + '/' + NST, 21, 9, '#c8382e'); if (!M.indoor) { if (TOUCH) txt(ctx, M.def.name, 5, 22, '#fff8e8', '#1d1626'); else txt(ctx, M.def.name, W - 5 - tw(M.def.name), 7, '#fff8e8', '#1d1626'); } }
+  if (st === 'play' && G.tgt) { const g = G.tgt, w = tw('E') + 9 + tw(g.label), ax = g.x != null ? g.x : pl.x, ay = g.x != null ? g.y : pl.y, x = Math.max(3, Math.min(W - w - 3, ax - snap(G.cx) - w / 2)), y = Math.max(TOUCH ? 32 : 22, ay - snap(G.cy) - 43); const kw = keycap(x, y, 'E'); txt(ctx, g.label, x + kw + 3, y + 2, '#fff8e8', '#1d1626'); }
   if (st === 'play' && G.banner > 0) { const a = Math.min(1, G.banner, (3.5 - G.banner) * 2 + 0.3); ctx.globalAlpha = Math.max(0, Math.min(1, a)); R(ctx, 0, 60, W, M.def.sub ? 30 : 20, 'rgba(29,22,38,0.75)'); txtC(ctx, M.def.name, W / 2, 65, '#fff8e8', '#1d1626', 2); if (M.def.sub) txtC(ctx, M.def.sub, W / 2, 80, '#ffd98a', null); ctx.globalAlpha = 1; }
-  if (st === 'dialog') at(ox, H - H0, () => { const d = G.dlg, L = d.lines[d.i], n = Math.floor(d.t * 42); panel(16, 130, 288, 42); wrap(L, 268).forEach((l, i, a) => { const before = a.slice(0, i).join(' ').length + (i ? 1 : 0); txt(ctx, l.slice(0, Math.max(0, n - before)), 26, 138 + i * 9, '#3a2e40'); }); if (n >= L.length && t % 0.8 < 0.5) { R(ctx, 292, 163, 5, 1, '#c8382e'); R(ctx, 293, 164, 3, 1, '#c8382e'); R(ctx, 294, 165, 1, 1, '#c8382e'); } });
-  if (st === 'got') at(ox, 0, () => { const s = STAMPS[G.got.id], k = Math.min(1, G.got.t * 5), y = 22 - (1 - k) * 30; panel(74, y, 172, 38); ring(96, y + 19, s[1], true); txt(ctx, 'NEW STAMP!', 114, y + 8, '#c8382e', null, 2); txt(ctx, s[0], 114, y + 24, '#3a2e40'); });
+  if (st === 'dialog') { const d = G.dlg, L = d.lines[d.i], n = Math.floor(d.t * 42), dw = Math.min(288, W - 12), ls = wrap(L, dw - 20), dh = Math.max(42, ls.length * 9 + 16), dx = Math.floor((W - dw) / 2), dy = H - dh - (TOUCH && H > W ? 110 : 8);
+    panel(dx, dy, dw, dh); ls.forEach((l, i, a) => { const before = a.slice(0, i).join(' ').length + (i ? 1 : 0); txt(ctx, l.slice(0, Math.max(0, n - before)), dx + 10, dy + 8 + i * 9, '#3a2e40'); });
+    if (n >= L.length && t % 0.8 < 0.5) { const ax = dx + dw - 12, ay = dy + dh - 9; R(ctx, ax, ay, 5, 1, '#c8382e'); R(ctx, ax + 1, ay + 1, 3, 1, '#c8382e'); R(ctx, ax + 2, ay + 2, 1, 1, '#c8382e'); } }
+  if (st === 'got') at(ox, TOUCH ? 14 : 0, () => { const s = STAMPS[G.got.id], k = Math.min(1, G.got.t * 5), y = 22 - (1 - k) * 30; panel(74, y, 172, 38); ring(96, y + 19, s[1], true); txt(ctx, 'NEW STAMP!', 114, y + 8, '#c8382e', null, 2); txt(ctx, s[0], 114, y + 24, '#3a2e40'); });
   if (st === 'mini') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); at(ox, oy, () => { panel(44, 20, 232, 126); MG[G.mg.k].draw(G.mg); if (!TOUCH) txtC(ctx, 'ESC TO LEAVE', 160, 152, '#c8e0ec', '#1d1626'); }); }
-  if (st === 'book') {
+  if (st === 'book' && W < W0) {
+    const bw = W - 12, bh = 52 + STN.length * 22, bx = 6, by = Math.max(4, Math.floor((H - bh) / 2)); R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); panel(bx, by, bw, bh); txtC(ctx, CITY.name + ' STAMP BOOK', W / 2, by + 7, '#c8382e', null, 2);
+    STN.forEach(([id, name], i) => { const y = by + 28 + i * 22; if (i) R(ctx, bx + 8, y - 3, bw - 16, 1, '#eadfc4'); txt(ctx, name, bx + 9, y + 6, '#3a2e40'); Object.keys(STAMPS).filter(k => STAMPS[k][2] === id).forEach((k, j) => ringS(bx + bw - 15 - j * 20, y + 8, STAMPS[k][1], !!G.stamps[k])); });
+    txtC(ctx, 'STAMPS ' + count(G.stamps) + '/' + NST + '  FIGURES ' + count(G.figs) + '/6  CATS ' + count(G.cats) + '/' + CITY.cats, W / 2, by + bh - 14, '#8a7a6a');
+  } else if (st === 'book') {
     R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); ctx.save(); ctx.translate(ox, oy); panel(8, 6, 304, 168); txtC(ctx, CITY.name + ' STAMP BOOK', 160, 12, '#c8382e', null, 2);
     STN.forEach(([id, name], i) => { const x = 18 + (i % 2) * 148, y = 30 + (i >> 1) * 32; txt(ctx, name, x, y, '#3a2e40'); if (i >> 1) R(ctx, x, y - 4, 136, 1, '#eadfc4'); Object.keys(STAMPS).filter(k => STAMPS[k][2] === id).forEach((k, j) => ringS(x + 12 + j * 24, y + 17, STAMPS[k][1], !!G.stamps[k])); });
     R(ctx, 18, 158, 284, 1, '#eadfc4'); txtC(ctx, 'STAMPS ' + count(G.stamps) + '/' + NST + '   FIGURES ' + count(G.figs) + '/6   CATS ' + count(G.cats) + '/' + CITY.cats, 160, 163, '#8a7a6a'); ctx.restore();
   }
-  if (st === 'line') {
+  if (st === 'line' && W < W0) {
+    const L = G.line, b = lineBox(); R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(b.x, b.y, b.w, b.h); txtC(ctx, 'WHERE TO?', W / 2, b.y + 7, '#3f9a5a', null, 2);
+    for (let k = 0; k < STN.length - 1; k++) R(ctx, b.x + 15, b.y + 36 + k * 24, 2, 24, '#5aa85a');
+    STN.forEach(([id, name], i) => { const y = b.y + 26 + i * 24, on = i === L.sel, here = id === M.id, got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length;
+      if (on) R(ctx, b.x + 4, y, b.w - 8, 20, '#f2e2c0'); disc(ctx, b.x + 16, y + 10, on ? 5.5 : 4.5, '#1d1626'); disc(ctx, b.x + 16, y + 10, on ? 4.5 : 3.5, here ? '#f2c14e' : on ? '#e0452f' : '#fff8e8');
+      txt(ctx, name, b.x + 28, y + 5, on ? '#c8382e' : '#3a2e40'); txt(ctx, here ? 'YOU ARE HERE' : have + '/' + got.length + ' STAMPS', b.x + 28, y + 12, here ? '#e08a1a' : have === got.length ? '#3f9a5a' : '#b8a888'); });
+    txtC(ctx, STN[L.sel][0] === M.id ? TOUCH ? 'TAP AGAIN TO STAY' : 'E TO STAY' : TOUCH ? 'TAP AGAIN TO RIDE' : 'E TO RIDE', W / 2, b.y + b.h - 12, '#8a7a6a');
+  } else if (st === 'line') {
     R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); ctx.save(); ctx.translate(ox, oy); panel(20, 10, 280, 160); txtC(ctx, 'WHERE TO?', 160, 17, '#3f9a5a', null, 2); const L = G.line, n = STN.length, P = i => { const a = -1.5708 + i / n * 6.2832; return [160 + Math.cos(a) * 86, 92 + Math.sin(a) * 40]; };
     for (let k = 0; k < 120; k++) { const a = k / 120 * 6.2832; R(ctx, 160 + Math.cos(a) * 86 - 1, 92 + Math.sin(a) * 40 - 1, 3, 3, '#5aa85a'); }
     STN.forEach(([id, name], i) => { const [x, y] = P(i), on = i === L.sel, here = id === M.id, got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length; disc(ctx, x, y, on ? 6 : 4.5, '#1d1626'); disc(ctx, x, y, on ? 5 : 3.5, here ? '#f2c14e' : on ? '#e0452f' : '#fff8e8'); const ty = y + (Math.sin(-1.5708 + i / n * 6.2832) < -0.2 ? -19 : 8), txx = Math.max(26 + tw(name) / 2, Math.min(294 - tw(name) / 2, x + Math.cos(-1.5708 + i / n * 6.2832) * 22)); txtC(ctx, name, txx, ty, on ? '#c8382e' : '#3a2e40'); txtC(ctx, have + '/' + got.length, txx, ty + 7, have === got.length ? '#3f9a5a' : '#b8a888'); });
     ctx.drawImage(ICON.train, 153, 80); txtC(ctx, STN[L.sel][0] === M.id ? 'YOU ARE HERE' : 'TO ' + STN[L.sel][1], 160, 98, '#3a2e40'); txtC(ctx, '< >  CHOOSE     E  RIDE     ESC  BACK', 160, 160, '#8a7a6a'); ctx.restore();
   }
-  if (st === 'title') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.5)'); ctx.save(); ctx.translate(ox, oy); txtO(ctx, GAME.title + ' ' + CITY.name, 160, 40, '#fff8e8', '#1d1626', 4); txtO(ctx, CITY.tagline, 160, 72, '#ffd98a', '#1d1626'); if (t % 1 < 0.65) txtO(ctx, TOUCH ? 'TAP TO START' : 'PRESS E TO START', 160, 102, '#fff8e8', '#1d1626', 2); txtO(ctx, TOUCH ? 'PAD TO WALK - E TO INTERACT - BOOK FOR STAMPS' : 'ARROWS/WASD WALK - E INTERACT - TAB BOOK - M MUSIC - F FULLSCREEN', 160, 156, '#fff8e8', '#1d1626'); if (G.hasSave) txtO(ctx, 'YOUR STAMPS ARE SAVED - N TO START OVER', 160, 166, '#c8e0ec', '#1d1626'); ctx.restore(); }
+  if (st === 'title') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.5)'); ctx.save(); ctx.translate(ox, oy); txtO(ctx, GAME.title + ' ' + CITY.name, 160, 40, '#fff8e8', '#1d1626', 4); txtO(ctx, CITY.tagline, 160, 72, '#ffd98a', '#1d1626'); if (t % 1 < 0.65) txtO(ctx, TOUCH ? 'TAP TO START' : 'PRESS E TO START', 160, 102, '#fff8e8', '#1d1626', 2); txtO(ctx, TOUCH ? 'DRAG LEFT SIDE TO WALK - E TO INTERACT' : 'ARROWS/WASD WALK - E INTERACT - TAB BOOK - M MUSIC - F FULLSCREEN', 160, 156, '#fff8e8', '#1d1626'); if (G.hasSave) txtO(ctx, TOUCH ? 'YOUR STAMPS ARE SAVED' : 'YOUR STAMPS ARE SAVED - N TO START OVER', 160, 166, '#c8e0ec', '#1d1626'); ctx.restore(); }
   if (G.fade > 0 && st !== 'title') { ctx.globalAlpha = G.fade; R(ctx, 0, 0, W, H, '#100c1c'); ctx.globalAlpha = 1; }
 }
 
@@ -168,6 +193,7 @@ function drawUI() {
   } catch (e) { G.err = String(e.stack || e); }
   let last = performance.now();
   function frame(now) {
+    if (now - last < 14) { requestAnimationFrame(frame); return; }
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
     try { if (!G.err) { update(dt); if (G.state === 'ride') drawRide(); else { drawWorld(); drawUI(); } } } catch (e) { console.error(e); G.err = String(e.stack || e); }
     if (G.err) { R(ctx, 0, 0, W, 60, '#400'); wrap(G.err.replace(/\s+/g, ' '), 300).slice(0, 7).forEach((l, i) => txt(ctx, l, 4, 4 + i * 7, '#fff')); }

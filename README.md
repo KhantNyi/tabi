@@ -16,10 +16,11 @@ You can also serve the folder with any static server if you prefer, for example 
 
 | Action | Keyboard | Touch |
 |---|---|---|
-| Walk | Arrows / WASD | D-pad |
-| Interact, talk, enter, confirm | E / Space / Enter | E |
+| Walk | Arrows / WASD | Drag anywhere on the left side (floating joystick) |
+| Interact, talk, enter, confirm | E / Space / Enter | E button, or tap to advance dialogue |
+| Back out of menus and minigames | Esc | ✕ button, or tap outside a menu |
 | Stamp book | Tab / B | BOOK |
-| Back out of menus and minigames | Esc | - |
+| Train line | E at a station | Tap a stop, then tap it again to ride |
 | Music on/off | M | ♫ |
 | Fullscreen | F | ⤢ (turns on by itself when you start on a phone) |
 | New game (on the title screen) | N | - |
@@ -40,9 +41,11 @@ There are 21 stamps to collect, along with capsule figures and cats to pet. The 
 
 ## Screens and phones
 
-The view fills the window. Pixels are always a whole-number size, and a bigger or wider screen shows more of the city rather than bigger pixels. Menus stay centred, and rooms smaller than the screen sit in the middle of it.
+The view fills the whole screen on every device, with the controls drawn on top of the game.
 
-On a phone held sideways, the game fills the screen and the touch controls float over the corners. Held upright, the game sits at the top with the controls underneath.
+- **Desktop and phones held sideways:** pixels stay a whole-number size, and a bigger or wider screen shows more of the city rather than bigger pixels.
+- **Phones held upright:** you see a narrower, taller slice of the city. The stamp book and the train line switch to one-column lists.
+- **Menus and rooms:** menus stay centred, and rooms smaller than the screen sit in the middle of it.
 
 On iPhone, Safari can't make a web page fullscreen. Use Share, then Add to Home Screen, and open it from there instead.
 
