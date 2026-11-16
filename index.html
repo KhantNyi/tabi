@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Tabi - a slow walk through Tokyo</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #100c1c; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  body { display: flex; align-items: center; justify-content: center; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; background: #100c1c; }
+  .pad { display: none; position: fixed; bottom: 14px; z-index: 2; }
+  .touch .pad { display: block; }
+  #padL { left: max(14px, env(safe-area-inset-left)); width: 156px; height: 156px; }
+  #padR { right: max(14px, env(safe-area-inset-right)); }
+  .btn { width: 52px; height: 52px; border-radius: 14px; border: 3px solid rgba(255, 248, 232, .55); background: rgba(40, 28, 64, .45); color: #fff8e8; font: bold 20px monospace; display: flex; align-items: center; justify-content: center; touch-action: none; box-sizing: border-box; }
+  #padL .btn { position: absolute; }
+  .btn.on { background: rgba(224, 86, 63, .7); }
+  .btn.big { width: 66px; height: 66px; border-radius: 50%; }
+  .btn.sm { width: 44px; height: 44px; font-size: 12px; position: fixed; top: 10px; right: max(10px, env(safe-area-inset-right)); display: none; }
+  .touch .btn.sm { display: flex; }
+  #mute { right: calc(max(10px, env(safe-area-inset-right)) + 54px); }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div class="pad" id="padL">
+  <div class="btn" data-k="u" style="left:52px;top:0">&#9650;</div>
+  <div class="btn" data-k="l" style="left:0;top:52px">&#9664;</div>
+  <div class="btn" data-k="r" style="left:104px;top:52px">&#9654;</div>
+  <div class="btn" data-k="d" style="left:52px;top:104px">&#9660;</div>
+</div>
+<div class="pad" id="padR"><div class="btn big" data-k="a">E</div></div>
+<div class="btn sm" data-k="b">BOOK</div>
+<div class="btn sm" id="mute" data-k="m">&#9835;</div>
+<script src="src/engine/core.js"></script>
+<script src="src/engine/audio.js"></script>
+<script src="src/engine/topdown.js"></script>
+<script src="src/art/sprites.js"></script>
+<script src="src/world/world.js"></script>
+<script src="src/cities/tokyo.js"></script>
+<script src="src/game/minigames.js"></script>
+<script src="src/game/main.js"></script>
+</body>
+</html>

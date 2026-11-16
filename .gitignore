@@ -1,0 +1,10 @@
+# older prototypes (side-scrolling platformer, single-village test) kept locally only
+_archive/
+
+# OS and editor clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
