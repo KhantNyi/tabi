@@ -161,8 +161,9 @@
     }
   };
 
+  concourse('os_shinkansen', { name: 'SHIN-OSAKA', hub: 'osa_namba', music: 'osaka', track: 26, dest: 'TOKYO', bento: ['TAKO MESHI', 'RICE COOKED WITH OCTOPUS AND GINGER. OSAKA PUTS OCTOPUS IN EVERYTHING, AND IS RIGHT TO.'] });
   city({
-    id: 'osaka', name: 'OSAKA', tagline: 'EAT UNTIL YOU DROP', start: 'osa_namba', hub: 'osa_namba', line: LINE, stamps: STAMPS, cats: 5, minis: { tako: TAKO },
+    id: 'osaka', name: 'OSAKA', tagline: 'EAT UNTIL YOU DROP', start: 'osa_namba', hub: 'osa_namba', concourse: 'os_shinkansen', line: LINE, stamps: STAMPS, cats: 5, minis: { tako: TAKO },
     sprites() {
       one('crab', 92, 42, g => { for (const s of [-1, 1]) { for (let k = 0; k < 4; k++) { const x = 46 + s * (22 + k * 5); line(g, 46 + s * 14, 26 + k * 2, x, 34 + k * 1.5, '#c0302a'); line(g, x, 34 + k * 1.5, x + s * 4, 41, '#c0302a'); } line(g, 46 + s * 16, 18, 46 + s * 30, 8, '#e0452f'); ell(g, 46 + s * 34, 6, 8, 5, '#e0452f'); ell(g, 46 + s * 34, 5, 6, 3, '#f06a5a'); R(g, 46 + s * 30 - 3, 6, 6, 1.5, '#8a2a24'); } ell(g, 46, 24, 20, 12, '#c0302a'); ell(g, 46, 22, 18, 10, '#e0452f'); ell(g, 42, 18, 8, 4, '#f06a5a'); for (const x of [40, 52]) { R(g, x, 6, 1.5, 8, '#c0302a'); disc(g, x + 0.75, 5, 2.5, '#f4f1e6'); disc(g, x + 0.75, 5, 1.2, '#1d1626'); } }, 1);
       one('cruise', 56, 18, g => { ell(g, 28, 12, 26, 5, '#f4f1e6'); R(g, 4, 9, 48, 4, '#f4f1e6'); R(g, 4, 12, 48, 2, '#3f7ab0'); R(g, 12, 3, 30, 7, '#5ad8f0'); R(g, 12, 3, 30, 1, '#bfe8ff'); for (let x = 15; x < 40; x += 6) R(g, x, 4, 3, 4, '#3a3a5a'); R(g, 0, 16, 56, 1, '#a6dcee'); }, 1);

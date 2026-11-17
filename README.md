@@ -33,9 +33,11 @@ You can also serve the folder with any static server if you prefer, for example 
 
 ## Menus
 
-The game opens on a **main menu**: CONTINUE (or START YOUR TRIP), PLAY TOGETHER, WHAT IS NEW, SETTINGS and NEW TRIP, which asks before it clears anything. While walking, Esc (☰ on a phone) opens a smaller menu with the stamp book, PLAY TOGETHER, SAY SOMETHING, settings and the way back to the main menu. **Settings** has sound (remembered), fullscreen, your nickname for playing together, and HOW TO PLAY.
+The game opens on a **title screen**: Fuji at dusk, swaying lanterns, falling petals and a shinkansen gliding past now and then. Its menu offers CONTINUE (or START YOUR TRIP), YOUR TRAVELLER, PLAY TOGETHER, WHAT IS NEW, SETTINGS and NEW TRIP, which asks before it clears anything. While walking, Esc (☰ on a phone) opens a smaller menu with the stamp book, YOUR TRAVELLER, PLAY TOGETHER, SAY SOMETHING, settings and the way back to the title screen.
 
-Every menu is a column of buttons: arrow keys and E, or one tap on a button. Esc, or a tap outside the buttons, goes back to wherever you came from.
+**Your traveller:** choose a hair style (short, long, bun, cap or sun hat) and colour, skin tone, top, trousers or a skirt and their colour, and a bag (or none). SURPRISE ME picks for you. A new trip starts here. The Harajuku fitting room and the Kyoto kimono shop add to the tops, and friends playing together see your traveller as you made it. **Settings** has sound (remembered), fullscreen, your nickname for playing together, and HOW TO PLAY.
+
+Every menu is a list: arrow keys and E, or one tap on a line. On a line with a value, left and right change it, and a tap on its left arrow steps back. Esc, or a tap outside the buttons, goes back to wherever you came from.
 
 ## Tokyo
 
@@ -97,6 +99,14 @@ Nara is one large map you explore on foot, with no trains. It runs from the stat
 - **Photos:** whenever you take a photo, an instant-photo card drops in and develops from a cream haze. It shows the view in front of you (with you out of the shot), a caption, and an orange date print. A few Fuji views are painted as postcards instead.
 - **Vending machines:** every vending machine in every city works. Pick one of eight hot and cold drinks, then stop the four-digit lucky number. Four of a kind (ATARI!) wins a second drink free. The drinks you have tried are kept in a collection, shown in the stamp book. At night the machines glow.
 
+## Photos
+
+Every TAKE A PHOTO spot gives you an instant-photo card. The camera frames the landmark the spot points at, not just whatever is on screen. It draws the scene again without you in it, and steps back for tall landmarks such as Kyoto Tower or Tsutenkaku. A spot can name its own frame (`frame: [x, y, w, h]`), and a few views are painted as postcards instead (Mirror Fuji, Chureito and the Skytree).
+
+## Big stations
+
+At Tokyo Station, Kyoto Station and Shin-Osaka (from Namba), the blue shinkansen sign leads into the station instead of straight onto a train. You arrive in an entrance hall with a bento shop and a souvenir stand. Beyond it is a concourse where commuters hurry across in streams, then ticket gates and stairs up to the platform, where the Nozomi waits. Board at any door. Walk into a stream and it slows, carries you along and nudges you out, so you pick your gaps. A departure board and a note at the top of the screen count down to the next train, but there's no way to miss out: another comes in two and a half minutes. Arriving by shinkansen, you step off on the platform and walk out through the crowd. Kawaguchiko and Nara keep their small-town signs.
+
 ## Playing together
 
 Two or more people can walk around Japan together. Choose PLAY TOGETHER (from either menu, or press T), then START A NEW ROOM, and share the four-letter code. Friends choose JOIN A ROOM WITH A CODE and type it in. When the game is hosted on a website, the menu offers an invite link instead (`?room=CODE`), and opening the link joins.
@@ -118,7 +128,7 @@ The last page of the stamp book lists every version and what it added, and WHAT 
 
 ## Saving
 
-Progress is saved in `localStorage` as one save for the whole trip: stamps from every city, figures, cats, the drinks you have tried, your outfit, your nickname for playing together and where you were. A save from the Tokyo-only version is picked up automatically. Some small things reset when you reload: deer crackers, and which Kuromon stalls you have tasted.
+Progress is saved in `localStorage` as one save for the whole trip: stamps from every city, figures, cats, the drinks you have tried, your traveller's look and outfit, your nickname for playing together and where you were. A save from the Tokyo-only version is picked up automatically. Some small things reset when you reload: deer crackers, and which Kuromon stalls you have tasted.
 
 ## Screens and phones
 
@@ -145,10 +155,12 @@ src/
   art/
     sprites.js          reusable art: people, trees, roofs, temples, shops, towers, icons
   world/
+    station.js          the shinkansen concourses at the big stations: the train, gates, crowds and departure board
     world.js            building a map: terrain, ground painter, roads, buildings, rooms,
                         furniture, NPCs, cars, forests, ledges, steps, bridges and walls,
                         plus the shared registries MAPS and CITIES, and the hooks net.js uses
-                        (OTHERS, on/emit, worldTime)
+                        (OTHERS, on/emit, worldTime). settle() checks every crowd path, cat and
+                        wanderer once a map is built, so nobody walks through walls or on water
   cities/
     tokyo.js            Tokyo's districts, rooms, dialogue, stamps and landmark art
     fuji.js             Kawaguchiko: the lake, the clouds on Fuji, the ropeway summit, onsen and noodles
@@ -158,13 +170,13 @@ src/
   game/
     minigames.js        crane, sushi, capsule, fortune, fitting room, vending machine
     changelog.js        the versions and what each one added (the stamp book's last page)
-    menus.js            the main menu, the menu while walking, settings, how to play, typing a room code
+    menus.js            the title screen, the menu while walking, your traveller, settings, how to play, typing a room code
     main.js             the game loop: walking, doors, trains, the shinkansen, stamp book, photo cards, saving, drawing
   net/
     net.js              playing together: rooms, friends' avatars, SAY SOMETHING, and the moments made for two
 ```
 
-Scripts are plain classic `<script>` tags that share one global scope, which is why the game works when opened straight from disk. Keep the load order in `index.html`: engine, art, world, cities, then `minigames.js`, `changelog.js`, `net.js`, `menus.js` and finally `main.js`, which boots the game.
+Scripts are plain classic `<script>` tags that share one global scope, which is why the game works when opened straight from disk. Keep the load order in `index.html`: engine, art, world (with `station.js`), cities, then `minigames.js`, `changelog.js`, `net.js`, `menus.js` and finally `main.js`, which boots the game.
 
 ## Adding a city
 
@@ -206,7 +218,8 @@ City streets can stay on a grid, since that's what they are. Parks, temples and 
 | `?st=book`, `?st=line`, `?st=ride` | open the stamp book, the train line or a train ride |
 | `?mini=crane&mt=1` | open a minigame (`crane`, `sushi`, `gacha`, `omikuji`, `dress`, `mochi`, `tea`, `tako`, `vend`); `mt` fast-forwards it by that many seconds |
 | `?room=ABCD&net=local` | join a room through a BroadcastChannel instead of the internet, so two tabs of one browser can play together (serve the folder over http for this) |
-| `?st=menu&kind=pause` | open a menu (`main`, `pause`, `settings`, `help`, `confirm`, `join`) |
+| `?st=menu&kind=pause` | open a menu (`main`, `pause`, `look`, `settings`, `help`, `confirm`, `join`) |
+| `?map=tk_shinkansen` | start in a station concourse (`tk_`, `ky_` or `os_shinkansen`) |
 | `?st=tog`, `?st=say`, `?st=book&pg=together`, `?st=book&pg=updates` | open the play-together menu, SAY SOMETHING, or a page of the stamp book |
 | `?sim=6000&seed=3` | walk around at random for that many frames before showing the first frame, pressing E often |
 

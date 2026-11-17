@@ -29,15 +29,13 @@
   // water instead, squeezing the lake the way distance does. It can slide at most `slide` units, which stops short of anything
   // you can walk on, so walking on into the park and the town scrolls it away as normal.
   // With `mirror`, the still water under it holds an upside-down Fuji, the "sakasa Fuji" the lake is famous for.
-  const HZ = { bot: 0, top: 0 }; // where the skyline's bottom edge and summit were last drawn on screen; photos are framed from it
   let SKYC = null, RFC = null;
   const canvasFor = (c, w, h) => c && c.lw >= w && c.lh === h ? c : mk(Math.max(320, w), h);
   function horizon(spr, base, slide, cl, mirror) {
     const mask = mirror ? waterMask(base + slide + 80, mirror) : null;
-    M.ACT.push({ x: 0, y: base + slide, sayT: 0, upd(e) { e.x = pl.x; }, draw(e, x, y) {
+    M.ACT.push({ x: 0, y: base + slide, sayT: 0, always: true, draw(e, x, y) {
       const h = spr.lh, cx = snap(G.cx), cy = e.y - y, hold = Math.min(h, Math.max(cl.peak + 8, Math.round(H * 0.42))); // never so low that the sky runs out
       const bot = snap(base - cy + Math.max(0, Math.min(slide, hold - (base - cy))));
-      HZ.bot = bot; HZ.top = bot - cl.peak;
       // and it drifts sideways at a third of your pace, so it stays in view as you walk the shore
       const c0 = (spr.lw - W) / 2, sx = snap(Math.max(0, Math.min(spr.lw - W, c0 + (cx - c0) * 0.35)));
       SKYC = canvasFor(SKYC, W, h); const s = SKYC.g; s.clearRect(0, 0, SKYC.lw, h); s.drawImage(spr, -sx, 0); puffs(s, cl.x - sx, cl.y, cl.sc);
@@ -64,14 +62,12 @@
     c.g.putImageData(im, 0, 0); for (const [x, y, w, hh] of cuts) c.g.clearRect(x, y, w, hh); return c;
   }
   const CLOUDY = [['THE CLOUDS HAVE SWALLOWED THE SUMMIT.', 'FUJI IS SHY. WAIT A LITTLE AND TRY AGAIN.'], ['A WHITE BLANKET SITS ON THE PEAK.', 'THE LOCALS SAY IT CLEARS IF YOU ARE PATIENT.'], ['NOTHING BUT CLOUD WHERE THE MOUNTAIN SHOULD BE.', 'KEEP AN EYE ON THE SKY AT THE TOP OF THE SCREEN.']];
-  // a Fuji photo frames the mountain where it stands on screen, summit at the top (the summit lookout). Two are painted as
-  // postcards instead: the mirror, whose reflection needs more height than a small screen has, and Chureito, where Fuji is
-  // off behind the trees
-  const aimFuji = () => [W / 2, HZ.top - 5];
+  // a Fuji photo: the summit lookout frames the mountain behind the fence (shot.frame). Two are painted as postcards instead:
+  // the mirror, whose reflection needs more height than a photo has room for, and Chureito, where Fuji is off behind the trees
   function fujiSpot(id, x, y, verb, lines, r, shot) {
     M.SPOTS.push({ x, y, r: r || 15, label: verb, stamp: id, fn() {
       if (!clear()) { Snd.fx('wind'); dialog(CLOUDY[(G.t | 0) % CLOUDY.length]); return; }
-      G.state = 'event'; G.ev = { sp: Object.assign({ act: 'snap', stamp: id, lines }, shot || { aim: aimFuji }), t: 0 }; pl.mv = false; pl.dir = 'u';
+      G.state = 'event'; G.ev = { sp: Object.assign({ act: 'snap', stamp: id, lines }, shot), t: 0 }; pl.mv = false; pl.dir = 'u';
     } });
   }
   // the mirror postcard: Fuji over the far trees, and the same Fuji upside down in the still lake
@@ -162,7 +158,7 @@
     lay() { tRect(FR, 0, 0, 40, 24); tRect(WA, 0, 0, 40, 6.75); tRect(PL, 8, 6.5, 32, 9); tOval(GR, 20, 15, 15, 7.5); tRect(GR, 15, 18, 25, 24); tRoad(DT, [[20, 23.5], [20, 15], [14, 13], [12, 10.5]], 0.6, GR); tRoad(DT, [[20, 15], [26, 13], [28, 10.5]], 0.6, GR); },
     deco() {
       horizon(SPR.fujiS, 108, 0, { x: 320, y: 14, sc: 0.75, peak: 100 }); block(0, 0, 640, 112);
-      fujiSpot('kw_summit', 320, 124, 'TAKE A PHOTO', ['FROM UP HERE THE LAKE IS A MIRROR AND THE TOWN IS A TOY.', 'AND FUJI FILLS THE WHOLE SKY, AS IF IT WERE STANDING RIGHT BEHIND YOU.'], 18);
+      fujiSpot('kw_summit', 320, 124, 'TAKE A PHOTO', ['FROM UP HERE THE LAKE IS A MIRROR AND THE TOWN IS A TOY.', 'AND FUJI FILLS THE WHOLE SKY, AS IF IT WERE STANDING RIGHT BEHIND YOU.'], 18, { frame: [170, 0, 300, 132] });
       put(SPR.bellH, 320, 200, 15, 33); block(308, 194, 332, 200); stampSpot('kw_bell', 320, 210, 'RING THE BELL', 'bow', ['DONG. THE SOUND ROLLS DOWN THE HILL AND OUT OVER THE WATER.', 'THEY SAY IF TWO PEOPLE RING IT TOGETHER, THEY STAY TOGETHER.']);
       prop('tanuki', 200, 212, 7); prop('usagi', 440, 212, 6);
       M.SPOTS.push({ x: 200, y: 220, r: 12, label: 'READ', lines: ['AN OLD STORY: A TANUKI PLAYED TRICKS ON A FARMER, AND A CLEVER RABBIT GOT EVEN.', 'THE MOUNTAIN IS NAMED FOR THE CRACKLE OF THE FIRE IN THE STORY. KACHI KACHI.'] });

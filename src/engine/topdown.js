@@ -98,8 +98,11 @@ function tdFrame(o, back, ph, act) {
     r(9, y0, 14, 46 - y0, robe); r(9, y0, 2, 46 - y0, rD); r(20, y0, 2, 46 - y0, rL); if (!back) r(15, y0 + 2, 1, 44 - y0, rD); r(9, 45, 14, 1, rD);
     r(11, 46 - (lL ? 1 : 0), 4, 2, '#f6efe2'); r(17, 46 - (lR ? 1 : 0), 4, 2, '#f6efe2');
   } else {
-    const leg = (x, lift, sx) => { r(x, 32, 5, 13 - lift, pa); r(x, 32, 1, 13 - lift, paD); r(x + 3, 34, 1, 10 - lift, paL); const sy = 45 - lift, s = o.shoes; r(sx, sy, 6, 3, s); r(sx, sy + 2, 6, 1, dark(s, 0.4)); if (!back) r(sx + 1, sy, 3, 1, lite(s, 0.35)); };
-    leg(10, lL, 9); leg(17, lR, 17); r(15, 32, 2, 3, paD);
+    const lg = o.skirt ? sk : pa, lgD = o.skirt ? skD : paD; // with a skirt the legs below it are bare
+    const leg = (x, lift, sx) => { r(x, 32, 5, 13 - lift, lg); r(x, 32, 1, 13 - lift, lgD); if (!o.skirt) r(x + 3, 34, 1, 10 - lift, paL); const sy = 45 - lift, s = o.shoes; r(sx, sy, 6, 3, s); r(sx, sy + 2, 6, 1, dark(s, 0.4)); if (!back) r(sx + 1, sy, 3, 1, lite(s, 0.35)); };
+    leg(10, lL, 9); leg(17, lR, 17);
+    if (o.skirt) { r(9, 31, 14, 4, pa); r(8, 34, 16, 4, pa); r(8, 34, 2, 4, paD); r(21, 31, 2, 6, lite(pa, 0.15)); r(8, 37, 16, 1, paD); if (!back) for (let x = 11; x < 22; x += 3) r(x, 35, 1, 2, paD); }
+    else r(15, 32, 2, 3, paD);
   }
   // body
   if (robe) {

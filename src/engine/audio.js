@@ -164,6 +164,7 @@ const Snd = {
       case 'wind': this.noise(t, 1.8, 0.07, 400, 1800, this.sfx); seq(['A6', 'E7', 'D7'], 0.35, 1.2, 0.035, 'sine', { echo: 1 }); break;
       case 'train': seq(['C5', 'E5', 'G5', 'C6', 'G5', 'C6', 'E6'], 0.16, 0.5, 0.09, 'triangle', { echo: 1 }); this.noise(t, 2.5, 0.05, 200, 900, this.sfx); break;
       case 'page': this.noise(t, 0.12, 0.08, 1500, 6000, this.sfx); break;
+      case 'chime': seq(['E6', 'C6', 'G5', 'C6'], 0.32, 1.1, 0.05, 'sine', { echo: 1 }); break; // the station's ding-dong
       case 'clink': this.tone('triangle', 2350 + Math.random() * 300, t, 0.07, 0.05, { pluck: 1, bus: this.sfx }); this.tone('sine', 3900, t + 0.02, 0.05, 0.02, { pluck: 1, bus: this.sfx }); break;
       case 'gacon': this.tone('sine', 150, t, 0.22, 0.4, { slide: 55, pluck: 1, bus: this.sfx }); this.noise(t, 0.09, 0.2, 150, 900, this.sfx); this.noise(t + 0.05, 0.16, 0.05, 2500, 6000, this.sfx); break;
       case 'beep': this.tone('square', 1320, t, 0.025, 0.018, B); break;

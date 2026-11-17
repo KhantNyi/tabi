@@ -3,13 +3,31 @@
 const GAME = { title: 'TABI', save: 'tabi', version: CHANGELOG[0][0] }; // the game's name lives here and nowhere else; the version is the newest changelog entry
 const CLIST = Object.values(CITIES); // every city, in the order index.html loads them
 let CITY = CITIES[new URLSearchParams(location.search).get('city')] || CLIST[0]; // the city you are in; go() keeps it in step with the map
-const G = { state: 'menu', menu: { kind: 'main', sel: 0, t: 0 }, mstack: [], ret: null, t: 0, cx: 0, cy: 0, fade: 1, flash: 0, banner: 0, stamps: {}, figs: {}, fit: 0, cats: {}, cans: {}, name: NET.name(), seen: '', cl: 0, tgt: null, fx: [], back: null, dist: CITY.start, hasSave: false };
+const G = { state: 'menu', menu: { kind: 'main', sel: 0, t: 0 }, mstack: [], ret: null, t: 0, cx: 0, cy: 0, fade: 1, flash: 0, banner: 0, stamps: {}, figs: {}, fit: 0, look: null, cats: {}, cans: {}, name: NET.name(), seen: '', cl: 0, tgt: null, fx: [], back: null, dist: CITY.start, hasSave: false };
 const pl = { x: 70, y: 204, dir: 'd', mv: false, wt: 0, ph: 0, act: null }, PRT = [];
 const FITS = ['#3fa7a0', '#f06a8c', '#f2c14e', '#8a6aff', '#3a3a4e', '#f4f1e6', '#e0563f', '#5aa85a', '#c8486a', '#4a6fa5', '#f0a8c0', '#5a8a6a'], KIMONO = 8, OBI = ['#f2c14e', '#f4f1e6', '#8a6aff', '#e8c070'], FITN = ['TEAL JACKET', 'PINK HOODIE', 'YELLOW RAINCOAT', 'PURPLE BOMBER', 'BLACK COAT', 'WHITE SHIRT', 'RED TRACK TOP', 'GREEN PARKA', 'RED KIMONO', 'INDIGO YUKATA', 'SAKURA KIMONO', 'MOSS KIMONO']; // from KIMONO on, rented in Kyoto
-const plLook = i => LOOKS['pl' + i] || (LOOKS['pl' + i] = makeLook(Object.assign({}, PLAYER_LOOK, i >= KIMONO ? { robe: FITS[i], obi: OBI[i - KIMONO], shirt: FITS[i], pants: FITS[i], shoes: '#f4f1e6', pack: null } : { shirt: FITS[i] })));
+// ---------- your traveller ----------
+// The look (G.look) is a few choices, each an index into LOOKOPT; the top is the outfit (G.fit), which the Harajuku fitting
+// room and the Kyoto kimono rental change too. Friends get the look as a short string of digits (lookKey).
+const LOOKOPT = {
+  hair: ['SHORT', 'LONG', 'BUN', 'CAP', 'SUN HAT'],
+  hc: [['BLACK', '#2a2430'], ['BROWN', '#6b4630'], ['CHESTNUT', '#a8603a'], ['BLONDE', '#e8c070'], ['SILVER', '#cfc9d6'], ['PINK', '#f08ab0'], ['BLUE', '#5a7ad8']],
+  sk: [['', '#fbe0c4'], ['', '#f6cfa6'], ['', '#e8b48a'], ['', '#c98a5a'], ['', '#8a5a3a']],
+  bot: ['TROUSERS', 'SKIRT'],
+  bc: [['NAVY', '#3d4a7a'], ['BLACK', '#2a2a3a'], ['KHAKI', '#7a7a5a'], ['DENIM', '#5a7ab0'], ['RED', '#c8486a'], ['CREAM', '#e8dcc0']],
+  bag: [['RED', '#e0563f'], ['BLUE', '#3f7ab0'], ['YELLOW', '#f2c14e'], ['GREEN', '#5aa85a'], ['PURPLE', '#8a6aff'], ['NO BAG', null]]
+};
+const LOOK_KEYS = ['hair', 'hc', 'sk', 'bot', 'bc', 'bag'], LOOK0 = { hair: 0, hc: 1, sk: 1, bot: 0, bc: 0, bag: 0 };
+G.look = Object.assign({}, LOOK0);
+const lookKey = l => LOOK_KEYS.map(k => l[k] | 0).join(''), lookOf = s => { const l = Object.assign({}, LOOK0); LOOK_KEYS.forEach((k, i) => { const v = +String(s || '')[i]; if (v >= 0 && v < LOOKOPT[k].length) l[k] = v; }); return l; };
+function lookParts(l) {
+  const bag = LOOKOPT.bag[l.bag][1];
+  return { hair: LOOKOPT.hc[l.hc][1], skin: LOOKOPT.sk[l.sk][1], pants: LOOKOPT.bc[l.bc][1], skirt: l.bot === 1, pack: bag, long: l.hair === 1, bun: l.hair === 2, hat: l.hair === 3 ? bag || '#f4f1e6' : l.hair === 4 ? '#e8d4a0' : null, brim: l.hair === 4 };
+}
+const plLook = (i, l = G.look) => { const k = 'pl' + i + ':' + lookKey(l); return LOOKS[k] || (LOOKS[k] = makeLook(Object.assign({}, PLAYER_LOOK, lookParts(l), i >= KIMONO ? { robe: FITS[i], obi: OBI[i - KIMONO], shirt: FITS[i], pants: FITS[i], shoes: '#f4f1e6', pack: null, skirt: false } : { shirt: FITS[i] }))); };
 // one save for the whole trip (older saves were kept per city under 'tabi-tokyo')
-function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, cats: G.cats, cans: G.cans, name: G.name, seen: G.seen, mute: !Snd.on, dist: G.dist })); } catch (e) { } }
-function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.cats = s.cats || {}; G.cans = s.cans || {}; if (NAMES.includes(s.name)) G.name = s.name; G.seen = s.seen || ''; if (s.mute && Snd.on) Snd.toggle(); if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
+function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, look: lookKey(G.look), cats: G.cats, cans: G.cans, name: G.name, seen: G.seen, mute: !Snd.on, dist: G.dist })); } catch (e) { } }
+function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.look = lookOf(s.look); G.cats = s.cats || {}; G.cans = s.cans || {}; if (NAMES.includes(s.name)) G.name = s.name; G.seen = s.seen || ''; if (s.mute && Snd.on) Snd.toggle(); if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
 const count = o => Object.keys(o).length, STAMPS = {}, SCITY = {}; for (const c of CLIST) for (const k in c.stamps) { STAMPS[k] = c.stamps[k]; SCITY[k] = c; }
 const nst = c => count(c.stamps), got = c => Object.keys(c.stamps).filter(k => G.stamps[k]).length, catsIn = c => Object.keys(G.cats).filter(k => (MAPS[k.split(':')[0]] || {}).city === c.id).length;
 const areas = c => c.areas || c.line; // the sections of a city's page in the stamp book
@@ -19,7 +37,7 @@ const SOON = [['kawaguchiko', 'MT FUJI'], ['kyoto', 'KYOTO'], ['osaka', 'OSAKA']
 const JPOS = { tokyo: [214, 44, 214, 26, 0], kawaguchiko: [164, 46, 164, 8, 0], kyoto: [70, 38, 50, 22, 0], osaka: [46, 58, 38, 54, -1], nara: [74, 62, 82, 59, 1] }; // dot x,y then label x,y,align on the Japan map
 function build(id) {
   const d = MAPS[id]; newMap(id, d.tw || 20, d.th || 12, !!d.indoor); M.def = d; M.night = d.night; M.hs = []; M.vs = [];
-  if (d.lay) d.lay(); if (!d.indoor) { blockTer(WA); paintGround(); } d.deco(); markRoads();
+  if (d.lay) d.lay(); if (!d.indoor) { blockTer(WA); paintGround(); } d.deco(); markRoads(); settle();
   M.OBJ.sort((a, b) => a.y - b.y); for (const [x, y, rx, ry] of M.SHD) ell(M.ground.g, x, y, rx, ry, d.indoor ? 'rgba(20,10,30,0.22)' : 'rgba(22,30,50,0.26)');
   return BUILT[id] = M;
 }
@@ -44,6 +62,7 @@ function interact() {
   const sp = t.spot; if (!sp) { const n = t.npc; say(n, n.lines[n.li++ % n.lines.length]); return; }
   if (sp.door) { G.back = { map: M.id, x: pl.x, y: pl.y }; Snd.fx('page'); go(sp.door, 160, 182, 'u'); }
   else if (sp.train) { G.state = 'line'; G.line = { sel: (CITY.line.findIndex(s => s[0] === M.id) + 1) % CITY.line.length }; Snd.fx('page'); }
+  else if (sp.shink && CITY.concourse && M.id !== CITY.concourse) { Snd.fx('chime'); G.back = null; go(CITY.concourse, 320, 514, 'u'); } // a big station: in through the concourse
   else if (sp.shink) { G.state = 'japan'; G.jp = { sel: (CLIST.indexOf(CITY) + 1) % CLIST.length }; Snd.fx('page'); }
   else if (sp.fn) sp.fn(sp);
   else if (sp.mini) { G.state = 'mini'; G.mg = { k: sp.mini, sp, t: 0 }; MG[sp.mini].init(G.mg); Snd.fx('ui'); }
@@ -56,6 +75,7 @@ function update(dt) {
   G.t += dt; NET.update(dt); if (G.fade > 0) G.fade = Math.max(0, G.fade - dt * 2); if (G.flash > 0) G.flash -= dt * 2; if (G.banner > 0) G.banner -= dt;
   if (KP.m) Snd.toggle();
   const st = G.state;
+  if (pl.sayT > 0) pl.sayT -= dt; // your own speech bubble fades like everyone else's
   if (G.photo) { const p = G.photo; p.t += dt; if (st !== 'event' && st !== 'dialog') p.out += dt; if (p.out > 0.35) G.photo = null; }
   if (TAP) { const tp = TAP; TAP = null; if (st === 'menu') MENU.tap(tp); else if (st === 'dialog' || st === 'got') KP.a = 1; else if (st === 'book') { const r = (G.clRows || []).find(q => BOOKP()[G.bk] === 'updates' && tp.x >= q[0] && tp.x <= q[0] + q[2] && tp.y >= q[1] && tp.y <= q[1] + q[3]); if (r) { G.cl = r[4]; Snd.fx('ui'); } else if (tp.x < W * 0.28) KP.l = 1; else if (tp.x > W * 0.72) KP.r = 1; else KP.b = 1; }
     else if (st === 'tog') NET.tapTog(tp); else if (st === 'say') NET.tapSay(tp);
@@ -91,7 +111,7 @@ function update(dt) {
   else if (st === 'mini') { G.mg.t += dt; const m = G.mg; MG[m.k].update(m, dt); if (G.mg === m && KP.x && m.k !== 'dress' && m.k !== 'vend') { G.mg = null; G.state = 'play'; } }
   else if (st === 'line') { const STN = CITY.line, n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === M.id) G.state = 'play'; else { G.state = 'ride'; G.ride = { to: L.sel, t: 0 }; Snd.play(null); Snd.fx('train'); emit('ride', G.ride); } } }
   else if (st === 'japan') { const n = CLIST.length, J = G.jp; if (KP.u || KP.l) { J.sel = (J.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d || KP.r) { J.sel = (J.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (CLIST[J.sel] === CITY) G.state = 'play'; else { G.state = 'ride'; G.ride = { city: CLIST[J.sel], t: 0, dur: 5.6 }; Snd.play(null); Snd.fx('train'); emit('ride', G.ride); } } }
-  else if (st === 'ride') { G.ride.t += dt; if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > (G.ride.dur || 3.4)) { const r = G.ride; G.state = 'play'; if (r.go) go(...r.go); else if (r.city) { go(r.city.hub || r.city.start); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1]; camSnap(); } } else go(CITY.line[r.to][0]); emit('arrived', r); } }
+  else if (st === 'ride') { G.ride.t += dt; if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > (G.ride.dur || 3.4)) { const r = G.ride; G.state = 'play'; if (r.go) go(...r.go); else if (r.city) { if (r.city.concourse) { go(r.city.concourse, 272, 100, 'd'); Snd.fx('chime'); } else { go(r.city.hub || r.city.start); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1]; camSnap(); } } } else go(CITY.line[r.to][0]); emit('arrived', r); } }
 
   if (st !== 'ride' && st !== 'line' && st !== 'japan' && st !== 'mini') {
     for (const n of M.ACT) {
@@ -126,7 +146,7 @@ function drawWorld() {
   if (G.state === 'play') for (const s of M.SPOTS) if (s.stamp && !G.stamps[s.stamp]) for (let k = 0; k < 10; k++) { const a = k * 0.6283 + t * 0.8; R(ctx, s.x - cx + Math.cos(a) * 9, s.y - cy - 1 + Math.sin(a) * 3.5, 1, U, k % 2 ? '#fff8e0' : '#ffd84a'); }
   const list = G.hidePl ? [] : [pl];
   for (const o of M.OBJ) { const dx = o.x - o.ox - cx, dy = o.y - o.oy - cy; if (dx < W + 2 && dy < H && dx + o.spr.lw > -2 && dy + o.spr.lh > 0) list.push(o); }
-  for (const e of M.ACT) if (e.x - cx > -20 && e.x - cx < W + 20 && e.y - cy > -4 && e.y - cy < H + 30) list.push(e);
+  for (const e of M.ACT) if (e.always || e.x - cx > -20 && e.x - cx < W + 20 && e.y - cy > -4 && e.y - cy < H + 30) list.push(e);
   for (const c of M.CARS) if (c.x - cx > -40 && c.x - cx < W + 40) list.push(c);
   for (const o of OTHERS) if (o.map === M.id && o.F && o.alpha > 0.03) list.push(o);
   list.sort((a, b) => a.y - b.y);
@@ -149,21 +169,45 @@ function drawWorld() {
   if (!G.hidePl) for (const n of M.ACT.concat(OTHERS.filter(o => o.map === M.id), pl)) if (n.sayT > 0) { const ls = wrap(n.say, 110), w = Math.max(...ls.map(l => tw(l))) + 8, h = ls.length * 7 + 6, x = Math.max(2, Math.min(W - w - 2, n.x - cx - w / 2)), y = Math.max(2, n.y - cy - 32 - h); panel(x, y, w, h); ls.forEach((l, i) => txt(ctx, l, x + 4, y + 4 + i * 7, '#3a2e40')); }
 }
 // ---------- photos ----------
-// When the shutter goes, the world is drawn once more without you in it and the view in front of you is copied onto a card.
-// A spot can aim the frame (aim() gives the centre x and top y on screen), or paint the picture itself (photo(g, w, h)).
-const CARD_Y = () => TOUCH ? 30 : 6; // the card's top; it is sized so the dialog box under it never covers the caption
-function takePhoto(sp) {
-  let pals = [];
-  const room = H - 42 - (TOUCH && H > W ? 110 : 8) - 30 - CARD_Y(), ph = Math.round(Math.min(106, room)), pw = Math.round(Math.min(160, W - 28, ph * 1.52)), c = mk(pw, ph);
-  if (sp.photo) sp.photo(c.g, pw, ph);
-  else {
-    G.hidePl = true; drawWorld(); G.hidePl = false;
-    const a = sp.aim ? sp.aim() : [pl.x - snap(G.cx), pl.y - snap(G.cy) + 10 - ph];
-    const x = Math.round(Math.max(0, Math.min(W - pw, a[0] - pw / 2))), y = Math.round(Math.max(0, Math.min(H - ph, a[1])));
-    _di.call(c.g, cv, x * S, y * S, pw * S, ph * S, 0, 0, pw, ph);
-    const cx = snap(G.cx), cy = snap(G.cy); // friends standing in the frame
-    pals = OTHERS.filter(o => o.map === M.id && o.alpha > 0.5 && o.x - cx > x - 2 && o.x - cx < x + pw + 2 && o.y - cy > y + 6 && o.y - cy - 24 < y + ph).map(o => o.name);
+// A photo frames what its spot points at, not just the screen. The subject is the spot's own frame ([x, y, w, h] in the
+// world) or else the biggest landmark standing just ahead of you; the world is drawn again around it, without you in it,
+// stepping back (a smaller scale) when the landmark is too big for the card. A spot can also paint the picture: photo(g, w, h).
+function subjectOf(sp) {
+  if (sp.frame) return sp.frame;
+  let best = null, bs = 0;
+  for (const o of M.OBJ) {
+    if (o.split || !o.spr) continue; // trees and bamboo are scenery, not subjects
+    const w = o.spr.lw, h = o.spr.lh, x0 = o.x - o.ox, y0 = o.y - o.oy, dx = Math.max(0, Math.abs(x0 + w / 2 - pl.x) - w / 2), dy = pl.y - o.y;
+    if (w * h < 700 || dy < -24 || dy > 230 || dx > 90) continue;
+    const sc = w * h / (1 + Math.hypot(dx, Math.max(0, dy - 20)) / 70); if (sc > bs) { bs = sc; best = [x0, y0, w, h]; }
   }
+  return best && [best[0] - 8, best[1] - 6, best[2] + 16, Math.max(best[3] + 14, pl.y + 4 - best[1])]; // and the ground in front, up to where you stand
+}
+function frameFor(sp, pw, ph) {
+  let [x, y, w, h] = subjectOf(sp) || [pl.x - pw / 2, pl.y + 10 - ph, pw, ph]; const A = pw / ph;
+  if (w / h > A) { const nh = w / A; y -= (nh - h) * 0.55; h = nh; } else { const nw = h * A; x -= (nw - w) / 2; w = nw; }
+  if (w < pw) { x -= (pw - w) / 2; y -= (ph - h) / 2; w = pw; h = ph; } // never closer than 1:1
+  if (w > pw / 0.36) { const nw = pw / 0.36, nh = ph / 0.36; x += (w - nw) / 2; y += (h - nh) * 0.7; w = nw; h = nh; } // nor too far back
+  x = M.w > w ? Math.max(0, Math.min(M.w - w, x)) : (M.w - w) / 2; y = M.h > h ? Math.max(0, Math.min(M.h - h, y)) : (M.h - h) / 2;
+  return [Math.round(x), Math.round(y), Math.ceil(w), Math.ceil(h)];
+}
+// draw the world as a camera at (x, y) seeing w x h would, onto its own canvas
+function renderWorld(x, y, w, h) {
+  const c = mk(w, h), was = [ctx, W, H, G.cx, G.cy];
+  ctx = c.g; W = w; H = h; G.cx = x; G.cy = y; G.hidePl = true;
+  try { drawWorld(); } finally { [ctx, W, H, G.cx, G.cy] = was; G.hidePl = false; }
+  return c;
+}
+const CARD_Y = () => TOUCH ? 30 : 6; // the card's top; it is sized so the dialog box under it never covers the caption
+function shoot(sp, pw, ph) {
+  const c = mk(pw, ph); if (sp.photo) { sp.photo(c.g, pw, ph); return { c, pals: [] }; }
+  const [x, y, w, h] = frameFor(sp, pw, ph), shot = renderWorld(x, y, w, h);
+  c.g.imageSmoothingEnabled = w > pw; c.g.imageSmoothingQuality = 'high'; c.g.drawImage(shot, 0, 0, pw, ph);
+  const pals = OTHERS.filter(o => o.map === M.id && o.alpha > 0.5 && o.x > x && o.x < x + w && o.y > y + 6 && o.y - 24 < y + h).map(o => o.name); // friends in the frame
+  return { c, pals };
+}
+function takePhoto(sp) {
+  const room = H - 42 - (TOUCH && H > W ? 110 : 8) - 30 - CARD_Y(), ph = Math.round(Math.min(106, room)), pw = Math.round(Math.min(160, W - 28, ph * 1.52)), { c, pals } = shoot(sp, pw, ph);
   const d = new Date(), two = n => String(n).padStart(2, '0'), st = STAMPS[sp.stamp], title = st ? st[0] : sp.label || '';
   let place = (G.zn && !M.indoor ? G.zn[4] : M.def.name).split(' - ')[0]; if (place === title) place = M.def.name === title ? CITY.name : M.def.name;
   if (pals.length) place = 'WITH ' + pals.join(' & ');
@@ -253,6 +297,7 @@ function drawUI() {
   if (st === 'play') { panel(4, 4, 44, 15); ctx.drawImage(stampOf('torii'), 6, 4.5); txt(ctx, got(CITY) + '/' + nst(CITY), 21, 9, '#c8382e'); const hd = CITY.hud && CITY.hud(); if (hd) { const w = 18 + tw(hd[1]); panel(51, 4, w, 15); ctx.drawImage(ICON[hd[0]], 53, 4.5); txt(ctx, hd[1], 67, 9, '#3a2e40'); } if (!M.indoor) { const nm = G.zn ? G.zn[4] : M.def.name; if (TOUCH) txt(ctx, nm, 5, 22, '#fff8e8', '#1d1626'); else txt(ctx, nm, W - 5 - tw(nm), 7, '#fff8e8', '#1d1626'); } }
   if (st === 'play' && G.zb > 0 && G.zn) { const z = G.zn, a = Math.max(0, Math.min(1, G.zb, (2.6 - G.zb) * 3)), w = Math.max(tw(z[4], 2), tw(z[5])) + 20, x = Math.floor((W - w) / 2), y = TOUCH ? 34 : 26; ctx.globalAlpha = a; panel(x, y, w, 26); txtC(ctx, z[4], W / 2, y + 5, '#c8382e', null, 2); txtC(ctx, z[5], W / 2, y + 17, '#8a7a6a'); ctx.globalAlpha = 1; }
   if (st === 'play' && G.tgt) { const g = G.tgt, w = tw('E') + 9 + tw(g.label), ax = g.x != null ? g.x : pl.x, ay = g.x != null ? g.y : pl.y, x = Math.max(3, Math.min(W - w - 3, ax - snap(G.cx) - w / 2)), y = Math.max(TOUCH ? 32 : 22, ay - snap(G.cy) - 43); const kw = keycap(x, y, 'E'); txt(ctx, g.label, x + kw + 3, y + 2, '#fff8e8', '#1d1626'); }
+  if (st === 'play' && M.def.hud) { const s = M.def.hud(), w = tw(s) + 12, y = NET.on && !TOUCH ? 16 : TOUCH ? 40 : 4; panel(Math.floor((W - w) / 2), y, w, 13); txtC(ctx, s, W / 2, y + 4, '#3f7ab0'); } // a map's own note (the next train)
   if (st === 'play') NET.hud();
   if (st === 'tog') NET.drawTog(); if (st === 'say') NET.drawSay();
   if (st === 'play' && G.banner > 0) { const a = Math.min(1, G.banner, (3.5 - G.banner) * 2 + 0.3); ctx.globalAlpha = Math.max(0, Math.min(1, a)); R(ctx, 0, 60, W, M.def.sub ? 30 : 20, 'rgba(29,22,38,0.75)'); txtC(ctx, M.def.name, W / 2, 65, '#fff8e8', '#1d1626', 2); if (M.def.sub) txtC(ctx, M.def.sub, W / 2, 80, '#ffd98a', null); ctx.globalAlpha = 1; }
@@ -339,7 +384,8 @@ function drawUI() {
   function frame(now) {
     if (now - last < 14) { requestAnimationFrame(frame); return; }
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
-    try { if (!G.err) { update(dt); if (G.snapReq) { const sp = G.snapReq; G.snapReq = null; takePhoto(sp); } if (G.state === 'ride') drawRide(); else { drawWorld(); drawUI(); } } } catch (e) { console.error(e); G.err = String(e.stack || e); }
+    // (the title scene covers the whole screen, so the world is not drawn under it)
+    try { if (!G.err) { update(dt); if (G.snapReq) { const sp = G.snapReq; G.snapReq = null; takePhoto(sp); } if (G.state === 'ride') drawRide(); else { if (!MENU.title()) drawWorld(); drawUI(); } } } catch (e) { console.error(e); G.err = String(e.stack || e); }
     if (G.err) { R(ctx, 0, 0, W, 60, '#400'); wrap(G.err.replace(/\s+/g, ' '), 300).slice(0, 7).forEach((l, i) => txt(ctx, l, 4, 4 + i * 7, '#fff')); }
     requestAnimationFrame(frame);
   }

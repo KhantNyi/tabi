@@ -118,7 +118,31 @@ const WALK = ['salary', 'office', 'teen', 'kid', 'tourist', 'kimono', 'granny', 
 function walker(i, ax, ay, bx, by) { M.ACT.push({ F: look(WALK[i % WALK.length], WCOL[(i * 3 + ax) % WCOL.length | 0]), x: ax + (bx - ax) * ((i * 37 % 100) / 100), y: ay + (by - ay) * ((i * 37 % 100) / 100), pa: [ax, ay], pb: [bx, by], to: i % 2, dir: 'd', mv: true, wt: i, ph: i, sp: 22 + i % 4 * 5, wait: 0, sayT: 0 }); }
 function crowd(n, ax, ay, bx, by, jit) { for (let i = 0; i < n; i++) { const j = (hsh(i, ax + ay) - 0.5) * jit, v = Math.abs(bx - ax) < Math.abs(by - ay); walker(i + ax, ax + (v ? j : 0), ay + (v ? 0 : j), bx + (v ? j : 0), by + (v ? 0 : j)); } }
 function cars(y, dir, n) { for (let i = 0; i < n; i++) M.CARS.push({ x: (i + hsh(y, i) * 0.6) * M.w / n, y, v: dir * (46 + hsh(i, y) * 20), k: Math.floor(hsh(y + i, 3) * SPR.car.length) }); }
-function stampSpot(id, x, y, verb, act, lines, r) { M.SPOTS.push({ x, y, r: r || 15, label: verb, stamp: id, act, lines }); }
+// settle(): run once a map is dressed. Crowd walkers move in straight lines without looking, so each path is checked against
+// walls, props and water: a blocked one slides sideways to a clear lane, or is cut short so the walker turns back before the
+// obstacle, or is dropped if too little is left. Cats and wandering people that start somewhere blocked step to the nearest
+// clear spot.
+function settle() {
+  const clear = (ax, ay, bx, by) => { const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 3)); for (let i = 0; i <= n; i++) if (hit(ax + (bx - ax) * i / n, ay + (by - ay) * i / n)) return false; return true; };
+  const drop = [];
+  for (const n of M.ACT) {
+    if (n.pa) {
+      const [ax, ay] = n.pa, [bx, by] = n.pb; if (clear(ax, ay, bx, by)) continue;
+      const len = Math.hypot(bx - ax, by - ay) || 1, nx = -(by - ay) / len, ny = (bx - ax) / len; let ok = false;
+      for (const o of [3, -3, 6, -6, 9, -9, 12, -12, 16, -16, 20, -20, 24, -24]) if (clear(ax + nx * o, ay + ny * o, bx + nx * o, by + ny * o)) { n.pa = [ax + nx * o, ay + ny * o]; n.pb = [bx + nx * o, by + ny * o]; n.x += nx * o; n.y += ny * o; ok = true; break; }
+      if (ok) continue;
+      // keep the clear stretch around where the walker is (or the longest clear stretch)
+      const N = Math.ceil(len / 3), at = i => [ax + (bx - ax) * i / N, ay + (by - ay) * i / N], free = i => !hit(...at(i));
+      let best = null, s = -1; for (let i = 0; i <= N + 1; i++) { if (i <= N && free(i)) { if (s < 0) s = i; } else if (s >= 0) { if (!best || i - 1 - s > best[1] - best[0]) best = [s, i - 1]; s = -1; } }
+      if (!best || (best[1] - best[0]) * 3 < 40) { drop.push(n); continue; }
+      n.pa = at(best[0] + 1); n.pb = at(best[1] - 1); const t = Math.max(0, Math.min(1, hsh(n.x, n.y))); n.x = n.pa[0] + (n.pb[0] - n.pa[0]) * t; n.y = n.pa[1] + (n.pb[1] - n.pa[1]) * t;
+    } else if ((n.cat || n.rad) && hit(n.x, n.y)) {
+      search: for (let r = 4; r <= 64; r += 4) for (let a = 0; a < 16; a++) { const x = n.x + Math.cos(a * 0.3927) * r, y = n.y + Math.sin(a * 0.3927) * r * 0.8; if (!hit(x, y) && terr(x, y) !== WA) { n.x = x; n.y = y; if (n.rad) { n.hx = x; n.hy = y; } break search; } }
+    }
+  }
+  if (drop.length) M.ACT = M.ACT.filter(n => !drop.includes(n));
+}
+function stampSpot(id, x, y, verb, act, lines, r, o) { M.SPOTS.push(Object.assign({ x, y, r: r || 15, label: verb, stamp: id, act, lines }, o)); } // o.frame: what a photo shows
 function station(x, y, name) { tower(x, y, 92, 44, { c: '#e8e0d0', sign: name + ' STATION', sc: '#3f9a5a', wc: '#bfe8ff', gx: 7, ww: 4 }); M.SPOTS.push({ x, y: y + 7, r: 14, label: 'TRAINS', train: 1 }); M.st = [x, y + 12]; }
 
 // ---------- rooms ----------

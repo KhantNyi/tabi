@@ -50,7 +50,8 @@ function personFrame(o, pose) {
       r(x + Math.round(d[0] / 2), 32, 5, 7, col); r(x + d[0], 39, 5, 6 - d[1], col); r(x + d[0], 39, 1, 6 - d[1], cd); if (cl) r(x + d[0] + 3, 34, 1, 10 - d[1], cl);
       const sy = 45 - d[1], s = o.shoes; r(x + d[0] - 1, sy, 7, 3, s); r(x + d[0] + 4, sy, 2, 1, lite(s, 0.35)); r(x + d[0] - 1, sy + 2, 7, 1, dark(s, 0.4)); r(x + d[0], sy, 3, 1, dark(s, 0.15));
     };
-    leg(11, bl, paD, dark(paD, 0.2), null); leg(16, fl, pa, paD, paL);
+    if (o.skirt) { leg(11, bl, skD, dark(skD, 0.2), null); leg(16, fl, sk, skD, null); r(10, 31, 12, 4, pa); r(9, 34, 14, 4, pa); r(9, 34, 2, 4, paD); r(19, 31, 2, 6, paL); r(9, 37, 14, 1, paD); }
+    else { leg(11, bl, paD, dark(paD, 0.2), null); leg(16, fl, pa, paD, paL); }
   }
   // body
   r(10, by, 12, 15, sh); r(10, by, 2, 15, shD); r(12, by, 1, 15, shM); r(20, by + 1, 2, 9, shL);

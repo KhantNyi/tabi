@@ -26,7 +26,7 @@
       house(570, 192, 64, 30, { sign: 'RAMEN', noren: '#c8382e', roofCol: '#3d3852', rh: 16, lantern: true, to: 'ramen' });
       cityEdge(0, 70); prop('vend', 430, 190, 6); prop('vend2', 612, 190, 6);
       for (const [x, y] of [[90, 300], [200, 310], [420, 300], [540, 312], [600, 290]]) plant('ginkgo', x, y, 1); plaza(392); prop('bench', 140, 300, 9); prop('bench', 480, 296, 9); prop('vend3', 250, 290, 6);
-      stampSpot('hachi', 206, 188, 'TAKE A PHOTO', 'snap', ['HACHIKO WAITED HERE FOR HIS OWNER EVERY DAY FOR TEN YEARS.', 'EVERYONE IN TOKYO MEETS THEIR FRIENDS BY THIS STATUE.']);
+      stampSpot('hachi', 206, 188, 'TAKE A PHOTO', 'snap', ['HACHIKO WAITED HERE FOR HIS OWNER EVERY DAY FOR TEN YEARS.', 'EVERYONE IN TOKYO MEETS THEIR FRIENDS BY THIS STATUE.'], 15, { frame: [146, 130, 120, 72] });
       stampSpot('scramble', 312, 232, 'TAKE A PHOTO', 'snap', ['THE LIGHTS CHANGE AND A THOUSAND PEOPLE CROSS AT ONCE.', 'SOMEHOW NOBODY BUMPS INTO ANYBODY.'], 13);
       cars(228, -1, 3); cars(251, 1, 3); crowd(3, 280, 200, 280, 266, 6); crowd(3, 344, 266, 344, 200, 6); crowd(6, 40, 200, 600, 200, 6); crowd(6, 600, 266, 40, 266, 8); crowd(3, 296, 214, 328, 250, 4);
       npc('teen', 180, 196, { lines: ['I AM WAITING FOR MY FRIEND. SHE IS ALWAYS LATE.', 'MEET AT HACHIKO, SHE SAID. SO DID EVERYONE ELSE.'], tint: '#f2c14e' });
@@ -88,7 +88,13 @@
       station(70, 448, 'ASAKUSA'); house(170, 448, 60, 28, { sign: 'KIMONO', noren: '#8a6aff', rh: 14, lantern: true }); house(470, 448, 60, 28, { sign: 'TEMPURA', noren: '#f2a03a', rh: 14, lantern: true }); house(560, 448, 56, 28, { sign: 'SENBEI', noren: '#3f7a5a', rh: 14 });
       sideTowers(470); prop('rick', 410, 456, 9); wild(['green', 'pine', 'green2', 'sakura']); prop('vend', 124, 446, 6);
       stampSpot('kaminari', 320, 458, 'TAKE A PHOTO', 'snap', ['THE THUNDER GATE, WITH A LANTERN AS TALL AS A BUS.', 'THE GODS OF WIND AND THUNDER STAND GUARD ON EITHER SIDE.'], 13);
-      stampSpot('sky', 560, 210, 'TAKE A PHOTO', 'snap', ['THE SKYTREE, 634 METRES OF STEEL ACROSS THE RIVER.', 'OLD TOKYO IN FRONT, NEW TOKYO BEHIND.'], 16);
+      // the Skytree rises past the top of the map, so its photo is a postcard: the tower over the Sumida river and its red bridge
+      stampSpot('sky', 560, 210, 'TAKE A PHOTO', 'snap', ['THE SKYTREE, 634 METRES OF STEEL ACROSS THE RIVER.', 'OLD TOKYO IN FRONT, NEW TOKYO BEHIND.'], 16, { photo(g, w, h) {
+        const r = RNG(8), by = Math.round(h * 0.7); dgrad(g, 0, 0, w, by, ['#78b4e6', '#a8d2f0', '#e2ecf4']); for (const [x, y, a] of [[w * 0.18, 12, 16], [w * 0.8, 20, 12]]) { ell(g, x, y, a, 2, '#f4f8fc'); ell(g, x + 4, y - 1.5, a * 0.5, 1.5, '#ffffff'); }
+        skyline(g, 0, w, by, 6, 20, '#a8b4cc', r); g.imageSmoothingEnabled = true; g.drawImage(SPR.skytree, Math.round(w * 0.6) - 11, by - 104, 22, 116); g.imageSmoothingEnabled = false; skyline(g, 0, w, by + 1, 3, 11, '#7c88a8', r);
+        R(g, 0, by, w, h - by, '#4a8ec0'); for (let k = 0; k < 14; k++) R(g, r() * w, by + 8 + r() * (h - by - 10), 3 + r() * 6, U, 'rgba(255,255,255,0.5)');
+        R(g, 0, by + 3, w, 3, '#c0442f'); R(g, 0, by + 3, w, U, '#e8705a'); for (let x = 6; x < w; x += 22) { R(g, x, by + 6, 2, 6, '#a8382a'); for (let k = 0; k < 9; k++) R(g, x + 2 + k * 2.2, by + 6 + Math.abs(k - 4) * 0.8, 2.2, U, '#c0442f'); }
+      } });
       M.SPOTS.push({ x: 320, y: 224, r: 13, label: 'WAFT THE SMOKE', fx: 'wind', lines: ['YOU WAVE THE INCENSE SMOKE OVER YOUR HEAD.', 'IT IS SAID TO MAKE YOU WISER. YOU FEEL ABOUT THE SAME.'] });
       cars(502, -1, 2); cars(510, 1, 2); crowd(8, 308, 250, 308, 430, 10); crowd(8, 332, 430, 332, 250, 10); crowd(5, 40, 456, 600, 456, 5); crowd(3, 250, 180, 400, 190, 6);
       npc('yukata', 426, 462, { lines: ['RICKSHAW RIDE? I KNOW EVERY BACK STREET.', 'MY LEGS ARE STRONGER THAN ANY TAXI.'] }); npc('granny', 274, 300, { lines: ['FRESH MELON BREAD! STILL WARM!', 'NO EATING WHILE WALKING, DEAR.'] }); npc('kimono', 380, 200, { rad: 30, lines: ['DRAW A FORTUNE INSIDE THE HALL.', 'IF IT IS BAD LUCK, JUST TIE IT UP AND LEAVE IT.'] }); M.ACT.push({ cat: true, x: 232, y: 214, k: 0 });
@@ -223,9 +229,10 @@
     npc('chef', 160, 78, { lines: ['WHATEVER PASSES, TAKE IT! FRESH THIS MORNING!'] }); M.SPOTS.push({ x: 190, y: 120, r: 12, label: 'SIT DOWN', mini: 'sushi', stamp: 'sushi' });
   } };
 
+  concourse('tk_shinkansen', { name: 'TOKYO STATION', hub: 'tokyo', music: 'tokyo', track: 14, dest: 'KYOTO', bento: ['MAKUNOUCHI', 'A LITTLE BOX OF EVERYTHING: GRILLED SALMON, RICE, A ROLLED OMELETTE, PICKLES.'] });
   city({
     id: 'tokyo', name: 'TOKYO', tagline: 'EIGHT DISTRICTS - ONE TRAIN LINE - NO HURRY',
-    start: 'shibuya', hub: 'tokyo', line: LINE, stamps: STAMPS, cats: 7,
+    start: 'shibuya', hub: 'tokyo', concourse: 'tk_shinkansen', line: LINE, stamps: STAMPS, cats: 7,
     sprites() { // landmark art only this city needs
       one('ttower', 110, 230, g => { for (let i = 0; i < 444; i++) { const t = i / 444, hw = snap(1 + 222 * 0.19 * Math.pow(Math.max(0, t - 0.1) / 0.9, 2.1)); if (t < 0.12) continue; const k = t >= 0.8 ? snap((t - 0.8) / 0.2 * hw * 0.6) : 0, c = Math.floor(t * 9) % 2 ? '#e8d8c0' : '#d8552c'; if (k < 1.5) R(g, 55 - hw, 6 + i / 2, hw * 2, U, c); else { R(g, 55 - hw, 6 + i / 2, hw - k, U, c); R(g, 55 + k, 6 + i / 2, hw - k, U, c); } } tokyoTower(g, 55, 228, 222); }, 1); one('box', 16, 10, g => { R(g, 1, 2, 14, 8, '#8a5a3a'); R(g, 1, 2, 14, 3, '#5a3a28'); for (let x = 2; x < 15; x += 2) R(g, x, 2, 1, 3, '#a8744a'); R(g, 6, 6.5, 4, 2, '#f2c14e'); }, 1);
       one('hachi', 18, 26, g => { R(g, 2, 16, 14, 9, '#8c8498'); R(g, 2, 16, 14, 1, '#c8c0d4'); R(g, 1, 24, 16, 2, '#6b6478'); dogStatue(g, 3, 16, '#a8845a'); }, 1);

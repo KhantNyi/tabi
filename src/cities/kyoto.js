@@ -82,7 +82,7 @@
       for (const y of [246, 270, 294, 318]) { R(g, 608, y, 192, 3, '#8a6448'); R(g, 608, y, 192, 1, '#b8865a'); R(g, 608, y + 3, 192, 1, '#2a1a18'); }
       block(608, 228, 800, 328); block(796, 128, 800, 166); block(796, 190, 800, 232);
       put(SPR.kiyo, 520, 160, 100, 98); block(440, 138, 600, 160); put(SPR.romon, 480, 256, 61, 99); block(422, 248, 464, 256); block(496, 248, 538, 256);
-      stampSpot('ky_kiyomizu', 720, 212, 'LOOK OUT', 'snap', ['THE STAGE STANDS ON 139 WOODEN PILLARS, WITHOUT A SINGLE NAIL.', 'BELOW, THE TREES; BEYOND THEM, THE WHOLE CITY GOING PINK IN THE EVENING.'], 18);
+      stampSpot('ky_kiyomizu', 720, 212, 'LOOK OUT', 'snap', ['THE STAGE STANDS ON 139 WOODEN PILLARS, WITHOUT A SINGLE NAIL.', 'BELOW, THE TREES; BEYOND THEM, THE WHOLE CITY GOING PINK IN THE EVENING.'], 18, { frame: [470, 64, 330, 220] });
       npc('monk', 580, 190, { lines: ['TO JUMP OFF THE STAGE OF KIYOMIZU, WE SAY, WHEN SOMEONE TAKES A BIG RISK.', 'PLEASE DO NOT TAKE IT LITERALLY.'] }); npc('tourist', 680, 160, { dir: 'd', rad: 20, lines: ['IT IS EVEN BETTER IN AUTUMN, THEY SAY. I DO NOT SEE HOW.'] });
       // Otowa, down the east trail
       put(SPR.otowa, 768, 436, 40, 59); block(732, 424, 804, 436); M.SPOTS.push({ x: 768, y: 448, r: 15, label: 'DRINK THE WATER', stamp: 'ky_otowa', act: 'hold', fx: 'slurp', lines: ['THREE THIN STREAMS FALL FROM THE ROOF. ONE FOR A LONG LIFE, ONE FOR LOVE, ONE FOR GOOD GRADES.', 'YOU MAY ONLY DRINK FROM ONE. CHOOSING IS THE HARD PART.'] });
@@ -120,7 +120,7 @@
     },
     deco() {
       ledge([[560, 224], [660, 222], [752, 224]], 11, 'earth'); steps(672, 224, 24, 15, '#b89868'); ledge([[560, 144], [660, 142], [752, 144]], 11, 'earth'); steps(632, 144, 24, 15, '#b89868');
-      bridge(384, 428, 408, 500, '#6a4a30', '#a8845a'); stampSpot('ky_bridge', 396, 470, 'TAKE A PHOTO', 'snap', ['THE MOON-CROSSING BRIDGE, SO NAMED BECAUSE AN EMPEROR THOUGHT THE MOON SEEMED TO WALK ACROSS IT.', 'THE MOUNTAINS BEHIND ARE GREEN NOW. IN AUTUMN THEY ARE ON FIRE.']);
+      bridge(384, 428, 408, 500, '#6a4a30', '#a8845a'); stampSpot('ky_bridge', 396, 470, 'TAKE A PHOTO', 'snap', ['THE MOON-CROSSING BRIDGE, SO NAMED BECAUSE AN EMPEROR THOUGHT THE MOON SEEMED TO WALK ACROSS IT.', 'THE MOUNTAINS BEHIND ARE GREEN NOW. IN AUTUMN THEY ARE ON FIRE.'], 15, { frame: [276, 396, 240, 160] });
       for (const [x, y] of [[200, 470], [560, 460], [660, 480]]) put(SPR.boat, x, y, 13, 8);
       npc('yukata', 600, 520, { lines: ['A ROWING BOAT FOR AN HOUR? THE RIVER IS SLOW AND THE DUCKS ARE FRIENDLY.'] }); prop('bench', 120, 420, 9); prop('bench', 520, 420, 9);
       // the bamboo grove and its fences
@@ -210,9 +210,10 @@
     }
   };
 
+  concourse('ky_shinkansen', { name: 'KYOTO STATION', hub: 'kyo_station', music: 'kyoto', track: 12, dest: 'TOKYO', bento: ['SABA SUSHI', 'MACKEREL PRESSED ONTO RICE AND WRAPPED IN KELP. KYOTO HAS MADE IT THIS WAY FOR CENTURIES.'] });
   city({
     id: 'kyoto', name: 'KYOTO', tagline: 'A THOUSAND TEMPLES AND ONE BUS PASS',
-    start: 'kyo_station', hub: 'kyo_station', line: LINE, stamps: STAMPS, cats: 6, minis: { tea: TEA },
+    start: 'kyo_station', hub: 'kyo_station', concourse: 'ky_shinkansen', line: LINE, stamps: STAMPS, cats: 6, minis: { tea: TEA },
     sprites() {
       variants('bamboo', 3, (rnd, i) => { const c = mk(28, 74), g = c.g; for (let k = 0; k < 4; k++) bamboo(g, 5 + k * 5.5 + rnd() * 2, 73, 56 + rnd() * 14, k % 2 ? '#5aa85a' : '#6ab868', rnd); return c; });
       one('torS', 32, 40, g => torii(g, 16, 39, 24, 34, '#e8502a'), 1);

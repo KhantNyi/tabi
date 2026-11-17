@@ -42,12 +42,12 @@ const NET = (function () {
     msg(k, d, id) { if (k === 'st') state(id, d); else event(id, d); }
   };
   // what I look like to everyone else, about ten times a second while it changes and once a second otherwise
-  const mine = () => ({ m: M.id, x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, mv: pl.mv, a: pl.act, f: G.fit, n: G.name, b: G.state === 'play' || G.state === 'event' ? 0 : 1, r: G.state === 'ride' ? 1 : 0 });
+  const mine = () => ({ m: M.id, x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, mv: pl.mv, a: pl.act, f: G.fit, l: lookKey(G.look), n: G.name, b: G.state === 'play' || G.state === 'event' ? 0 : 1, r: G.state === 'ride' ? 1 : 0 });
   function sendState(to) { if (!tx) return; const s = mine(); tx.send('st', s, to); if (!to) { sent = JSON.stringify(s); last = now(); } }
   function state(id, d) {
     let o = peer(id); const fresh = !o;
     if (fresh) { o = { id, remote: true, x: d.x, y: d.y, wt: 0, ph: Math.random() * 6, alpha: 0, sayT: 0 }; OTHERS.push(o); }
-    if (o.fit !== d.f) { o.fit = d.f; o.F = plLook(d.f); }
+    if (o.fit !== d.f || o.lk !== d.l) { o.fit = d.f; o.lk = d.l; o.F = plLook(d.f, lookOf(d.l)); } // how they have dressed their traveller
     if (o.map !== d.m || Math.hypot(d.x - o.x, d.y - o.y) > 60) { o.x = d.x; o.y = d.y; }
     Object.assign(o, { map: d.m, tx: d.x, ty: d.y, dir: d.d, mv: d.mv, act: d.a || null, busy: d.b, ride: d.r, name: d.n, col: colOf(d.n), last: now() });
     if (fresh) { N.say(d.n + ' IS HERE!'); Snd.fx('heart'); }
