@@ -13,7 +13,8 @@
   const AREAS = [['kw_lake', 'LAKESHORE'], ['kw_hill', 'PAGODA HILL'], ['kw_park', 'OISHI PARK'], ['kw_town', 'TOWN'], ['kw_summit', 'MT KACHIKACHI']];
 
   // ---------- the clouds on Fuji ----------
-  const cover = () => { const p = (G.t / 30 + 0.35) % 1; return p < 0.5 ? 1 : p < 0.58 ? 1 - (p - 0.5) / 0.08 : p < 0.92 ? 0 : (p - 0.92) / 0.08; };
+  // on the shared clock (worldTime), so friends standing together see the same sky
+  const cover = () => { const p = (worldTime() / 30 + 0.35) % 1; return p < 0.5 ? 1 : p < 0.58 ? 1 - (p - 0.5) / 0.08 : p < 0.92 ? 0 : (p - 0.92) / 0.08; };
   const clear = () => cover() < 0.2;
   const BLOBS = [[-36, 7, 22, 7], [-12, 2, 26, 8], [16, 5, 24, 7], [40, 11, 20, 6], [-54, 15, 18, 5], [2, 15, 30, 6], [30, 19, 22, 5]];
   function puffs(g, sx, sy, sc) { // the cloud cap, parting sideways as it clears

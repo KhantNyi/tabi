@@ -20,6 +20,9 @@ You can also serve the folder with any static server if you prefer, for example 
 | Interact, talk, enter, confirm | E / Space / Enter | E button, or tap to advance dialogue |
 | Back out of menus and minigames | Esc | ✕ button, or tap outside a menu |
 | Stamp book | Tab / B | BOOK |
+| Play together (start, join or leave a room) | T | 2P |
+| Say something (bow, cheer, a preset phrase) | C | ··· (while in a room) |
+| What's new | V on the title screen, or the last page of the stamp book | Tap the version line on the title screen |
 | Train line | E at a station | Tap a stop, then tap it again to ride |
 | Shinkansen to another city | E at the blue shinkansen sign by the main station (Tokyo Station, Kyoto Station, Namba, Kawaguchiko, Nara). Every train-line menu says where it is. | Tap a city, then tap it again to ride |
 | Turn the stamp book's page | Left / Right | Tap the left or right side |
@@ -87,9 +90,28 @@ Nara is one large map you explore on foot, with no trains. It runs from the stat
 - **Photos:** whenever you take a photo, an instant-photo card drops in and develops from a cream haze. It shows the view in front of you (with you out of the shot), a caption, and an orange date print. A few Fuji views are painted as postcards instead.
 - **Vending machines:** every vending machine in every city works. Pick one of eight hot and cold drinks, then stop the four-digit lucky number. Four of a kind (ATARI!) wins a second drink free. The drinks you have tried are kept in a collection, shown in the stamp book. At night the machines glow.
 
+## Playing together
+
+Two or more people can walk around Japan together. Press T (2P on a phone), choose START A NEW ROOM, and share the four-letter code. Friends press T, choose JOIN A ROOM and enter it. When the game is hosted on a website, the menu offers an invite link instead (`?room=CODE`), and opening the link joins.
+
+- **Seeing each other:** friends on your map appear in their own outfits with a name tag. Friends elsewhere on the same map get an arrow at the edge of the screen. The menu lists where everyone is. When a friend's tab goes quiet, their avatar fades.
+- **Talking:** C opens SAY SOMETHING, with a bow, a cheer and eight preset phrases. There is no free-text chat, and names are animal nicknames (TANUKI, NEKO...), so a stranger who guessed a code could only wave.
+- **Your own progress:** everyone keeps their own stamp book and save. Fuji's clouds run on the wall clock, so friends at the lake see the same sky.
+- **Better together:** four stamps on the TOGETHER page of the book need a friend:
+  - **Group photo:** take a photo with a friend in the frame.
+  - **Bell for two:** ring the summit bell within a few seconds of each other.
+  - **Travel together:** board a train when a friend nearby asks you along.
+  - **A drink for a friend:** win an ATARI and give the second drink away.
+
+Players connect directly to each other over WebRTC, using [Trystero](https://github.com/dmotz/trystero). Public Nostr relays introduce players, and after that they talk peer to peer. The library is loaded from a CDN only when you first join a room, so playing alone makes no network requests. A few strict networks block direct connections between players. Supporting those would need a TURN server.
+
+## What's new
+
+The last page of the stamp book lists every version and what it added. Press V on the title screen to open it directly. Returning players get a note when the version changes. Versions live in `src/game/changelog.js`, newest first. The top entry is the game's version.
+
 ## Saving
 
-Progress is saved in `localStorage` as one save for the whole trip: stamps from every city, figures, cats, the drinks you have tried, your outfit and where you were. A save from the Tokyo-only version is picked up automatically. Some small things reset when you reload: deer crackers, and which Kuromon stalls you have tasted.
+Progress is saved in `localStorage` as one save for the whole trip: stamps from every city, figures, cats, the drinks you have tried, your outfit, your nickname for playing together and where you were. A save from the Tokyo-only version is picked up automatically. Some small things reset when you reload: deer crackers, and which Kuromon stalls you have tasted.
 
 ## Screens and phones
 
@@ -115,7 +137,8 @@ src/
   world/
     world.js            building a map: terrain, ground painter, roads, buildings, rooms,
                         furniture, NPCs, cars, forests, ledges, steps, bridges and walls,
-                        plus the shared registries MAPS and CITIES
+                        plus the shared registries MAPS and CITIES, and the hooks net.js uses
+                        (OTHERS, on/emit, worldTime)
   cities/
     tokyo.js            Tokyo's districts, rooms, dialogue, stamps and landmark art
     fuji.js             Kawaguchiko: the lake, the clouds on Fuji, the ropeway summit, onsen and noodles
@@ -124,10 +147,13 @@ src/
     osaka.js            Osaka's four districts, the takoyaki minigame and landmark art
   game/
     minigames.js        crane, sushi, capsule, fortune, fitting room, vending machine
+    changelog.js        the versions and what each one added (the stamp book's last page)
     main.js             the game loop: walking, doors, trains, the shinkansen, stamp book, photo cards, saving, drawing
+  net/
+    net.js              playing together: rooms, friends' avatars, SAY SOMETHING, and the moments made for two
 ```
 
-Scripts are plain classic `<script>` tags that share one global scope, which is why the game works when opened straight from disk. Keep the load order in `index.html`: engine, then art, then world, then cities, then game.
+Scripts are plain classic `<script>` tags that share one global scope, which is why the game works when opened straight from disk. Keep the load order in `index.html`: engine, art, world, cities, then `minigames.js`, `changelog.js`, `net.js` and finally `main.js`, which boots the game.
 
 ## Adding a city
 
@@ -168,6 +194,8 @@ City streets can stay on a grid, since that's what they are. Parks, temples and 
 | `?ov=1` | draw the whole map at once (with `map=`), to check its layout |
 | `?st=book`, `?st=line`, `?st=ride` | open the stamp book, the train line or a train ride |
 | `?mini=crane&mt=1` | open a minigame (`crane`, `sushi`, `gacha`, `omikuji`, `dress`, `mochi`, `tea`, `tako`, `vend`); `mt` fast-forwards it by that many seconds |
+| `?room=ABCD&net=local` | join a room through a BroadcastChannel instead of the internet, so two tabs of one browser can play together (serve the folder over http for this) |
+| `?st=tog`, `?st=say`, `?st=book&pg=together`, `?st=book&pg=updates` | open the play-together menu, SAY SOMETHING, or a page of the stamp book |
 | `?sim=6000&seed=3` | walk around at random for that many frames before showing the first frame, pressing E often |
 
 If a script error happens, it is printed in a red bar at the top of the canvas.

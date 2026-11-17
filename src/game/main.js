@@ -1,18 +1,20 @@
 'use strict';
 // ---------- runtime: walking, doors, trains between districts and cities, stamps, saving ----------
-const GAME = { title: 'TABI', save: 'tabi' }; // the game's name lives here and nowhere else
+const GAME = { title: 'TABI', save: 'tabi', version: CHANGELOG[0][0] }; // the game's name lives here and nowhere else; the version is the newest changelog entry
 const CLIST = Object.values(CITIES); // every city, in the order index.html loads them
 let CITY = CITIES[new URLSearchParams(location.search).get('city')] || CLIST[0]; // the city you are in; go() keeps it in step with the map
-const G = { state: 'title', t: 0, cx: 0, cy: 0, fade: 1, flash: 0, banner: 0, stamps: {}, figs: {}, fit: 0, cats: {}, cans: {}, tgt: null, fx: [], back: null, dist: CITY.start, hasSave: false };
+const G = { state: 'title', t: 0, cx: 0, cy: 0, fade: 1, flash: 0, banner: 0, stamps: {}, figs: {}, fit: 0, cats: {}, cans: {}, name: NET.name(), seen: '', cl: 0, tgt: null, fx: [], back: null, dist: CITY.start, hasSave: false };
 const pl = { x: 70, y: 204, dir: 'd', mv: false, wt: 0, ph: 0, act: null }, PRT = [];
 const FITS = ['#3fa7a0', '#f06a8c', '#f2c14e', '#8a6aff', '#3a3a4e', '#f4f1e6', '#e0563f', '#5aa85a', '#c8486a', '#4a6fa5', '#f0a8c0', '#5a8a6a'], KIMONO = 8, OBI = ['#f2c14e', '#f4f1e6', '#8a6aff', '#e8c070'], FITN = ['TEAL JACKET', 'PINK HOODIE', 'YELLOW RAINCOAT', 'PURPLE BOMBER', 'BLACK COAT', 'WHITE SHIRT', 'RED TRACK TOP', 'GREEN PARKA', 'RED KIMONO', 'INDIGO YUKATA', 'SAKURA KIMONO', 'MOSS KIMONO']; // from KIMONO on, rented in Kyoto
 const plLook = i => LOOKS['pl' + i] || (LOOKS['pl' + i] = makeLook(Object.assign({}, PLAYER_LOOK, i >= KIMONO ? { robe: FITS[i], obi: OBI[i - KIMONO], shirt: FITS[i], pants: FITS[i], shoes: '#f4f1e6', pack: null } : { shirt: FITS[i] })));
 // one save for the whole trip (older saves were kept per city under 'tabi-tokyo')
-function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, cats: G.cats, cans: G.cans, dist: G.dist })); } catch (e) { } }
-function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.cats = s.cats || {}; G.cans = s.cans || {}; if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
+function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, cats: G.cats, cans: G.cans, name: G.name, seen: G.seen, dist: G.dist })); } catch (e) { } }
+function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.cats = s.cats || {}; G.cans = s.cans || {}; if (NAMES.includes(s.name)) G.name = s.name; G.seen = s.seen || ''; if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
 const count = o => Object.keys(o).length, STAMPS = {}, SCITY = {}; for (const c of CLIST) for (const k in c.stamps) { STAMPS[k] = c.stamps[k]; SCITY[k] = c; }
 const nst = c => count(c.stamps), got = c => Object.keys(c.stamps).filter(k => G.stamps[k]).length, catsIn = c => Object.keys(G.cats).filter(k => (MAPS[k.split(':')[0]] || {}).city === c.id).length;
 const areas = c => c.areas || c.line; // the sections of a city's page in the stamp book
+const stampInfo = id => STAMPS[id] || TSTAMPS[id]; // a city's stamp, or one from the TOGETHER page
+const BOOKP = () => CLIST.concat(['together', 'updates']); // the stamp book's pages: one per city, then TOGETHER, then what is new
 const SOON = [['kawaguchiko', 'MT FUJI'], ['kyoto', 'KYOTO'], ['osaka', 'OSAKA']].filter(c => !CITIES[c[0]]); // on the map, not built yet
 const JPOS = { tokyo: [214, 44, 214, 26, 0], kawaguchiko: [164, 46, 164, 8, 0], kyoto: [70, 38, 50, 22, 0], osaka: [46, 58, 38, 54, -1], nara: [74, 62, 82, 59, 1] }; // dot x,y then label x,y,align on the Japan map
 function build(id) {
@@ -45,31 +47,35 @@ function interact() {
   else if (sp.shink) { G.state = 'japan'; G.jp = { sel: (CLIST.indexOf(CITY) + 1) % CLIST.length }; Snd.fx('page'); }
   else if (sp.fn) sp.fn(sp);
   else if (sp.mini) { G.state = 'mini'; G.mg = { k: sp.mini, sp, t: 0 }; MG[sp.mini].init(G.mg); Snd.fx('ui'); }
-  else if (sp.act) { G.state = 'event'; G.ev = { sp, t: 0 }; pl.mv = false; pl.dir = sp.act === 'hold' ? 'd' : 'u'; }
+  else if (sp.act) { G.state = 'event'; G.ev = { sp, t: 0 }; pl.mv = false; pl.dir = sp.act === 'hold' ? 'd' : 'u'; emit('act', sp); }
   else { Snd.fx(sp.fx || 'ui'); dialog(sp.lines); }
 }
 function endMini(win, lines) { const sp = G.mg.sp; G.mg = null; G.state = 'play'; dialog(lines, win && sp.stamp ? () => award(sp.stamp) : null); }
 
 function update(dt) {
-  G.t += dt; if (G.fade > 0 && G.state !== 'title') G.fade = Math.max(0, G.fade - dt * 2); if (G.flash > 0) G.flash -= dt * 2; if (G.banner > 0) G.banner -= dt;
+  G.t += dt; NET.update(dt); if (G.fade > 0 && G.state !== 'title') G.fade = Math.max(0, G.fade - dt * 2); if (G.flash > 0) G.flash -= dt * 2; if (G.banner > 0) G.banner -= dt;
   if (KP.m) Snd.toggle();
   const st = G.state;
   if (G.photo) { const p = G.photo; p.t += dt; if (st !== 'event' && st !== 'dialog') p.out += dt; if (p.out > 0.35) G.photo = null; }
-  if (TAP) { const tp = TAP; TAP = null; if (st === 'title' || st === 'dialog' || st === 'got') KP.a = 1; else if (st === 'book') { if (CLIST.length > 1 && tp.x < W * 0.28) KP.l = 1; else if (CLIST.length > 1 && tp.x > W * 0.72) KP.r = 1; else KP.b = 1; }
+  if (TAP) { const tp = TAP; TAP = null; if (st === 'title') { if (Math.abs(tp.y - (Math.floor((H - H0) / 2) + 124)) < 8) KP.v = 1; else KP.a = 1; } else if (st === 'dialog' || st === 'got') KP.a = 1; else if (st === 'book') { const r = (G.clRows || []).find(q => BOOKP()[G.bk] === 'updates' && tp.x >= q[0] && tp.x <= q[0] + q[2] && tp.y >= q[1] && tp.y <= q[1] + q[3]); if (r) { G.cl = r[4]; Snd.fx('ui'); } else if (tp.x < W * 0.28) KP.l = 1; else if (tp.x > W * 0.72) KP.r = 1; else KP.b = 1; }
+    else if (st === 'tog') NET.tapTog(tp); else if (st === 'say') NET.tapSay(tp);
     else if (st === 'japan') { const i = jpHit(tp); if (i < 0) { if (!jpBox().inside(tp)) KP.x = 1; } else if (i === G.jp.sel) KP.a = 1; else { G.jp.sel = i; Snd.fx('ui'); } }
     else if (st === 'line') { const i = lineHit(tp); if (i < 0) { if (!lineBox().inside(tp)) KP.x = 1; } else if (i === G.line.sel) KP.a = 1; else { G.line.sel = i; Snd.fx('ui'); } } }
-  if (st === 'title') { if (KP.n && G.hasSave) { G.stamps = {}; G.figs = {}; G.cats = {}; G.cans = {}; G.fit = 0; G.hasSave = false; pl.F = plLook(0); go(CLIST[0].start); G.banner = 0; Snd.fx('ui'); } else if (KP.a) { if (TOUCH) fullscreen(true); G.state = 'play'; G.banner = 3.5; G.fade = 0; Snd.play(M.def.music); Snd.fx('ui'); } }
+  if (st === 'title') { if (KP.n && G.hasSave) { G.stamps = {}; G.figs = {}; G.cats = {}; G.cans = {}; G.fit = 0; G.hasSave = false; pl.F = plLook(0); go(CLIST[0].start); G.banner = 0; Snd.fx('ui'); } else if (KP.v) { G.state = 'book'; G.bk = BOOKP().length - 1; G.cl = 0; G.bookBack = 'title'; Snd.fx('page'); }
+    else if (KP.a) { if (TOUCH) fullscreen(true); G.state = 'play'; G.banner = 3.5; G.fade = 0; Snd.play(M.def.music); Snd.fx('ui'); if (G.seen !== GAME.version) { if (G.hasSave) NET.say('UPDATED TO VERSION ' + GAME.version + '. SEE WHAT IS NEW ON THE LAST PAGE OF YOUR STAMP BOOK.', 6); G.seen = GAME.version; save(); } } }
   else if (st === 'play') {
     let dx = (K.r ? 1 : 0) - (K.l ? 1 : 0), dy = (K.d ? 1 : 0) - (K.u ? 1 : 0);
     if (JOY.on) { dx = JOY.x; dy = JOY.y; const m = Math.hypot(dx, dy); if (m > 1) { dx /= m; dy /= m; } }
     pl.mv = !!(dx || dy);
+    if (pl.emT > 0) { pl.emT -= dt; pl.act = pl.emT > 0 && !pl.mv ? pl.em : null; if (pl.mv) pl.emT = 0; } // a bow or a cheer from SAY SOMETHING, until you move
     if (pl.mv) { if (JOY.on) { if (Math.abs(dx) > Math.abs(dy) * 1.15) pl.dir = dx < 0 ? 'l' : 'r'; else if (Math.abs(dy) > Math.abs(dx) * 1.15) pl.dir = dy < 0 ? 'u' : 'd'; } else { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27) && Snd.ctx) Snd.noise(Snd.ctx.currentTime, 0.035, 0.018, 500, 1600, Snd.sfx); } else pl.wt = 0;
     if (M.def.zones) { const z = zoneAt(pl.x, pl.y); if (z && z !== G.zn) { G.zn = z; if (G.banner <= 0) G.zb = 2.6; } if (G.zb > 0) G.zb -= dt; }
     if (M.indoor && pl.y > 188 && G.back) { const b = G.back; G.back = null; Snd.fx('page'); go(b.map, b.x, b.y, 'd'); G.banner = 0; }
     let best = null, bd = 1e9; const tryT = (x, y, r, o) => { const d = Math.hypot(x - pl.x, (y - pl.y) * 1.3); if (d < r && d < bd) { bd = d; best = o; } };
     for (const s of M.SPOTS) tryT(s.x, s.y, s.r, { spot: s, label: s.label });
     for (const n of M.ACT) { if (n.cat) tryT(n.x, n.y, 15, { cat: n, x: n.x, y: n.y + 12, label: 'PET' }); else if (n.use) tryT(n.x, n.y + 2, 17, { act: n, x: n.x, y: n.y + 10, label: n.label(n) }); else if (n.spot) tryT(n.x, n.y + 16, 22, { spot: n.spot, label: n.spot.label }); else if (n.lines) tryT(n.x, n.y, 20, { npc: n, x: n.x, y: n.y, label: 'TALK' }); }
-    G.tgt = best; if (KP.a) interact(); else if (KP.b) { G.state = 'book'; G.bk = CLIST.indexOf(CITY); Snd.fx('page'); }
+    G.tgt = best; if (KP.a && NET.invite) NET.accept(); else if (KP.a) interact(); else if (KP.b) { G.state = 'book'; G.bk = CLIST.indexOf(CITY); Snd.fx('page'); }
+    else if (KP.t) NET.open(); else if (KP.c) NET.openSay(); else if (KP.x && NET.invite) NET.invite = null;
   } else if (st === 'event') {
     const ev = G.ev, sp = ev.sp, t0 = ev.t; ev.t += dt; const cross = s => t0 < s && ev.t >= s;
     if (sp.act === 'bow') { pl.act = (ev.t > 0.7 && ev.t < 1.2) || (ev.t > 1.5 && ev.t < 2) ? 'bow' : 'back'; if (cross(0.15)) Snd.fx('coin'); if (cross(0.35)) Snd.fx('bell'); if (cross(2.2) || cross(2.45)) Snd.fx('clap'); }
@@ -79,12 +85,14 @@ function update(dt) {
   } else if (st === 'dialog') {
     const d = G.dlg, L = d.lines[d.i]; d.t += dt; if (d.t * 42 < L.length && Math.floor(d.t * 14) !== Math.floor((d.t - dt) * 14)) Snd.fx('talk');
     if (KP.a || KP.x) { if (d.t * 42 < L.length) d.t = 99; else if (++d.i >= d.lines.length) { G.state = 'play'; G.dlg = null; if (d.then) d.then(); } else { d.t = 0; Snd.fx('ui'); } }
-  } else if (st === 'got') { G.got.t += dt; pl.act = 'cheer'; pl.dir = 'd'; if (G.got.t > 2.6 || (G.got.t > 0.6 && KP.a)) { pl.act = null; G.state = 'play'; const c = SCITY[G.got.id]; if (got(c) === nst(c)) { Snd.fx('yay'); dialog(count(G.stamps) === count(STAMPS) && CLIST.length > 1 ? ['THAT IS EVERY STAMP ON THE WHOLE TRIP!', 'YOUR BOOK IS FULL. THE ROADS ARE STILL YOURS TO WANDER.'] : ['THAT IS EVERY STAMP IN ' + c.name + '!', 'IT IS STILL YOURS TO WANDER FOR AS LONG AS YOU LIKE.']); } } }
-  else if (st === 'book') { const n = CLIST.length; if (n > 1 && (KP.l || KP.r)) { G.bk = (G.bk + (KP.r ? 1 : n - 1)) % n; Snd.fx('page'); } else if (KP.b || KP.a || KP.x) { G.state = 'play'; Snd.fx('page'); } }
+  } else if (st === 'got') { G.got.t += dt; pl.act = 'cheer'; pl.dir = 'd'; if (G.got.t > 2.6 || (G.got.t > 0.6 && KP.a)) { pl.act = null; G.state = 'play'; const c = SCITY[G.got.id]; if (c && got(c) === nst(c)) { Snd.fx('yay'); dialog(Object.keys(STAMPS).every(k => G.stamps[k]) && CLIST.length > 1 ? ['THAT IS EVERY STAMP ON THE WHOLE TRIP!', 'YOUR BOOK IS FULL. THE ROADS ARE STILL YOURS TO WANDER.'] : ['THAT IS EVERY STAMP IN ' + c.name + '!', 'IT IS STILL YOURS TO WANDER FOR AS LONG AS YOU LIKE.']); } } }
+  else if (st === 'book') { const n = BOOKP().length; if (BOOKP()[G.bk] === 'updates' && (KP.u || KP.d)) { G.cl = (G.cl + (KP.d ? 1 : CHANGELOG.length - 1)) % CHANGELOG.length; Snd.fx('ui'); } else if (KP.l || KP.r) { G.bk = (G.bk + (KP.r ? 1 : n - 1)) % n; Snd.fx('page'); } else if (KP.b || KP.a || KP.x) { G.state = G.bookBack || 'play'; G.bookBack = null; Snd.fx('page'); } }
+  else if (st === 'tog') NET.updTog();
+  else if (st === 'say') NET.updSay();
   else if (st === 'mini') { G.mg.t += dt; const m = G.mg; MG[m.k].update(m, dt); if (G.mg === m && KP.x && m.k !== 'dress' && m.k !== 'vend') { G.mg = null; G.state = 'play'; } }
-  else if (st === 'line') { const STN = CITY.line, n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === M.id) G.state = 'play'; else { G.state = 'ride'; G.ride = { to: L.sel, t: 0 }; Snd.play(null); Snd.fx('train'); } } }
-  else if (st === 'japan') { const n = CLIST.length, J = G.jp; if (KP.u || KP.l) { J.sel = (J.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d || KP.r) { J.sel = (J.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (CLIST[J.sel] === CITY) G.state = 'play'; else { G.state = 'ride'; G.ride = { city: CLIST[J.sel], t: 0, dur: 5.6 }; Snd.play(null); Snd.fx('train'); } } }
-  else if (st === 'ride') { G.ride.t += dt; if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > (G.ride.dur || 3.4)) { const r = G.ride; G.state = 'play'; if (r.go) go(...r.go); else if (r.city) { go(r.city.hub || r.city.start); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1]; camSnap(); } } else go(CITY.line[r.to][0]); } }
+  else if (st === 'line') { const STN = CITY.line, n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === M.id) G.state = 'play'; else { G.state = 'ride'; G.ride = { to: L.sel, t: 0 }; Snd.play(null); Snd.fx('train'); emit('ride', G.ride); } } }
+  else if (st === 'japan') { const n = CLIST.length, J = G.jp; if (KP.u || KP.l) { J.sel = (J.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d || KP.r) { J.sel = (J.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (CLIST[J.sel] === CITY) G.state = 'play'; else { G.state = 'ride'; G.ride = { city: CLIST[J.sel], t: 0, dur: 5.6 }; Snd.play(null); Snd.fx('train'); emit('ride', G.ride); } } }
+  else if (st === 'ride') { G.ride.t += dt; if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > (G.ride.dur || 3.4)) { const r = G.ride; G.state = 'play'; if (r.go) go(...r.go); else if (r.city) { go(r.city.hub || r.city.start); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1]; camSnap(); } } else go(CITY.line[r.to][0]); emit('arrived', r); } }
 
   if (st !== 'ride' && st !== 'line' && st !== 'japan' && st !== 'mini') {
     for (const n of M.ACT) {
@@ -121,8 +129,10 @@ function drawWorld() {
   for (const o of M.OBJ) { const dx = o.x - o.ox - cx, dy = o.y - o.oy - cy; if (dx < W + 2 && dy < H && dx + o.spr.lw > -2 && dy + o.spr.lh > 0) list.push(o); }
   for (const e of M.ACT) if (e.x - cx > -20 && e.x - cx < W + 20 && e.y - cy > -4 && e.y - cy < H + 30) list.push(e);
   for (const c of M.CARS) if (c.x - cx > -40 && c.x - cx < W + 40) list.push(c);
+  for (const o of OTHERS) if (o.map === M.id && o.F && o.alpha > 0.03) list.push(o);
   list.sort((a, b) => a.y - b.y);
   for (const o of list) {
+    if (o.remote) { ctx.globalAlpha = o.alpha; drawActor(o, cx, cy); ctx.globalAlpha = 1; continue; }
     if (o.F || o.cat || o.draw) { drawActor(o, cx, cy); continue; }
     if (o.v) { ell(ctx, o.x - cx, o.y - cy, 14, 2.5, 'rgba(22,30,50,0.35)'); ctx.drawImage(SPR.car[o.k][o.v > 0 ? 0 : 1], snap(o.x - cx - 16), snap(o.y - cy - 16)); continue; }
     const s = o.spr, dx = snap(o.x - o.ox - cx), dy = snap(o.y - o.oy - cy);
@@ -136,13 +146,15 @@ function drawWorld() {
     const x = s.x - cx, st = s.stamp && !G.stamps[s.stamp]; if (!st && !s.door && !s.train && !s.shink) continue; const y = s.y - cy - (s.door || s.train || s.shink ? 30 : 36) + Math.round(Math.abs(Math.sin(t * 3 + s.x)) * 3), c = st ? '#ffd84a' : s.train ? '#5ad88a' : s.shink ? '#6ab8f0' : '#fff8e8';
     if (x < -10 || x > W + 10 || y < -10 || y > H) continue; R(ctx, x - 2.5, y - 5, 5, 5, '#1d1626'); R(ctx, x - 3.5, y, 7, 1.5, '#1d1626'); R(ctx, x - 2.5, y + 1.5, 5, 1, '#1d1626'); R(ctx, x - 1.5, y + 2.5, 3, 1, '#1d1626'); R(ctx, x - 0.5, y + 3.5, 1, 1, '#1d1626'); R(ctx, x - 1.5, y - 4, 3, 5, c); R(ctx, x - 2.5, y + 0.5, 5, 1, c); R(ctx, x - 1.5, y + 1.5, 3, 1, c); R(ctx, x - 0.5, y + 2.5, 1, 1, c);
   }
-  if (!G.hidePl) for (const n of M.ACT) if (n.sayT > 0) { const ls = wrap(n.say, 110), w = Math.max(...ls.map(l => tw(l))) + 8, h = ls.length * 7 + 6, x = Math.max(2, Math.min(W - w - 2, n.x - cx - w / 2)), y = Math.max(2, n.y - cy - 32 - h); panel(x, y, w, h); ls.forEach((l, i) => txt(ctx, l, x + 4, y + 4 + i * 7, '#3a2e40')); }
+  if (!G.hidePl) NET.tags(cx, cy);
+  if (!G.hidePl) for (const n of M.ACT.concat(OTHERS.filter(o => o.map === M.id), pl)) if (n.sayT > 0) { const ls = wrap(n.say, 110), w = Math.max(...ls.map(l => tw(l))) + 8, h = ls.length * 7 + 6, x = Math.max(2, Math.min(W - w - 2, n.x - cx - w / 2)), y = Math.max(2, n.y - cy - 32 - h); panel(x, y, w, h); ls.forEach((l, i) => txt(ctx, l, x + 4, y + 4 + i * 7, '#3a2e40')); }
 }
 // ---------- photos ----------
 // When the shutter goes, the world is drawn once more without you in it and the view in front of you is copied onto a card.
 // A spot can aim the frame (aim() gives the centre x and top y on screen), or paint the picture itself (photo(g, w, h)).
 const CARD_Y = () => TOUCH ? 30 : 6; // the card's top; it is sized so the dialog box under it never covers the caption
 function takePhoto(sp) {
+  let pals = [];
   const room = H - 42 - (TOUCH && H > W ? 110 : 8) - 30 - CARD_Y(), ph = Math.round(Math.min(106, room)), pw = Math.round(Math.min(160, W - 28, ph * 1.52)), c = mk(pw, ph);
   if (sp.photo) sp.photo(c.g, pw, ph);
   else {
@@ -150,10 +162,14 @@ function takePhoto(sp) {
     const a = sp.aim ? sp.aim() : [pl.x - snap(G.cx), pl.y - snap(G.cy) + 10 - ph];
     const x = Math.round(Math.max(0, Math.min(W - pw, a[0] - pw / 2))), y = Math.round(Math.max(0, Math.min(H - ph, a[1])));
     _di.call(c.g, cv, x * S, y * S, pw * S, ph * S, 0, 0, pw, ph);
+    const cx = snap(G.cx), cy = snap(G.cy); // friends standing in the frame
+    pals = OTHERS.filter(o => o.map === M.id && o.alpha > 0.5 && o.x - cx > x - 2 && o.x - cx < x + pw + 2 && o.y - cy > y + 6 && o.y - cy - 24 < y + ph).map(o => o.name);
   }
   const d = new Date(), two = n => String(n).padStart(2, '0'), st = STAMPS[sp.stamp], title = st ? st[0] : sp.label || '';
   let place = (G.zn && !M.indoor ? G.zn[4] : M.def.name).split(' - ')[0]; if (place === title) place = M.def.name === title ? CITY.name : M.def.name;
-  G.photo = { img: c, t: 0, out: 0, title, place, date: "'" + two(d.getFullYear() % 100) + ' ' + two(d.getMonth() + 1) + ' ' + two(d.getDate()) };
+  if (pals.length) place = 'WITH ' + pals.join(' & ');
+  G.photo = { img: c, t: 0, out: 0, title, place, with: pals, date: "'" + two(d.getFullYear() % 100) + ' ' + two(d.getMonth() + 1) + ' ' + two(d.getDate()) };
+  emit('photo', G.photo);
 }
 // the card: an instant photo that drops in, develops out of a cream haze, and carries a caption and an orange date print
 function drawPhoto() {
@@ -196,6 +212,36 @@ function jpHit(p) {
   if (W < W0) { const i = Math.floor((p.y - b.y - 26) / 24); return p.x >= b.x && p.x <= b.x + b.w && i >= 0 && i < n ? i : -1; }
   let best = -1, bd = 24; CLIST.forEach((c, i) => { const q = JPOS[c.id], d = Math.hypot(p.x - (b.x + 8 + q[0]), p.y - (b.y + 20 + q[1])); if (d < bd) { bd = d; best = i; } }); return best;
 }
+// ---------- the last two pages of the stamp book ----------
+function bookFrame(title, nh) { // the page and its header and footer; a tall single column on narrow screens
+  const narrow = W < W0, w = narrow ? W - 12 : 304, h = narrow ? nh : 168, x = Math.floor((W - w) / 2), y = Math.max(4, Math.floor((H - h) / 2));
+  panel(x, y, w, h); txtC(ctx, narrow ? title : '< ' + title + ' >', W / 2, y + 6, '#c8382e', null, 2); R(ctx, x + 10, y + h - 17, w - 20, 1, '#eadfc4');
+  txtC(ctx, narrow ? '< TAP THE SIDES TO TURN THE PAGE >' : (G.bk + 1) + '/' + BOOKP().length, W / 2, y + h - 11, narrow ? '#b8a888' : '#8a7a6a'); return { x, y, w, h, narrow };
+}
+const THOW = { t_photo: 'TAKE A PHOTO WITH A FRIEND IN IT', t_bell: 'RING THE SUMMIT BELL AT THE SAME TIME', t_ride: 'RIDE ALONG WHEN A FRIEND ASKS', t_gift: 'WIN AN ATARI AND GIVE ONE AWAY' };
+function togetherPage() {
+  const b = bookFrame('TOGETHER', 214), cols = b.narrow ? 2 : 4, cw = (b.w - 16) / cols;
+  wrap('STAMPS YOU CAN ONLY COLLECT WITH FRIENDS. ' + (TOUCH ? 'TAP 2P' : 'PRESS T') + ' TO PLAY TOGETHER.', b.w - 24).forEach((l, i) => txtC(ctx, l, W / 2, b.y + 22 + i * 7, '#6a5a6a'));
+  Object.keys(TSTAMPS).forEach((k, i) => {
+    const cx = b.x + 8 + cw * (i % cols) + cw / 2, cy = b.y + (b.narrow ? 58 : 50) + Math.floor(i / cols) * 66, have = !!G.stamps[k]; ringS(cx, cy, TSTAMPS[k][1], have);
+    let y = cy + 13; for (const l of wrap(TSTAMPS[k][0], cw - 6)) { txtC(ctx, l, cx, y, have ? '#c8382e' : '#3a2e40'); y += 7; } y += 2; for (const l of wrap(THOW[k], cw - 6)) { txtC(ctx, l, cx, y, '#a89878'); y += 7; }
+  });
+  const ln = NET.on ? 'ROOM ' + NET.code + (OTHERS.length ? ': YOU, ' + OTHERS.map(o => o.name).join(', ') : ': WAITING FOR FRIENDS') : 'NOT PLAYING TOGETHER RIGHT NOW';
+  txtC(ctx, ln, W / 2, b.y + b.h - 27, NET.on ? '#3f9a5a' : '#b8a888');
+}
+function updatesPage() {
+  const tall = Math.max(...CHANGELOG.map(c => c[3].reduce((h, l) => h + wrap(l, W - 40).length * 7 + 3, 0))); // narrow screens: fit the longest entry
+  const b = bookFrame('WHAT IS NEW', 24 + CHANGELOG.length * 11 + 30 + tall + 24), lx = b.x + 10, ly = b.y + 24, lw = b.narrow ? b.w - 20 : 100, rh = b.narrow ? 11 : 17, v = CHANGELOG[G.cl]; G.clRows = [];
+  CHANGELOG.forEach(([ver, date, title], i) => {
+    const y = ly + i * rh, on = i === G.cl; if (on) R(ctx, lx - 3, y - 3, lw + 6, rh - 1, '#f2e2c0'); G.clRows.push([lx - 3, y - 3, lw + 6, rh - 1, i]);
+    txt(ctx, ver, lx, y, on ? '#c8382e' : '#8a7a6a'); txt(ctx, title, lx + 16, y, on ? '#c8382e' : '#3a2e40'); if (!b.narrow) txt(ctx, date, lx + 16, y + 7, '#b8a888');
+  });
+  if (!b.narrow) txt(ctx, TOUCH ? 'TAP A VERSION' : 'UP/DOWN: VERSIONS', lx, ly + CHANGELOG.length * rh + 2, '#b8a888');
+  const dx = b.narrow ? lx : b.x + 124, dw = b.narrow ? b.w - 20 : b.w - 134; let y = b.narrow ? ly + CHANGELOG.length * rh + 8 : ly;
+  if (b.narrow) R(ctx, lx, y - 5, dw, 1, '#eadfc4'); else R(ctx, dx - 8, ly - 3, 1, b.h - 44, '#eadfc4');
+  txt(ctx, v[2], dx, y, '#c8382e', null, tw(v[2], 2) > dw ? 1 : 2); txt(ctx, 'VERSION ' + v[0] + ' - ' + v[1], dx, y + 12, '#a89878'); y += 22;
+  for (const item of v[3]) { const ls = wrap(item, dw - 8); R(ctx, dx, y + 1.5, 2, 2, '#c8382e'); ls.forEach((l, j) => txt(ctx, l, dx + 6, y + j * 7, '#3a2e40')); y += ls.length * 7 + 3; }
+}
 function at(dx, dy, fn) { ctx.save(); ctx.translate(dx, dy); fn(); ctx.restore(); }
 function drawUI() {
   const st = G.state, t = G.t, ox = Math.floor((W - W0) / 2), oy = Math.floor((H - H0) / 2);
@@ -204,14 +250,18 @@ function drawUI() {
   if (st === 'play') { panel(4, 4, 44, 15); ctx.drawImage(stampOf('torii'), 6, 4.5); txt(ctx, got(CITY) + '/' + nst(CITY), 21, 9, '#c8382e'); const hd = CITY.hud && CITY.hud(); if (hd) { const w = 18 + tw(hd[1]); panel(51, 4, w, 15); ctx.drawImage(ICON[hd[0]], 53, 4.5); txt(ctx, hd[1], 67, 9, '#3a2e40'); } if (!M.indoor) { const nm = G.zn ? G.zn[4] : M.def.name; if (TOUCH) txt(ctx, nm, 5, 22, '#fff8e8', '#1d1626'); else txt(ctx, nm, W - 5 - tw(nm), 7, '#fff8e8', '#1d1626'); } }
   if (st === 'play' && G.zb > 0 && G.zn) { const z = G.zn, a = Math.max(0, Math.min(1, G.zb, (2.6 - G.zb) * 3)), w = Math.max(tw(z[4], 2), tw(z[5])) + 20, x = Math.floor((W - w) / 2), y = TOUCH ? 34 : 26; ctx.globalAlpha = a; panel(x, y, w, 26); txtC(ctx, z[4], W / 2, y + 5, '#c8382e', null, 2); txtC(ctx, z[5], W / 2, y + 17, '#8a7a6a'); ctx.globalAlpha = 1; }
   if (st === 'play' && G.tgt) { const g = G.tgt, w = tw('E') + 9 + tw(g.label), ax = g.x != null ? g.x : pl.x, ay = g.x != null ? g.y : pl.y, x = Math.max(3, Math.min(W - w - 3, ax - snap(G.cx) - w / 2)), y = Math.max(TOUCH ? 32 : 22, ay - snap(G.cy) - 43); const kw = keycap(x, y, 'E'); txt(ctx, g.label, x + kw + 3, y + 2, '#fff8e8', '#1d1626'); }
+  if (st === 'play') NET.hud();
+  if (st === 'tog') NET.drawTog(); if (st === 'say') NET.drawSay();
   if (st === 'play' && G.banner > 0) { const a = Math.min(1, G.banner, (3.5 - G.banner) * 2 + 0.3); ctx.globalAlpha = Math.max(0, Math.min(1, a)); R(ctx, 0, 60, W, M.def.sub ? 30 : 20, 'rgba(29,22,38,0.75)'); txtC(ctx, M.def.name, W / 2, 65, '#fff8e8', '#1d1626', 2); if (M.def.sub) txtC(ctx, M.def.sub, W / 2, 80, '#ffd98a', null); ctx.globalAlpha = 1; }
   if (st === 'dialog') { const d = G.dlg, L = d.lines[d.i], n = Math.floor(d.t * 42), dw = Math.min(288, W - 12), ls = wrap(L, dw - 20), dh = Math.max(42, ls.length * 9 + 16), dx = Math.floor((W - dw) / 2), dy = H - dh - (TOUCH && H > W ? 110 : 8);
     panel(dx, dy, dw, dh); ls.forEach((l, i, a) => { const before = a.slice(0, i).join(' ').length + (i ? 1 : 0); txt(ctx, l.slice(0, Math.max(0, n - before)), dx + 10, dy + 8 + i * 9, '#3a2e40'); });
     if (n >= L.length && t % 0.8 < 0.5) { const ax = dx + dw - 12, ay = dy + dh - 9; R(ctx, ax, ay, 5, 1, '#c8382e'); R(ctx, ax + 1, ay + 1, 3, 1, '#c8382e'); R(ctx, ax + 2, ay + 2, 1, 1, '#c8382e'); } }
-  if (st === 'got') at(ox, TOUCH ? 14 : 0, () => { const s = STAMPS[G.got.id], k = Math.min(1, G.got.t * 5), y = 22 - (1 - k) * 30; panel(74, y, 172, 38); ring(96, y + 19, s[1], true); txt(ctx, 'NEW STAMP!', 114, y + 8, '#c8382e', null, 2); txt(ctx, s[0], 114, y + 24, '#3a2e40'); });
+  if (st === 'got') at(ox, TOUCH ? 14 : 0, () => { const s = stampInfo(G.got.id), k = Math.min(1, G.got.t * 5), y = 22 - (1 - k) * 30; panel(74, y, 172, 38); ring(96, y + 19, s[1], true); txt(ctx, 'NEW STAMP!', 114, y + 8, '#c8382e', null, 2); txt(ctx, s[0], 114, y + 24, '#3a2e40'); });
   if (st === 'mini') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); at(ox, oy, () => { panel(44, 20, 232, 126); MG[G.mg.k].draw(G.mg); if (!TOUCH) txtC(ctx, 'ESC TO LEAVE', 160, 152, '#c8e0ec', '#1d1626'); }); }
-  if (st === 'book') {
-    const BC = CLIST[G.bk] || CITY, AR = areas(BC), many = CLIST.length > 1, head = (many ? '< ' : '') + BC.name + ' STAMP BOOK' + (many ? ' >' : ''), foot = 'STAMPS ' + got(BC) + '/' + nst(BC) + '  FIGURES ' + count(G.figs) + '/6  CATS ' + catsIn(BC) + '/' + BC.cats + '  CANS ' + count(G.cans) + '/' + DRINKS.length, keys = k => Object.keys(BC.stamps).filter(q => BC.stamps[q][2] === k);
+  if (st === 'book' && BOOKP()[G.bk] === 'together') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); togetherPage(); }
+  else if (st === 'book' && BOOKP()[G.bk] === 'updates') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)'); updatesPage(); }
+  else if (st === 'book') {
+    const BC = CLIST[G.bk] || CITY, AR = areas(BC), many = true, head = (many ? '< ' : '') + BC.name + ' STAMP BOOK' + (many ? ' >' : ''), foot = 'STAMPS ' + got(BC) + '/' + nst(BC) + '  FIGURES ' + count(G.figs) + '/6  CATS ' + catsIn(BC) + '/' + BC.cats + '  CANS ' + count(G.cans) + '/' + DRINKS.length, keys = k => Object.keys(BC.stamps).filter(q => BC.stamps[q][2] === k);
     R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.6)');
     if (W < W0) {
       const bw = W - 12, bh = 52 + AR.length * 22 + (many ? 9 : 0), bx = 6, by = Math.max(4, Math.floor((H - bh) / 2)); panel(bx, by, bw, bh); txtC(ctx, BC.name + ' STAMP BOOK', W / 2, by + 7, '#c8382e', null, tw(BC.name + ' STAMP BOOK', 2) > bw - 12 ? 1 : 2);
@@ -220,7 +270,7 @@ function drawUI() {
     } else at(ox, oy, () => {
       panel(8, 6, 304, 168); txtC(ctx, head, 160, 12, '#c8382e', null, 2); const rh = AR.length > 8 ? 26 : 32;
       AR.forEach(([id, name], i) => { const x = 18 + (i % 2) * 148, y = 30 + (i >> 1) * rh; txt(ctx, name, x, y, '#3a2e40'); if (i >> 1) R(ctx, x, y - 4, 136, 1, '#eadfc4'); keys(id).forEach((k, j) => ringS(x + 12 + j * 24, y + 17, STAMPS[k][1], !!G.stamps[k])); });
-      R(ctx, 18, 158, 284, 1, '#eadfc4'); txtC(ctx, foot.replace(/  /g, '   ') + (many ? '      ' + (CLIST.indexOf(BC) + 1) + '/' + CLIST.length : ''), 160, 163, '#8a7a6a');
+      R(ctx, 18, 158, 284, 1, '#eadfc4'); txtC(ctx, foot.replace(/  /g, '   ') + (many ? '      ' + (G.bk + 1) + '/' + BOOKP().length : ''), 160, 163, '#8a7a6a');
     });
   }
   if (st === 'japan') {
@@ -251,7 +301,7 @@ function drawUI() {
     STN.forEach(([id, name], i) => { const [x, y] = P(i), on = i === L.sel, here = id === M.id, got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length; disc(ctx, x, y, on ? 6 : 4.5, '#1d1626'); disc(ctx, x, y, on ? 5 : 3.5, here ? '#f2c14e' : on ? '#e0452f' : '#fff8e8'); const ty = y + (Math.sin(-1.5708 + i / n * 6.2832) < -0.2 ? -19 : 8), txx = Math.max(26 + tw(name) / 2, Math.min(294 - tw(name) / 2, x + Math.cos(-1.5708 + i / n * 6.2832) * 22)); txtC(ctx, name, txx, ty, on ? '#c8382e' : '#3a2e40'); txtC(ctx, have + '/' + got.length, txx, ty + 7, have === got.length ? '#3f9a5a' : '#b8a888'); });
     ctx.drawImage(ICON.train, 153, 80); txtC(ctx, STN[L.sel][0] === M.id ? 'YOU ARE HERE' : 'TO ' + STN[L.sel][1], 160, 98, '#3a2e40'); const sh = shinkHint(); if (sh) { txtC(ctx, sh[0], 160, 109, '#3f7ab0'); txtC(ctx, sh[1], 160, 116, '#3f7ab0'); } txtC(ctx, '< >  CHOOSE     E  RIDE     ESC  BACK', 160, 160, '#8a7a6a'); ctx.restore();
   }
-  if (st === 'title') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.5)'); ctx.save(); ctx.translate(ox, oy); txtO(ctx, GAME.title + ' ' + CITY.name, 160, 40, '#fff8e8', '#1d1626', 4); txtO(ctx, CITY.tagline, 160, 72, '#ffd98a', '#1d1626'); if (t % 1 < 0.65) txtO(ctx, TOUCH ? 'TAP TO START' : 'PRESS E TO START', 160, 102, '#fff8e8', '#1d1626', 2); txtO(ctx, TOUCH ? 'DRAG LEFT SIDE TO WALK - E TO INTERACT' : 'ARROWS/WASD WALK - E INTERACT - TAB BOOK - M MUSIC - F FULLSCREEN', 160, 156, '#fff8e8', '#1d1626'); if (G.hasSave) txtO(ctx, TOUCH ? 'YOUR STAMPS ARE SAVED' : 'YOUR STAMPS ARE SAVED - N TO START OVER', 160, 166, '#c8e0ec', '#1d1626'); ctx.restore(); }
+  if (st === 'title') { R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.5)'); ctx.save(); ctx.translate(ox, oy); txtO(ctx, GAME.title + ' ' + CITY.name, 160, 40, '#fff8e8', '#1d1626', 4); txtO(ctx, CITY.tagline, 160, 72, '#ffd98a', '#1d1626'); if (t % 1 < 0.65) txtO(ctx, TOUCH ? 'TAP TO START' : 'PRESS E TO START', 160, 102, '#fff8e8', '#1d1626', 2); txtO(ctx, TOUCH ? 'DRAG LEFT SIDE TO WALK - E TO INTERACT' : 'ARROWS/WASD WALK - E INTERACT - TAB BOOK - M MUSIC - F FULLSCREEN', 160, 156, '#fff8e8', '#1d1626'); txtO(ctx, 'VERSION ' + GAME.version + ' - ' + (TOUCH ? 'TAP HERE FOR WHAT IS NEW' : 'T: PLAY TOGETHER - V: WHAT IS NEW'), 160, 122, '#ffd98a', '#1d1626'); if (G.hasSave) txtO(ctx, TOUCH ? 'YOUR STAMPS ARE SAVED' : 'YOUR STAMPS ARE SAVED - N TO START OVER', 160, 166, '#c8e0ec', '#1d1626'); ctx.restore(); }
   if (G.fade > 0 && st !== 'title') { ctx.globalAlpha = G.fade; R(ctx, 0, 0, W, H, '#100c1c'); ctx.globalAlpha = 1; }
 }
 
@@ -275,7 +325,8 @@ function drawUI() {
   try {
     go(q.get('map') || (q.has('city') && MAPS[G.dist].city !== CITY.id ? CITY.start : G.dist)); G.fade = 0; G.banner = 0;
     if (q.has('map') || q.has('x')) { G.state = 'play'; if (MAPS[q.get('map')].indoor) { const h = MAPS[CITY.hub || CITY.start]; build(CITY.start); G.back = { map: CITY.start, x: BUILT[CITY.start].st ? BUILT[CITY.start].st[0] : 70, y: BUILT[CITY.start].st ? BUILT[CITY.start].st[1] : 204 }; M = BUILT[q.get('map')]; pl.x = 160; pl.y = 180; } if (q.has('x')) { pl.x = +q.get('x'); pl.y = +q.get('y'); } camSnap(); G.zn = zoneAt(pl.x, pl.y); }
-    if (q.get('st') === 'book') { G.state = 'book'; G.bk = CLIST.indexOf(CITY); } if (q.get('st') === 'japan') { G.state = 'japan'; G.jp = { sel: +(q.get('sel') || 0) }; } if (q.get('st') === 'shink') { G.state = 'ride'; G.ride = { city: CLIST[CLIST.length - 1], t: 1.5, dur: 5.6 }; } if (q.get('st') === 'line') { G.state = 'line'; G.line = { sel: 2 }; } if (q.get('st') === 'ride') { G.state = 'ride'; G.ride = { to: 3, t: 1 }; }
+    if (q.get('st') === 'book') { G.state = 'book'; G.bk = q.has('pg') ? BOOKP().indexOf(q.get('pg')) : CLIST.indexOf(CITY); } if (q.get('st') === 'tog') NET.open(); if (q.get('st') === 'say') NET.openSay(); if (q.get('st') === 'japan') { G.state = 'japan'; G.jp = { sel: +(q.get('sel') || 0) }; } if (q.get('st') === 'shink') { G.state = 'ride'; G.ride = { city: CLIST[CLIST.length - 1], t: 1.5, dur: 5.6 }; } if (q.get('st') === 'line') { G.state = 'line'; G.line = { sel: 2 }; } if (q.get('st') === 'ride') { G.state = 'ride'; G.ride = { to: 3, t: 1 }; }
+    if (q.has('room') && !q.has('sim')) NET.join(q.get('room').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8));
     if (q.has('mini')) { G.state = 'mini'; G.mg = { k: q.get('mini'), sp: {}, t: +(q.get('mt') || 0) }; MG[G.mg.k].init(G.mg); }
     if (q.has('sim')) { const sr = RNG(+q.get('seed') || 1); for (let i = 0, n = +q.get('sim'); i < n; i++) { if (i % 50 === 0) { K.l = K.r = K.u = K.d = 0; K['lrud'[sr() * 4 | 0]] = 1; if (sr() < 0.4) K['lrud'[sr() * 4 | 0]] = 1; } if (i % 15 === 0) KP.a = 1; if (i % 400 === 399) KP.x = 1; update(1 / 60); } K.l = K.r = K.u = K.d = 0; }
     if (q.has('ov')) { removeEventListener('resize', fit); W = M.w; H = M.h; cv.width = W * S; cv.height = H * S; ctx.imageSmoothingEnabled = false; ctx.setTransform(S, 0, 0, S, 0, 0); const k = Math.min(innerWidth / W, innerHeight / H); cv.style.width = W * k + 'px'; cv.style.height = H * k + 'px'; G.state = 'play'; G.banner = 0; camSnap(); }

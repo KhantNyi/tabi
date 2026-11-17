@@ -37,7 +37,7 @@ for (const el of document.querySelectorAll('[data-fs]')) el.addEventListener('po
 
 // ---------- input ----------
 const K = {}, KP = {};
-const KEYS = { ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd', KeyE: 'a', Enter: 'a', Space: 'a', KeyX: 'a', KeyZ: 'a', Tab: 'b', KeyB: 'b', KeyQ: 'b', KeyM: 'm', KeyN: 'n', Escape: 'x' };
+const KEYS = { ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd', KeyE: 'a', Enter: 'a', Space: 'a', KeyX: 'a', KeyZ: 'a', Tab: 'b', KeyB: 'b', KeyQ: 'b', KeyM: 'm', KeyN: 'n', KeyT: 't', KeyC: 'c', KeyV: 'v', Escape: 'x' };
 function press(k) { if (!K[k]) KP[k] = 1; K[k] = 1; Snd.init(); }
 addEventListener('keydown', e => { const k = KEYS[e.code]; if (k) { e.preventDefault(); press(k); } });
 addEventListener('keyup', e => { const k = KEYS[e.code]; if (k) K[k] = 0; });
@@ -49,7 +49,7 @@ for (const el of document.querySelectorAll('[data-k]')) {
 }
 // taps on the screen, in world units, for menus that can be tapped (title, dialogue, the train line, the stamp book)
 let TAP = null;
-const TAPPY = () => ['title', 'dialog', 'got', 'line', 'book', 'japan'].includes(G.state);
+const TAPPY = () => ['title', 'dialog', 'got', 'line', 'book', 'japan', 'tog', 'say'].includes(G.state);
 function tapAt(e) { const r = cv.getBoundingClientRect(); TAP = { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H }; Snd.init(); }
 cv.addEventListener('pointerdown', e => { if (TAPPY()) tapAt(e); else Snd.init(); });
 const buzz = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { } };

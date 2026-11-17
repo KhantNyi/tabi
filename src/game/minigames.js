@@ -38,9 +38,10 @@ function drinkSpr(k, ghost) {
   return SPR[key] = outline(c);
 }
 function vendDone(m) {
-  const kinds = [...new Set(m.got)], fresh = kinds.filter(k => !G.cans[k]); for (const k of kinds) G.cans[k] = 1; save();
+  const gift = m.gift ? m.got.pop() : -1, kinds = [...new Set(m.got)], fresh = kinds.filter(k => !G.cans[k]); for (const k of kinds) G.cans[k] = 1; save();
   const n = count(G.cans), L = m.atari ? ['ATARI! FOUR OF A KIND. THE MACHINE PLAYS A LITTLE TUNE AND DROPS A SECOND DRINK, FREE.'] : [];
   for (const k of m.got) L.push(DRINKS[k][0] + '. ' + DRINKS[k][6]);
+  if (gift >= 0) { L.push('YOU GIVE THE ' + DRINKS[gift][0] + ' TO ' + m.gift.name + '. THEY LOOK VERY PLEASED.'); emit('gift', { to: m.gift, d: gift }); }
   if (fresh.length) L.push(n === DRINKS.length ? 'THAT IS EVERY DRINK IN THE MACHINE. YOU ARE NOW A VENDING MACHINE EXPERT.' : 'NEW FOR YOUR COLLECTION: ' + n + ' OF ' + DRINKS.length + ' DRINKS TRIED.');
   endMini(true, L);
 }
@@ -114,7 +115,7 @@ const MG = {
       } else if (m.ph === 'judge') {
         if (m.pt > 0.7) { const d = m.reel.map(p => Math.floor(p) % 10); m.pt = 0; if (d.every(v => v === d[0])) { m.ph = 'atari'; m.atari = true; Snd.fx('atari'); m.say = 'ATARI! ONE MORE!'; m.sayT = 2.2; } else { m.ph = 'take'; Snd.fx('land'); } }
       } else if (m.ph === 'atari') { if (m.pt > 2.4) { m.ph = 'pick'; m.free = true; m.pt = 0; } }
-      else if (m.ph === 'take' && KP.a && m.pt > 0.3) vendDone(m);
+      else if (m.ph === 'take' && m.pt > 0.3) { m.pal = m.atari && m.got.length > 1 ? NET.near(80) : null; if (KP.a) vendDone(m); else if (KP.r && m.pal) { m.gift = m.pal; vendDone(m); } } // a friend nearby can have the free one
     },
     draw(m) {
       const vc = m.vc, X = 56 + (m.shake > 0 ? Math.round(Math.sin(G.t * 70)) : 0), at = m.ph === 'atari', blink = G.t % 0.3 < 0.15, D = DRINKS[m.i], RX = 152;
@@ -152,7 +153,7 @@ const MG = {
       }
       txt(ctx, 'DRINKS TRIED ' + count(G.cans) + '/' + DRINKS.length, RX, 101, '#8a7a6a'); DRINKS.forEach((_, k) => ctx.drawImage(drinkSpr(k, !G.cans[k]), RX - 1 + k * 13, 108));
       if (m.ph === 'pay' && m.coins.length) { const done = m.coins.length * 0.16 + 0.15; m.coins.forEach((v, j) => { const k = (m.pt - j * 0.16) / 0.14; if (k < 0 || k >= 1 || m.pt > done) return; const x = X + 100 - k * 42, y = 113 - Math.sin(k * 3.14) * 6; disc(ctx, x, y, 2.6, '#1d1626'); disc(ctx, x, y, 2.1, v === 10 ? '#d08a4a' : '#d8d4e0'); if (v === 50) disc(ctx, x, y, 0.7, '#1d1626'); p1(ctx, x - 1, y - 1, '#ffffff'); }); }
-      const B = { pick: m.free ? 'ATARI! PICK ONE MORE, IT IS FREE' : '< > CHOOSE - E BUY', pay: m.pt > m.coins.length * 0.16 + 0.45 ? 'GACON!' : m.free ? '' : 'CLINK... CLINK...', roll: 'E TO STOP NUMBER ' + (m.stop + 1) + ' OF 4', judge: '...', atari: 'ATARI!! ATARI!!', take: m.atari ? 'E TO TAKE THEM BOTH' : 'NOT THIS TIME. E TO TAKE YOUR DRINK' };
+      const B = { pick: m.free ? 'ATARI! PICK ONE MORE, IT IS FREE' : '< > CHOOSE - E BUY', pay: m.pt > m.coins.length * 0.16 + 0.45 ? 'GACON!' : m.free ? '' : 'CLINK... CLINK...', roll: 'E TO STOP NUMBER ' + (m.stop + 1) + ' OF 4', judge: '...', atari: 'ATARI!! ATARI!!', take: m.pal ? 'E TAKE BOTH - > GIVE ONE TO ' + m.pal.name : m.atari ? 'E TO TAKE THEM BOTH' : 'NOT THIS TIME. E TO TAKE YOUR DRINK' };
       txtC(ctx, B[m.ph], 160, 136, '#3a2e40');
     }
   },

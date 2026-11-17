@@ -3,6 +3,14 @@
 const T = 16, GR = 0, DT = 1, PV = 2, WA = 3, VL = 4, FR = 5, AS = 6, PL = 7, HARD = [0, 0, 1, 0, 1, 0, 1, 1];
 const MAPS = {}, BUILT = {}, SPR = {}, LOOKS = {}, CITIES = {}; // MAPS holds every district and room of every city, so map ids must be unique
 let M = null; // the map being built or walked
+// ---------- hooks for playing together (src/net/net.js) ----------
+// OTHERS: friends' avatars ({ id, name, col, F, map, x, y, dir, mv, wt, ph, act, alpha, say, sayT }); drawWorld draws the
+// ones on your map. on()/emit(): moments worth telling friends about ('act', 'photo', 'ride', 'arrived', 'gift', 'say').
+// worldTime(): a clock every player agrees on (the wall clock), for things that must match on everyone's screen.
+const OTHERS = [], BUS = {};
+function on(k, fn) { (BUS[k] = BUS[k] || []).push(fn); }
+function emit(k, d) { for (const fn of BUS[k] || []) fn(d); }
+function worldTime() { return Date.now() / 1000; }
 function newMap(id, tw_, th, indoor) { const w = tw_ * T, h = th * T; return M = { id, w, h, GW: w / 8, GH: h / 8, SW: w / 4, SH: h / 4, TER: new Uint8Array(w * h / 64), SOL: new Uint8Array(w * h / 16), OBJ: [], SHD: [], ACT: [], SPOTS: [], LIGHTS: [], CARS: [], indoor, ground: mk(w, h) }; }
 function tset(i, j, t, only) { if (i < 0 || j < 0 || i >= M.GW || j >= M.GH) return; const k = j * M.GW + i; if (only != null && M.TER[k] !== only) return; M.TER[k] = t; }
 function tRect(t, x0, y0, x1, y1, only) { for (let j = Math.round(y0 * 2); j < Math.round(y1 * 2); j++) for (let i = Math.round(x0 * 2); i < Math.round(x1 * 2); i++) tset(i, j, t, only); }
@@ -257,7 +265,7 @@ function wallV(x, y0, y1, c = '#e8d8b0', rc = '#4a4660') {
   block(x - 4, y0, x + 4, y1);
 }
 // start a ride scene that ends at another map: rideTo({ label, name, go: [mapId, x, y], spr, speed, dur })
-function rideTo(o) { G.state = 'ride'; G.ride = Object.assign({ t: 0, dur: 4 }, o); Snd.play(null); Snd.fx('train'); }
+function rideTo(o) { G.state = 'ride'; G.ride = Object.assign({ t: 0, dur: 4 }, o); Snd.play(null); Snd.fx('train'); emit('ride', G.ride); }
 // the bullet-train gate that links cities, and a wooden signpost you can read
 function shinkansen(x, y) { prop('shsign', x + 20, y + 5, 3); M.SPOTS.push({ x, y: y + 7, r: 14, label: 'SHINKANSEN', shink: 1 }); M.sk = [x, y + 12]; }
 // a bus stop that opens the city's line, like a station

@@ -26,6 +26,9 @@
   #mute { right: calc(max(10px, env(safe-area-inset-right)) + 52px); }
   #fs { right: calc(max(10px, env(safe-area-inset-right)) + 104px); font-size: 18px; }
   .nofs #fs { display: none !important; }
+  #tog { right: calc(max(10px, env(safe-area-inset-right)) + 156px); font-size: 14px; }
+  #btnC { position: absolute; left: 6px; top: 6px; width: 46px; height: 46px; border-radius: 50%; font-size: 16px; display: none; }
+  .mp #btnC { display: flex; }
 </style>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -35,10 +38,11 @@
 <body>
 <canvas id="game"></canvas>
 <div id="joy"><div id="joyB"><div id="joyK"></div></div></div>
-<div class="pad" id="padR"><div class="btn" id="btnA" data-k="a">E</div><div class="btn" id="btnB" data-k="x">&#x2715;</div></div>
+<div class="pad" id="padR"><div class="btn" id="btnA" data-k="a">E</div><div class="btn" id="btnB" data-k="x">&#x2715;</div><div class="btn" id="btnC" data-k="c">&middot;&middot;&middot;</div></div>
 <div class="btn sm" data-k="b">BOOK</div>
 <div class="btn sm" id="mute" data-k="m">&#9835;</div>
 <div class="btn sm" id="fs" data-fs="1">&#x2922;</div>
+<div class="btn sm" id="tog" data-k="t">2P</div>
 <script src="src/engine/core.js"></script>
 <script src="src/engine/audio.js"></script>
 <script src="src/engine/topdown.js"></script>
@@ -50,6 +54,8 @@
 <script src="src/cities/nara.js"></script>
 <script src="src/cities/osaka.js"></script>
 <script src="src/game/minigames.js"></script>
+<script src="src/game/changelog.js"></script>
+<script src="src/net/net.js"></script>
 <script src="src/game/main.js"></script>
 </body>
 </html>
