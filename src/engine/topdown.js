@@ -81,6 +81,9 @@ const JOY = { on: false, x: 0, y: 0 };
   for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) zone.addEventListener(ev, end);
 })();
 addEventListener('contextmenu', e => e.preventDefault());
+// sound starts on the first real gesture of each kind a browser accepts (see Snd.init); touchend and click are the ones iOS honours
+for (const ev of ['touchend', 'click', 'pointerup', 'keydown']) addEventListener(ev, () => Snd.init(), { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Snd.ctx && Snd.ctx.state !== 'running') Snd.ctx.resume().catch(() => { }); });
 const hsh = (x, y) => { let n = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) | 0; n = Math.imul(n ^ n >>> 13, 1274126177); return ((n ^ n >>> 16) >>> 0) / 4294967296; };
 function vn(x, y) { const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), a = hsh(xi, yi), b = hsh(xi + 1, yi), c = hsh(xi, yi + 1), d = hsh(xi + 1, yi + 1); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; }
 const c32 = h => { const [r, g, b] = hex(h); return (255 << 24 | b << 16 | g << 8 | r) >>> 0; };

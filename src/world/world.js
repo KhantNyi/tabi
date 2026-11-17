@@ -62,7 +62,7 @@ function zebra(g, x, y, w, h, vert) { if (vert) for (let k = 2; k < w - 2; k += 
 function markRoads() {
   const g = M.ground.g; if (!M.hs) return;
   for (const [y, n] of M.hs) { const yy = y * T + n * 8; for (let x = 4; x < M.w; x += 14) if (!M.vs.some(([vx, vn_]) => x > vx * T - 16 && x < (vx + vn_) * T + 10)) R(g, x, yy - U, 7, 1, '#e8e4f0'); for (const [vx, vn_] of M.vs) { zebra(g, vx * T - 13, y * T + 1, 10, n * T - 2); zebra(g, (vx + vn_) * T + 3, y * T + 1, 10, n * T - 2); } }
-  for (const [x, n] of M.vs) { const xx = x * T + n * 8; for (let y = 4; y < M.h; y += 14) if (!M.hs.some(([hy, hn]) => y > hy * T - 16 && y < (hy + hn) * T + 10)) R(g, xx - U, y, 1, 7, '#e8e4f0'); for (const [hy, hn] of M.hs) { zebra(g, x * T + 1, hy * T - 13, n * T - 2, 10, 1); zebra(g, x * T + 1, (hy + hn) * T + 3, n * T - 2, 10, 1); } }
+  for (const [x, n] of M.vs) { const xx = x * T + n * 8; for (let y = 4; y < M.h; y += 14) if (terr(xx, y + 3) === AS && !M.hs.some(([hy, hn]) => y > hy * T - 16 && y < (hy + hn) * T + 10)) R(g, xx - U, y, 1, 7, '#e8e4f0'); /* dashes only on asphalt */ for (const [hy, hn] of M.hs) { zebra(g, x * T + 1, hy * T - 13, n * T - 2, 10, 1); zebra(g, x * T + 1, (hy + hn) * T + 3, n * T - 2, 10, 1); } }
 }
 
 // ---------- things ----------
@@ -107,10 +107,34 @@ function house(x, y, w, h, o) { const c = mk(w + 24, GY + 2); shopArt(c.g, 12, w
 // rows of anonymous buildings around a city map, so the edge never shows
 function cityEdge(skipTop, depth = 34) {
   const rnd = RNG(M.w * 3 + M.id.length * 7);
-  if (!skipTop) for (let x = 20; x < M.w + 10;) { const w = 34 + (rnd() * 4 | 0) * 8; if (!M.vs.some(([vx, n]) => x + w / 2 > vx * T - 6 && x - w / 2 < (vx + n) * T + 6)) tower(x, 58, w, 52 + (rnd() * 6 | 0) * 9, { top: true }); x += w + 4; }
+  if (!skipTop) for (let x = 20; x < M.w + 10;) { const w = 34 + (rnd() * 4 | 0) * 8; if (!M.vs.some(([vx, n]) => x + w / 2 > vx * T - 6 && x - w / 2 < (vx + n) * T + 6)) tower(x, 58, w, M.ext ? 30 + (rnd() * 3 | 0) * 5 : 52 + (rnd() * 6 | 0) * 9, { top: true }); x += w + 4; }
   for (let x = 24; x < M.w + 10;) { const w = 40 + (rnd() * 4 | 0) * 8; tower(x, M.h + 62, w, 62 + (rnd() * 3 | 0) * 6); x += w + 3; }
   for (const x of [14, M.w - 14]) for (let y = 110; y < M.h; y += 46) if (!M.hs.some(([hy, n]) => y > hy * T - 2 && y - 16 < (hy + n) * T)) tower(x, y, 30, 50 + (rnd() * 4 | 0) * 8);
   block(0, 0, M.w, M.hs[0][0] * T - depth); block(0, M.h - 6, M.w, M.h); block(0, 0, 6, M.h); block(M.w - 6, 0, M.w, M.h);
+}
+// north(def, n, more): give a city-street map a district to its north, reached up its north-south avenue(s). The map is built
+// as before inside a map n tiles taller, then everything it made is moved down n tiles, and more.lay() / more.deco() fill
+// the new rows (more.ground: their base terrain; more.avenue: the tile row the avenues start from). While the old map is
+// built, M.ext is set, so its top row of buildings stays low enough not to hide the street behind it.
+function north(def, n, more) {
+  const dy = n * T, lay0 = def.lay, deco0 = def.deco; def.th = (def.th || 12) + n;
+  def.lay = function () {
+    lay0(); const k = n * 2 * M.GW; M.TER.copyWithin(k, 0, M.TER.length - k); M.TER.fill(more.ground != null ? more.ground : PV, 0, k);
+    M.hs = M.hs.map(([y, w]) => [y + n, w]); more.lay(); for (const [x, w] of M.vs) tRect(AS, x, more.avenue != null ? more.avenue : 0, x + w, n);
+  };
+  def.deco = function () {
+    const g = M.ground.g, h0 = M.h, hs = M.hs, S0 = M.SOL.slice(), first = [M.OBJ.length, M.ACT.length, M.SPOTS.length]; M.SOL.fill(0); M.h -= dy; M.hs = hs.map(([y, w]) => [y - n, w]); M.ext = true;
+    g.save(); g.translate(0, dy); try { deco0(); } finally { g.restore(); M.h = h0; M.hs = hs; M.ext = false; }
+    const rows = dy / 4 * M.SW; M.SOL.copyWithin(rows, 0, M.SOL.length - rows); M.SOL.fill(0, 0, rows); for (let i = 0; i < M.SOL.length; i++) M.SOL[i] = M.SOL[i] || S0[i];
+    for (const o of M.OBJ.slice(first[0])) o.y += dy;
+    for (const a of M.ACT.slice(first[1])) { a.y += dy; for (const q of ['hy', 'ty']) if (a[q] != null) a[q] += dy; if (a.pa) { a.pa = [a.pa[0], a.pa[1] + dy]; a.pb = [a.pb[0], a.pb[1] + dy]; } }
+    for (const s of M.SPOTS.slice(first[2])) { s.y += dy; if (s.frame) s.frame = [s.frame[0], s.frame[1] + dy, s.frame[2], s.frame[3]]; }
+    for (const q of M.SHD) q[1] += dy; for (const q of M.LIGHTS) q[1] += dy; for (const c of M.CARS) c.y += dy;
+    if (M.st) M.st = [M.st[0], M.st[1] + dy]; if (M.sk) M.sk = [M.sk[0], M.sk[1] + dy];
+    for (const [x, w] of M.vs) block(x * T, 0, (x + w) * T, M.hs[0][0] * T, 0); // the avenues now run on north
+    more.deco();
+  };
+  return def;
 }
 function look(name, tint_) { const k = name + (tint_ || ''); return LOOKS[k] || (LOOKS[k] = makeLook(tint_ ? Object.assign({}, NPC_LOOKS[name], NPC_LOOKS[name].robe ? { robe: tint_ } : { shirt: tint_ }) : NPC_LOOKS[name])); }
 function npc(name, x, y, o = {}) { const n = Object.assign({ F: look(name, o.tint), x, y, hx: x, hy: y, rad: 0, lines: ['...'], li: 0, dir: 'd', mv: false, wt: 0, ph: (x + y) % 7, wait: 0.5 + (x % 5) * 0.4, rnd: RNG(x * 3 + y), sayT: 0 }, o); M.ACT.push(n); return n; }

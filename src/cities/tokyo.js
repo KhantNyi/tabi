@@ -14,7 +14,49 @@
     tower: ['TOKYO TOWER', 'tower', 'tower'], zojo: ['ZOJOJI TEMPLE', 'buddha', 'tower']
   };
 
-  MAPS.shibuya = { name: 'SHIBUYA', sub: 'THE BUSIEST CROSSING IN THE WORLD', tw: 40, th: 28, music: 'tokyo',
+  // ---------- north up the avenues ----------
+  // Shibuya, Shinjuku, Akihabara and Tokyo Station each get a district to the north, reached by walking up the avenue that
+  // crosses the main street: Center Gai's shops, Omoide Yokocho's yakitori alleys, Akihabara's back streets of parts stalls,
+  // and the palace moat behind Marunouchi. north() (world.js) builds the old map lower down and adds these rows on top.
+  const NORTH = 12, ND = NORTH * T; // tiles added on top of each street map, and the same in world units
+  const shopRow = (list, y, x0 = 26, o = {}) => { let x = x0; list.forEach(([sign, sc, w, h, extra], i) => { tower(x + w / 2, y, w, h, Object.assign({ c: TWC[(i * 3 + x0) % TWC.length], sign, sc, lit: 0.45 }, o, extra)); x += w + 6; }); };
+  const CENTER_GAI = { avenue: 10, lay() { tRect(PL, 0, 4.3, 40, 11.6); }, deco() {
+    block(0, 0, M.w, 52);
+    shopRow([['CAFE', '#f2c14e', 58, 40], ['RECORDS', '#5aa8e0', 62, 46], ['KARAOKE', '#f06a8c', 66, 44, { vs: 5, vc: '#f06a8c' }], ['SHOES', '#8a6aff', 56, 38], ['CREPES', '#f06a8c', 54, 36, { c: '#f8d8e0' }], ['PURIKURA', '#5ad88a', 66, 44, { vs: 4, vc: '#5ad88a' }], ['RAMEN', '#e0563f', 56, 38], ['VINTAGE', '#c8a070', 60, 42]], 66);
+    put(SPR.cgai, 312, 178, 36, 41); block(276, 172, 282, 178); block(342, 172, 348, 178);
+    for (const x of [110, 230, 410, 530]) prop('lamp', x, 186, 2); prop('vend2', 56, 182, 6); prop('vend3', 596, 182, 6); prop('bench', 170, 184, 9); prop('bench', 460, 184, 9);
+    crowd(6, 40, 104, 600, 104, 6); crowd(6, 600, 142, 40, 142, 6);
+    npc('teen', 200, 124, { tint: '#5aa8e0', lines: ['I SING HERE EVERY SATURDAY. TWO PEOPLE STOPPED TODAY.', 'ONE OF THEM WAS MY MUM.'] });
+    npc('office', 452, 86, { dir: 'u', lines: ['THE PHOTO BOOTH GIVES YOU GIANT EYES AND A CAT NOSE.', 'I LOOK INCREDIBLE. NOTHING LIKE ME.'] });
+    npc('kid', 120, 90, { rad: 20, lines: ['THIS STREET IS WHERE EVERY FASHION IN JAPAN STARTS.', 'MY MUM SAYS IT IS WHERE EVERY FASHION GOES TO DIE.'] });
+  } };
+  const YOKOCHO = { avenue: 10, lay() { tRect(AS, 0, 4, 40, 12, PV); }, deco() {
+    block(0, 0, M.w, 52); const NO = ['#8a2a24', '#3d5a80', '#5a8a5a', '#c8382e', '#6a4a8a'];
+    // a row of tiny yakitori stalls along the top, another back to back across the middle, and two narrow lanes between them
+    for (let x = 26, i = 0; x < M.w - 20; x += 42, i++) house(x, 66, 36, 20, { noren: NO[i % 5], rh: 12, lantern: true, sign: i % 4 ? null : 'YAKITORI' });
+    for (let x = 50, i = 0; x < M.w - 30; x += 44, i++) { if (Math.abs(x - 168) < 44 || Math.abs(x - 430) < 30) continue; house(x, 138, 38, 18, { noren: NO[(i + 2) % 5], rh: 11, lantern: true }); block(x - 19, 104, x + 19, 138); }
+    for (const [x, y, d] of [[96, 84, 'u'], [270, 84, 'u'], [520, 84, 'u'], [330, 156, 'u']]) npc(['salary', 'office', 'salary', 'tourist'][x % 4], x, y, { dir: d, lines: [['TWO MORE SKEWERS AND A BEER. THEN HOME.', 'I SAID THAT TWO HOURS AGO.'], ['THERE ARE SIX SEATS IN THIS BAR. I HAVE SAT IN ALL OF THEM.'], ['THIS ALLEY HAS BEEN HERE SINCE THE WAR. SO HAS THE COOK.'], ['THE SMOKE GETS IN YOUR HAIR AND STAYS FOR DAYS.', 'THAT IS PART OF THE PRICE.']][x % 4] });
+    M.SPOTS.push({ x: 190, y: 92, r: 14, label: 'SMELL THE GRILL', fx: 'munch', lines: ['CHARCOAL, SOY AND CHICKEN FAT DRIP AND HISS.', 'A COOK WAVES A FAN AT THE GRILL AND THE SMOKE ROLLS DOWN THE ALLEY TOWARDS YOU.'] });
+    crowd(3, 40, 96, 600, 96, 4); crowd(4, 600, 172, 40, 172, 4); prop('vend', 600, 182, 6);
+  } };
+  const BACKSTREETS = { avenue: 10, lay() { tRect(AS, 0, 4.2, 40, 12, PV); }, deco() {
+    block(0, 0, M.w, 52);
+    shopRow([['PARTS', '#5ad8f0', 50, 40], ['MAID CAFE', '#f06a8c', 70, 46, { vs: 5, vc: '#ffd84a' }], ['TRAINS', '#f2c14e', 52, 40], ['ANIME', '#8a6aff', 58, 44], ['CARDS', '#5ad88a', 50, 38], ['RETRO', '#f2a03a', 56, 42], ['FIGURES', '#e0563f', 60, 44], ['DOLLS', '#f0a8c0', 52, 40], ['RADIOS', '#5aa8e0', 52, 40]], 66);
+    for (let i = 0; i < 8; i++) fur('gacha', 216 + i * 13, 150, i % 3); M.SPOTS.push({ x: 262, y: 160, r: 18, label: 'CAPSULE MACHINES', mini: 'gacha' });
+    for (const [x, t] of [[90, 'CABLES! CHIPS! SWITCHES! ALL ONE HUNDRED YEN!'], [540, 'THIS VACUUM TUBE IS SIXTY YEARS OLD. IT STILL GLOWS.']]) { prop('stall', x, 170, 13); npc('salary', x, 182, { tint: '#5a6a4a', lines: [t] }); }
+    npc('maiko', 128, 86, { tint: '#3a3a4e', lines: ['WELCOME HOME! WE HAVE TABLES AT THE CAFE UPSTAIRS!', 'SAY MOE MOE KYUN AND THE OMELETTE GETS A HEART ON IT.'] });
+    crowd(5, 40, 100, 600, 100, 6); crowd(5, 600, 128, 40, 128, 6);
+  } };
+  const MARUNOUCHI = { ground: GR, avenue: 9, lay() { tRect(WA, 0, 0.9, 42, 3.4); tRect(VL, 0, 4.6, 42, 7.4); tRect(VL, 23.5, 7.4, 27.5, 9); }, deco() {
+    ledge([[0, 0], [336, 0], [672, 0]], 14, 'stone'); bridge(318, 16, 354, 56, '#8a8496', '#c8c0b4');
+    npc('salary', 336, 26, { dir: 'd', tint: '#3a3a4e', lines: ['THE PALACE GATE OPENS TWICE A YEAR: NEW YEAR AND THE EMPEROR\'S BIRTHDAY.', 'TODAY IS NOT ONE OF THOSE DAYS.'] });
+    for (let x = 30; x < M.w; x += 58) { plant('pine', x + hsh(x, 3) * 14, 160 + hsh(x, 7) * 16, 1); } for (const x of [140, 260, 470, 590]) prop('bench', x, 130, 9); for (const x of [200, 520]) prop('lantern', x, 70, 4);
+    crowd(5, 30, 96, 640, 96, 6); crowd(5, 640, 112, 30, 112, 6);
+    npc('granny', 600, 92, { rad: 20, lines: ['I WALK ROUND THE PALACE EVERY MORNING. FIVE KILOMETRES.', 'THE JOGGERS GO THE OTHER WAY. THEY ARE ALL WRONG.'] });
+    npc('tourist', 120, 80, { dir: 'u', lines: ['THOSE STONES IN THE WALL WEIGH AS MUCH AS A HOUSE.', 'NOBODY USED MORTAR. THEY JUST FIT.'] });
+  } };
+
+  MAPS.shibuya = north({ zones: [[0, 0, 640, ND - 4, 'CENTER GAI', 'SHOPS, SONGS AND PHOTO BOOTHS'], [0, ND - 4, 640, 640, 'SHIBUYA', 'THE BUSIEST CROSSING IN THE WORLD']], name: 'SHIBUYA', sub: 'THE BUSIEST CROSSING IN THE WORLD', tw: 40, th: 28, music: 'tokyo',
     lay() { tRect(PV, 0, 0, 40, 28); tRect(PL, 8, 9, 17.5, 12.5); roads([[13, 3]], [[18, 3]]); },
     deco() {
       const g = M.ground.g; for (let k = 0; k < 9; k++) { R(g, 291 + k * 5, 211 + k * 5, 4, 2, '#e8e4f0'); R(g, 331 - k * 5, 211 + k * 5, 4, 2, '#e8e4f0'); }
@@ -31,7 +73,7 @@
       cars(228, -1, 3); cars(251, 1, 3); crowd(3, 280, 200, 280, 266, 6); crowd(3, 344, 266, 344, 200, 6); crowd(6, 40, 200, 600, 200, 6); crowd(6, 600, 266, 40, 266, 8); crowd(3, 296, 214, 328, 250, 4);
       npc('teen', 180, 196, { lines: ['I AM WAITING FOR MY FRIEND. SHE IS ALWAYS LATE.', 'MEET AT HACHIKO, SHE SAID. SO DID EVERYONE ELSE.'], tint: '#f2c14e' });
       npc('tourist', 232, 198, { lines: ['IS THIS THE FAMOUS DOG?', 'I WATCHED THE FILM. I CRIED.'] }); M.ACT.push({ cat: true, x: 520, y: 300, k: 0 });
-    } };
+    } }, NORTH, CENTER_GAI);
   MAPS.harajuku = { name: 'HARAJUKU', sub: 'CREPES, COLOUR AND A QUIET FOREST SHRINE', tw: 32, th: 30, music: 'kyoto', petals: 1,
     lay() { tRect(FR, 0, 0, 32, 11.5); tRect(PV, 0, 11.5, 32, 30); tRect(VL, 14.5, 3, 16.5, 11.5); tRect(VL, 10, 3, 21, 7.5); tRect(PL, 14, 11.5, 17, 20); roads([[20, 2]], []); },
     deco() {
@@ -48,7 +90,7 @@
       cars(342, -1, 2); cars(350, 1, 2); crowd(6, 232, 200, 232, 300, 10); crowd(6, 264, 300, 264, 200, 10); crowd(5, 40, 314, 470, 314, 5); crowd(3, 248, 120, 248, 190, 8);
       npc('teen', 300, 300, { lines: ['WELCOME! TRY OUR RAINBOW COTTON CANDY!', 'IT IS BIGGER THAN YOUR HEAD!'], tint: '#8a6aff' }); npc('monk', 290, 112, { lines: ['WALK ON THE SIDE OF THE PATH. THE MIDDLE IS FOR THE GODS.'] }); M.ACT.push({ cat: true, x: 380, y: 400, k: 1 });
     } };
-  MAPS.shinjuku = { name: 'SHINJUKU', sub: 'NEON, TOWERS AND TINY ALLEY BARS', tw: 40, th: 28, music: 'osaka', night: 1, tint: '#7078c0',
+  MAPS.shinjuku = north({ zones: [[0, 0, 640, ND - 4, 'OMOIDE YOKOCHO', 'MEMORY LANE: SMOKE AND SKEWERS'], [0, ND - 4, 640, 640, 'SHINJUKU', 'NEON, TOWERS AND TINY ALLEY BARS']], name: 'SHINJUKU', sub: 'NEON, TOWERS AND TINY ALLEY BARS', tw: 40, th: 28, music: 'osaka', night: 1, tint: '#7078c0',
     lay() { tRect(PV, 0, 0, 40, 28); roads([[13, 3]], [[9, 3]]); },
     deco() {
       station(70, 192, 'SHINJUKU');
@@ -60,8 +102,8 @@
       prop('vend', 318, 190, 6); prop('vend3', 466, 190, 6); plaza(396);
       cars(228, -1, 4); cars(251, 1, 4); crowd(8, 40, 200, 610, 200, 6); crowd(8, 610, 266, 40, 266, 8); crowd(4, 138, 200, 138, 268, 6); crowd(4, 214, 268, 214, 200, 6);
       npc('salary', 520, 200, { lines: ['ONE MORE SKEWER AND THEN I GO HOME. PROBABLY.', 'THE LAST TRAIN IS A SUGGESTION.'] }); npc('office', 300, 200, { lines: ['THE VIEW FROM THE TOP IS FREE, YOU KNOW.'] }); M.ACT.push({ cat: true, x: 590, y: 200, k: 2 });
-    } };
-  MAPS.akiba = { name: 'AKIHABARA', sub: 'ELECTRIC TOWN', tw: 40, th: 28, music: 'osaka', night: 1, tint: '#9088c8',
+    } }, NORTH, YOKOCHO);
+  MAPS.akiba = north({ zones: [[0, 0, 640, ND - 4, 'BACK STREETS', 'PARTS, CAPSULES AND MAID CAFES'], [0, ND - 4, 640, 640, 'AKIHABARA', 'ELECTRIC TOWN']], name: 'AKIHABARA', sub: 'ELECTRIC TOWN', tw: 40, th: 28, music: 'osaka', night: 1, tint: '#9088c8',
     lay() { tRect(PV, 0, 0, 40, 28); roads([[13, 3]], [[24, 3]]); },
     deco() {
       station(70, 192, 'AKIHABARA');
@@ -75,12 +117,12 @@
       stampSpot('denki', 268, 204, 'TAKE A PHOTO', 'snap', ['EIGHT FLOORS OF CABLES, CHIPS AND BLINKING LIGHTS.', 'IF IT RUNS ON ELECTRICITY, SOMEBODY HERE SELLS IT.'], 13);
       cars(228, -1, 3); cars(251, 1, 3); crowd(7, 40, 200, 610, 200, 6); crowd(7, 610, 266, 40, 266, 8); crowd(4, 378, 200, 378, 268, 6); crowd(4, 438, 268, 438, 200, 6);
       npc('maiko', 320, 200, { lines: ['WELCOME HOME, TRAVELLER! THE CAFE IS UPSTAIRS!', 'TODAY\'S SPECIAL IS OMELETTE RICE WITH A KETCHUP CAT!'], tint: '#3a3a4e' }); npc('kid', 200, 200, { lines: ['I HAVE BEEN TRYING FOR THE GOLD DRAGON ALL WEEK.'] });
-    } };
+    } }, NORTH, BACKSTREETS);
   MAPS.asakusa = { name: 'ASAKUSA', sub: 'OLD TOKYO UNDER THE BIG RED LANTERN', tw: 40, th: 34, music: 'kyoto', petals: 1,
     lay() { tRect(FR, 0, 0, 40, 26.5); tOval(GR, 20, 13.5, 16.5, 10.5); tOval(GR, 34, 13, 6, 7); tOval(GR, 7.5, 18, 7, 7.5); tOval(GR, 29, 21, 9, 5); tRect(GR, 1.5, 22.5, 38.5, 26.5); tRect(PV, 0, 26.5, 40, 34); tRect(VL, 11, 6, 29, 15.5); tRect(PL, 18.5, 15.5, 21.5, 26.5); roads([[30, 2]], []); },
     deco() {
       put(SPR.hall, 320, 150, 88, 90); block(260, 128, 380, 150); door(320, 150, 'sensoji'); fur('burner', 320, 214);
-      put(SPR.pagoda, 196, 196, 52, 130); block(166, 178, 226, 196); put(SPR.skytree, 566, 190, 21, 250); block(556, 182, 576, 190);
+      put(SPR.pagoda, 196, 196, 52, 130); block(166, 178, 226, 196); put(SPR.skytree, 566, 192, 33, 197); block(546, 182, 586, 192);
       put(SPR.kaminari, 320, 440, 55, 85); block(276, 434, 300, 440); block(340, 434, 364, 440);
       for (let y = 266; y < 420; y += 30) for (const x of [280, 360]) prop('stall', x, y, 13);
       for (const y of [170, 200, 230]) for (const x of [296, 344]) prop('lantern', x, y, 4);
@@ -91,7 +133,7 @@
       // the Skytree rises past the top of the map, so its photo is a postcard: the tower over the Sumida river and its red bridge
       stampSpot('sky', 560, 210, 'TAKE A PHOTO', 'snap', ['THE SKYTREE, 634 METRES OF STEEL ACROSS THE RIVER.', 'OLD TOKYO IN FRONT, NEW TOKYO BEHIND.'], 16, { photo(g, w, h) {
         const r = RNG(8), by = Math.round(h * 0.7); dgrad(g, 0, 0, w, by, ['#78b4e6', '#a8d2f0', '#e2ecf4']); for (const [x, y, a] of [[w * 0.18, 12, 16], [w * 0.8, 20, 12]]) { ell(g, x, y, a, 2, '#f4f8fc'); ell(g, x + 4, y - 1.5, a * 0.5, 1.5, '#ffffff'); }
-        skyline(g, 0, w, by, 6, 20, '#a8b4cc', r); g.imageSmoothingEnabled = true; g.drawImage(SPR.skytree, Math.round(w * 0.6) - 11, by - 104, 22, 116); g.imageSmoothingEnabled = false; skyline(g, 0, w, by + 1, 3, 11, '#7c88a8', r);
+        skyline(g, 0, w, by, 6, 20, '#a8b4cc', r); g.imageSmoothingEnabled = true; g.drawImage(SPR.skytree, Math.round(w * 0.6) - 18, by - 104, 36, 110); g.imageSmoothingEnabled = false; skyline(g, 0, w, by + 1, 3, 11, '#7c88a8', r);
         R(g, 0, by, w, h - by, '#4a8ec0'); for (let k = 0; k < 14; k++) R(g, r() * w, by + 8 + r() * (h - by - 10), 3 + r() * 6, U, 'rgba(255,255,255,0.5)');
         R(g, 0, by + 3, w, 3, '#c0442f'); R(g, 0, by + 3, w, U, '#e8705a'); for (let x = 6; x < w; x += 22) { R(g, x, by + 6, 2, 6, '#a8382a'); for (let k = 0; k < 9; k++) R(g, x + 2 + k * 2.2, by + 6 + Math.abs(k - 4) * 0.8, 2.2, U, '#c0442f'); }
       } });
@@ -130,7 +172,7 @@
       cars(438, -1, 2); cars(446, 1, 2); crowd(5, 40, 394, 600, 394, 5); crowd(4, 240, 330, 420, 356, 8); crowd(2, 480, 300, 590, 320, 6);
       npc('tourist', 290, 344, { lines: ['IT IS THIRTEEN METRES TALLER THAN THE ONE IN PARIS.', 'THEY PAINT IT ORANGE AND WHITE SO PLANES CAN SEE IT.'] }); npc('kimono', 370, 350, { lines: ['IT LIGHTS UP WHEN THE SUN GOES DOWN. JUST WAIT.'] }); M.ACT.push({ cat: true, x: 500, y: 290, k: 1 });
     } };
-  MAPS.tokyo = { name: 'TOKYO STATION', sub: 'RED BRICK, GINZA GLASS', tw: 42, th: 28, music: 'tokyo',
+  MAPS.tokyo = north({ zones: [[0, 0, 672, ND - 4, 'MARUNOUCHI', 'THE PALACE MOAT AND ITS STONE WALLS'], [0, ND - 4, 672, 640, 'TOKYO STATION', 'RED BRICK, GINZA GLASS']], name: 'TOKYO STATION', sub: 'RED BRICK, GINZA GLASS', tw: 42, th: 28, music: 'tokyo',
     lay() { tRect(PV, 0, 0, 42, 28); tRect(PL, 2, 16, 23, 17); roads([[17, 3]], [[24, 3]]); },
     deco() {
       put(SPR.brick, 196, 256, 150, 95); block(52, 238, 340, 256); M.SPOTS.push({ x: 150, y: 263, r: 14, label: 'TRAINS', train: 1 }); M.st = [150, 268]; shinkansen(246, 256);
@@ -141,7 +183,7 @@
       stampSpot('brick', 110, 268, 'TAKE A PHOTO', 'snap', ['THREE DOMES AND A MILLION RED BRICKS, BUILT IN 1914.', 'BULLET TRAINS LEAVE FROM BEHIND IT EVERY FEW MINUTES.']);
       cars(292, -1, 3); cars(315, 1, 3); crowd(7, 40, 264, 640, 264, 5); crowd(7, 640, 330, 40, 330, 8); crowd(4, 378, 264, 378, 332, 6); crowd(4, 438, 332, 438, 264, 6);
       npc('salary', 250, 268, { lines: ['PLATFORM TWENTY-THREE... OR WAS IT THIRTY-TWO?', 'I HAVE WORKED HERE TEN YEARS AND STILL GET LOST INSIDE.'] }); npc('office', 600, 268, { lines: ['THE BASEMENT FOOD HALL IS THE BEST PART OF THE STORE.'] });
-    } };
+    } }, NORTH, MARUNOUCHI);
 
   // ---------- rooms ----------
   MAPS.ramen = { indoor: 1, name: 'RAMEN SHOP', deco() {
@@ -236,8 +278,20 @@
     sprites() { // landmark art only this city needs
       one('ttower', 110, 230, g => { for (let i = 0; i < 444; i++) { const t = i / 444, hw = snap(1 + 222 * 0.19 * Math.pow(Math.max(0, t - 0.1) / 0.9, 2.1)); if (t < 0.12) continue; const k = t >= 0.8 ? snap((t - 0.8) / 0.2 * hw * 0.6) : 0, c = Math.floor(t * 9) % 2 ? '#e8d8c0' : '#d8552c'; if (k < 1.5) R(g, 55 - hw, 6 + i / 2, hw * 2, U, c); else { R(g, 55 - hw, 6 + i / 2, hw - k, U, c); R(g, 55 + k, 6 + i / 2, hw - k, U, c); } } tokyoTower(g, 55, 228, 222); }, 1); one('box', 16, 10, g => { R(g, 1, 2, 14, 8, '#8a5a3a'); R(g, 1, 2, 14, 3, '#5a3a28'); for (let x = 2; x < 15; x += 2) R(g, x, 2, 1, 3, '#a8744a'); R(g, 6, 6.5, 4, 2, '#f2c14e'); }, 1);
       one('hachi', 18, 26, g => { R(g, 2, 16, 14, 9, '#8c8498'); R(g, 2, 16, 14, 1, '#c8c0d4'); R(g, 1, 24, 16, 2, '#6b6478'); dogStatue(g, 3, 16, '#a8845a'); }, 1);
-      one('skytree', 40, 250, g => { for (let i = 0; i < 480; i++) { const t = i / 480, y = 8 + i / 2, hw = snap(1 + 6 * Math.pow(t, 1.4)); R(g, 20 - hw, y, hw * 2, U, i % 10 < 5 ? '#b0c0dc' : '#8ea0c4'); p1(g, 20 - hw, y, '#eef4ff'); p1(g, 20 + hw - U, y, '#5a6a8a'); if (i % 14 === 0) R(g, 20 - hw, y, hw * 2, U, '#5a6a8a'); } R(g, 19.5, 0, 1, 10, '#e8f0ff'); for (const [t, w] of [[0.16, 6], [0.22, 7]]) { const y = 8 + t * 240; R(g, 20 - w, y, w * 2, 5, '#e8f0ff'); R(g, 20 - w, y + 2, w * 2, 1.5, '#5a6a8a'); R(g, 20 - w, y + 4.5, w * 2, U, '#7a8aa8'); } }, 1);
+      one('skytree', 64, 196, g => { // a tripod base, a lattice shaft narrowing as it rises, two observation decks and the antenna
+        for (let y = 40; y < 194; y++) {
+          const t = (y - 40) / 154, hw = 3.5 + 8.5 * Math.pow(t, 1.25) + (y > 170 ? (y - 170) * 0.55 : 0), x0 = 32 - hw;
+          R(g, x0, y, hw * 2, 1, '#b8c6de'); R(g, 32, y, hw, 1, '#94a6c6'); R(g, x0, y, 1, 1, '#d8e2f2');
+          for (let x = Math.ceil(x0 + 1); x < 32 + hw - 1; x += 3) if ((x + y) % 6 < 1.5 || (x - y + 600) % 6 < 1.5) p1(g, x, y, '#7a8cb0');
+        }
+        for (const x of [17, 32, 47]) R(g, x - 2, 186, 4, 10, '#7a8cb0');
+        ell(g, 32, 100, 14, 5, '#5a6a8a'); R(g, 18, 96, 28, 8, '#5a6a8a'); R(g, 18, 98, 28, 3, '#ffe6a0'); for (let x = 19; x < 46; x += 3) R(g, x, 98, U, 3, '#5a6a8a'); R(g, 18, 96, 28, U, '#c8d4e8');
+        ell(g, 32, 72, 9, 3, '#5a6a8a'); R(g, 23, 70, 18, 5, '#5a6a8a'); R(g, 23, 71.5, 18, 2, '#cfe8ff'); R(g, 23, 70, 18, U, '#c8d4e8');
+        for (let y = 2; y < 42; y++) { const hw = y < 20 ? 1 : 1.5 + (y - 20) * 0.08; R(g, 32 - hw, y, hw * 2, 1, y % 6 < 3 ? '#e8eef8' : '#b8c6de'); } disc(g, 32, 2, 1.4, '#ff5a4a');
+        R(g, 6, 194, 52, 2, '#6b6478');
+      }, 1);
       one('kaminari', 110, 86, g => { roof(g, 55, 4, 26, 54, 22, '#3d3852'); R(g, 10, 26, 90, 6, '#b8402f'); R(g, 10, 26, 90, 1, '#e86a50'); for (const x of [12, 34, 68, 90]) { R(g, x, 32, 8, 52, '#c0442f'); R(g, x, 32, 2, 52, '#e86a50'); R(g, x + 6, 32, 2, 52, '#8a2a20'); R(g, x - 1, 82, 10, 3, '#8c8498'); } R(g, 14, 36, 18, 46, '#3a2228'); R(g, 78, 36, 18, 46, '#3a2228'); R(g, 19, 48, 8, 30, '#5a8a6a'); disc(g, 23, 46, 4, '#7ab08a'); R(g, 83, 48, 8, 30, '#b85a4a'); disc(g, 87, 46, 4, '#e08a6a'); chochin(g, 55, 32, '#e0452f', 3.6); R(g, 52, 42, 6, 14, '#1d1626'); R(g, 53.5, 43, 3, 2, '#f2c14e'); R(g, 53.5, 47, 3, 1, '#f2c14e'); R(g, 54.5, 46, 1, 8, '#f2c14e'); R(g, 53, 51, 4, 1, '#f2c14e'); });
+      one('cgai', 72, 42, g => { for (const x of [2, 66]) { R(g, x, 4, 4, 38, '#c8382e'); R(g, x, 4, 1.5, 38, '#f06a5a'); } R(g, 4, 2, 64, 15, '#1d2a44'); R(g, 5, 3, 62, 13, '#2f4a7a'); R(g, 5, 3, 62, U, '#5a7aa8'); txt(g, 'CENTER GAI', 16, 7, '#ffd84a'); for (let x = 8; x < 66; x += 6) disc(g, x, 1, 1, x % 12 ? '#ffd84a' : '#f06a8c'); }, 1);
       one('arch', 96, 50, g => { for (const x of [4, 86]) { R(g, x, 10, 6, 40, '#f06a8c'); R(g, x, 10, 1.5, 40, '#ffa8c0'); R(g, x + 4.5, 10, 1.5, 40, '#b8405c'); } R(g, 2, 6, 92, 14, '#1d1626'); R(g, 3, 7, 90, 12, '#f06a8c'); R(g, 3, 7, 90, 1.5, '#ffa8c0'); txtC(g, 'TAKESHITA STREET', 48, 11, '#fff8e8'); for (let i = 0; i < 9; i++) disc(g, 8 + i * 10, 4, 2.5, ['#ffd84a', '#5ad8f0', '#ff8a6a', '#8fd070'][i % 4]); });
       one('brick', 300, 96, g => { R(g, 6, 40, 288, 56, '#a84a38'); for (let y = 42; y < 96; y += 3) { R(g, 6, y, 288, U, '#8a3a2c'); for (let x = 8 + (y % 6) * 1.5; x < 294; x += 6) p1(g, x, y + 1, '#c86a50'); } R(g, 6, 40, 288, 3, '#f4eedc'); R(g, 6, 66, 288, 2, '#f4eedc'); for (let x = 14; x < 290; x += 12) { for (const y of [48, 74]) { R(g, x - 1, y - 1, 7, 13, '#f4eedc'); R(g, x, y, 5, 11, '#4a6a8a'); R(g, x, y, 5, 2, '#cfeaff'); R(g, x + 2.25, y, U, 11, '#f4eedc'); } } for (const cx of [60, 150, 240]) { const big = cx === 150; R(g, cx - 22, 26, 44, 16, '#a84a38'); R(g, cx - 22, 26, 44, 2, '#f4eedc'); ell(g, cx, 26, big ? 20 : 18, big ? 16 : 13, '#4a5a6a'); ell(g, cx - 3, 23, big ? 14 : 12, big ? 10 : 8, '#6a7a8a'); R(g, cx - 22, 26, 44, 1, '#f4eedc'); R(g, cx - 0.5, 4, 1, 8, '#f2c14e'); disc(g, cx, 34, 3.5, '#f4eedc'); p1(g, cx, 33, '#1d1626'); R(g, cx, 34, 1.5, U, '#1d1626'); } R(g, 138, 76, 24, 20, '#3a2630'); R(g, 140, 78, 20, 18, '#ffd98a'); R(g, 149.5, 78, 1, 18, '#3a2630'); R(g, 126, 70, 48, 4, '#f4eedc'); });
       one('clock', 70, 120, g => { bldg(g, 6, 118, 58, 70, { c: '#d8d0c0', lit: 0.3, gx: 7, ww: 4, wh: 5, gy: 9, foot: 24, top: false }, RNG(5)); R(g, 6, 96, 58, 22, '#4a4458'); R(g, 8, 98, 54, 18, '#ffd98a'); for (let x = 16; x < 60; x += 9) R(g, x, 98, U, 18, '#4a4458'); R(g, 23, 20, 24, 30, '#d8d0c0'); R(g, 23, 20, 24, 2, '#f4eedc'); R(g, 23, 20, 2, 30, '#f4eedc'); roof(g, 35, 12, 6, 15, 9, '#4a8a7a'); R(g, 34.5, 4, 1, 9, '#4a8a7a'); disc(g, 35, 35, 9, '#3a3346'); disc(g, 35, 35, 8, '#fff8e8'); R(g, 34.5, 29, 1, 6, '#1d1626'); R(g, 35, 34.5, 5, 1, '#1d1626'); for (let k = 0; k < 12; k++) p1(g, 35 + Math.cos(k * 0.5236) * 7, 35 + Math.sin(k * 0.5236) * 7, '#1d1626'); });

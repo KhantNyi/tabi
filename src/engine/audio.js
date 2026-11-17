@@ -62,10 +62,15 @@ for (const k in TRACKS) { // pre-parse
 
 const Snd = {
   ctx: null, on: true, track: null, step: 0, next: 0, timer: null,
+  // Browsers only start sound from a tap, click or key press. iOS is the strictest: it wants touchend or click, may leave the
+  // context 'interrupted' after a call or a trip to the home screen, and mutes web audio when the ring switch is on silent
+  // unless the page says it is playing media. So: try on every such gesture, resume from any state but running, play a
+  // moment of silence to unlock, and ask for the 'playback' audio session where the browser has one.
   init() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    if (this.ctx) { if (this.ctx.state !== 'running') { const p = this.ctx.resume(); if (p && p.catch) p.catch(() => { }); this.unlock(); } return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    const c = this.ctx = new AC();
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { }
+    const c = this.ctx = new AC(); this.unlock();
     this.master = c.createGain(); this.master.gain.value = this.on ? 0.55 : 0; // sound may have been switched off before it started this.master.connect(c.destination);
     this.mus = c.createGain(); this.mus.gain.value = 0.8; this.mus.connect(this.master);
     this.sfx = c.createGain(); this.sfx.gain.value = 0.9; this.sfx.connect(this.master);
@@ -77,6 +82,7 @@ const Snd = {
     for (let i = 0; i < a.length; i++) a[i] = Math.random() * 2 - 1; this.noiseBuf = n;
     this.timer = setInterval(() => this.tick(), 30);
   },
+  unlock() { try { const c = this.ctx, b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); if (c.state !== 'running') c.resume().catch(() => { }); } catch (e) { } },
   toggle() { this.on = !this.on; if (this.master) this.master.gain.value = this.on ? 0.55 : 0; return this.on; },
   // one enveloped oscillator note
   tone(type, f, t, dur, vol, o = {}) {

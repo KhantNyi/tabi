@@ -43,6 +43,12 @@ Every menu is a list: arrow keys and E, or one tap on a line. On a line with a v
 
 There are eight districts on one train line: Shibuya, Harajuku, Shinjuku, Ueno, Asakusa, Akihabara, Tokyo Station and Tokyo Tower. The shinkansen to other cities leaves from Tokyo Station.
 
+The four city-street districts go on north, up the avenue that crosses their main street:
+- **Shibuya:** Center Gai, a lane of shops and photo booths under its banner.
+- **Shinjuku:** Omoide Yokocho, rows of tiny lantern-lit yakitori stalls with narrow alleys between them.
+- **Akihabara:** back streets of parts stalls, a maid café and a wall of capsule machines.
+- **Tokyo Station:** Marunouchi, a gravel walk beside the Imperial Palace moat, its stone walls and a bridge.
+
 You can walk into 15 places, each with its own indoor screen: a ramen shop, two clothes shops, a crepe café, a yakitori bar, an observation deck, the Tokyo Tower deck, a game center, a figure shop, Senso-ji's main hall, the panda house, the museum, a department-store food hall and conveyor sushi.
 
 There are 21 stamps to collect, along with capsule figures and cats to pet. The minigames are:
@@ -105,7 +111,7 @@ Every TAKE A PHOTO spot gives you an instant-photo card. The camera frames the l
 
 ## Big stations
 
-At Tokyo Station, Kyoto Station and Shin-Osaka (from Namba), the blue shinkansen sign leads into the station instead of straight onto a train. You arrive in an entrance hall with a bento shop and a souvenir stand. Beyond it is a concourse where commuters hurry across in streams, then ticket gates and stairs up to the platform, where the Nozomi waits. Board at any door. Walk into a stream and it slows, carries you along and nudges you out, so you pick your gaps. A departure board and a note at the top of the screen count down to the next train, but there's no way to miss out: another comes in two and a half minutes. Arriving by shinkansen, you step off on the platform and walk out through the crowd. Kawaguchiko and Nara keep their small-town signs.
+At Tokyo Station, Kyoto Station and Shin-Osaka (from Namba), the blue shinkansen sign leads into the station instead of straight onto a train. The station has two levels. Downstairs is the concourse, where commuters hurry across in streams, with ticket gates (a lane runs straight down from each escalator) and shops built into the wall. Escalators lead up to the platform, where the Nozomi waits. Board at any door. Blue SHINKANSEN signs point up to the trains, and yellow EXIT signs point down and out. Walking through the glass doors at the bottom takes you back out to the city. Walk into a stream and it slows, carries you along and nudges you out, so you pick your gaps. A departure board and a note at the top of the screen count down to the next train, but there's no way to miss out: another comes in two and a half minutes. Arriving by shinkansen, you step off on the platform and walk out through the crowd. Kawaguchiko and Nara keep their small-town signs.
 
 ## Playing together
 
@@ -159,7 +165,8 @@ src/
     world.js            building a map: terrain, ground painter, roads, buildings, rooms,
                         furniture, NPCs, cars, forests, ledges, steps, bridges and walls,
                         plus the shared registries MAPS and CITIES, and the hooks net.js uses
-                        (OTHERS, on/emit, worldTime). settle() checks every crowd path, cat and
+                        (OTHERS, on/emit, worldTime). north() adds a district above a street map.
+                        settle() checks every crowd path, cat and
                         wanderer once a map is built, so nobody walks through walls or on water
   cities/
     tokyo.js            Tokyo's districts, rooms, dialogue, stamps and landmark art
@@ -220,6 +227,7 @@ City streets can stay on a grid, since that's what they are. Parks, temples and 
 | `?room=ABCD&net=local` | join a room through a BroadcastChannel instead of the internet, so two tabs of one browser can play together (serve the folder over http for this) |
 | `?st=menu&kind=pause` | open a menu (`main`, `pause`, `look`, `settings`, `help`, `confirm`, `join`) |
 | `?map=tk_shinkansen` | start in a station concourse (`tk_`, `ky_` or `os_shinkansen`) |
+| `?map=shibuya&ov=1` | the whole of a map at once, including the districts north of the Tokyo streets |
 | `?st=tog`, `?st=say`, `?st=book&pg=together`, `?st=book&pg=updates` | open the play-together menu, SAY SOMETHING, or a page of the stamp book |
 | `?sim=6000&seed=3` | walk around at random for that many frames before showing the first frame, pressing E often |
 
