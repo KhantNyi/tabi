@@ -48,7 +48,7 @@ const camX = () => M.w <= W ? (M.w - W) / 2 : Math.max(0, Math.min(M.w - W, pl.x
 const zoneAt = (x, y) => (M.def.zones || []).find(z => x >= z[0] && x < z[2] && y >= z[1] && y < z[3]) || null;
 function camSnap() { G.cx = camX(); G.cy = camY(); }
 function go(id, x, y, dir) {
-  M = BUILT[id] || build(id); CITY = CITIES[M.def.city] || CITY; const st = M.st || [160, 182]; pl.x = x != null ? x : st[0]; pl.y = y != null ? y : st[1]; pl.dir = dir || 'd'; pl.mv = false; pl.act = null; G.fade = 1; G.tgt = null; G.fx = []; G.zn = zoneAt(pl.x, pl.y); G.zb = 0; camSnap();
+  M = BUILT[id] || build(id); CITY = CITIES[M.def.city] || CITY; const st = M.st || [160, 182]; pl.x = x != null ? x : st[0]; pl.y = y != null ? y : st[1]; pl.dir = dir || 'd'; pl.mv = false; pl.act = null; G.fade = 1; G.tgt = null; G.fx = []; G.zn = zoneAt(pl.x, pl.y); G.zb = 0; camSnap(); LIFE.enter();
   if (!M.indoor) { G.dist = id; G.banner = 3.5; save(); } else G.banner = 2.5; Snd.play(M.def.music || 'tokyo');
 }
 function step(e, dx, dy) { let m = false; if (dx && !hit(e.x + dx, e.y)) { e.x += dx; m = true; } if (dy && !hit(e.x, e.y + dy)) { e.y += dy; m = true; } return m; }
@@ -87,7 +87,7 @@ function update(dt) {
     if (JOY.on) { dx = JOY.x; dy = JOY.y; const m = Math.hypot(dx, dy); if (m > 1) { dx /= m; dy /= m; } }
     pl.mv = !!(dx || dy);
     if (pl.emT > 0) { pl.emT -= dt; pl.act = pl.emT > 0 && !pl.mv ? pl.em : null; if (pl.mv) pl.emT = 0; } // a bow or a cheer from SAY SOMETHING, until you move
-    if (pl.mv) { if (JOY.on) { if (Math.abs(dx) > Math.abs(dy) * 1.15) pl.dir = dx < 0 ? 'l' : 'r'; else if (Math.abs(dy) > Math.abs(dx) * 1.15) pl.dir = dy < 0 ? 'u' : 'd'; } else { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27) && Snd.ctx) Snd.noise(Snd.ctx.currentTime, 0.035, 0.018, 500, 1600, Snd.sfx); } else pl.wt = 0;
+    if (pl.mv) { if (JOY.on) { if (Math.abs(dx) > Math.abs(dy) * 1.15) pl.dir = dx < 0 ? 'l' : 'r'; else if (Math.abs(dy) > Math.abs(dx) * 1.15) pl.dir = dy < 0 ? 'u' : 'd'; } else { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27)) LIFE.foot(); } else pl.wt = 0;
     if (M.def.zones) { const z = zoneAt(pl.x, pl.y); if (z && z !== G.zn) { G.zn = z; if (G.banner <= 0) G.zb = 2.6; } if (G.zb > 0) G.zb -= dt; }
     if (M.def.tick) M.def.tick(); // a map's own rule (walking out of a station's doors)
     if (M.indoor && pl.y > 188 && G.back) { const b = G.back; G.back = null; Snd.fx('page'); go(b.map, b.x, b.y, 'd'); G.banner = 0; }
@@ -126,6 +126,7 @@ function update(dt) {
       if (d < 2 || n.tt < 0 || !step(n, tx / d * 20 * dt, ty / d * 20 * dt)) { n.mv = false; n.wait = 1 + n.rnd() * 3.5; continue; }
       n.mv = true; n.wt += dt; n.dir = Math.abs(tx) > Math.abs(ty) ? (tx < 0 ? 'l' : 'r') : (ty < 0 ? 'u' : 'd');
     }
+    LIFE.update(dt, st);
     for (const c of M.CARS) { const ahead = (pl.x - c.x) * Math.sign(c.v); if (!(Math.abs(pl.y - 4 - c.y) < 13 && ahead > 0 && ahead < 40)) c.x += c.v * dt; if (c.x > M.w + 40) c.x = -40; if (c.x < -40) c.x = M.w + 40; }
     for (const p of PRT) { p.x += (p.vx + Math.sin(G.t * 1.3 + p.ph) * 6) * dt; p.y += p.vy * dt; if (p.y > H + 4) { p.y = -4; p.x = Math.random() * (W + 60); } if (p.x < -6) p.x = W + 4; }
     for (const f of G.fx) f.t += dt; G.fx = G.fx.filter(f => f.t < 1.1);
@@ -158,7 +159,10 @@ function drawWorld() {
     const s = o.spr, dx = snap(o.x - o.ox - cx), dy = snap(o.y - o.oy - cy);
     if (o.split) { const off = snap(Math.sin(t * 1.1 + o.x * 0.031 + o.y * 0.017) * o.sw); ctx.drawImage(s, 0, 0, s.lw, o.split, dx + off, dy, s.lw, o.split); ctx.drawImage(s, 0, o.split, s.lw, s.lh - o.split, dx, dy + o.split, s.lw, s.lh - o.split); } else ctx.drawImage(s, dx, dy);
   }
-  if (M.def.tint) { ctx.globalCompositeOperation = 'multiply'; R(ctx, 0, 0, W, H, M.def.tint); ctx.globalCompositeOperation = 'lighter'; for (const [x, y, r, c] of M.LIGHTS) { if (x - cx < -r || x - cx > W + r || y - cy < -r || y - cy > H + r) continue; ctx.drawImage(glowSpr(r, c), snap(x - cx - r), snap(y - cy - r)); } ctx.globalCompositeOperation = 'source-over'; }
+  LIFE.drawFx(cx, cy);
+  // lights breathe a little, and some neon flickers now and then
+  if (M.def.tint) { ctx.globalCompositeOperation = 'multiply'; R(ctx, 0, 0, W, H, M.def.tint); ctx.globalCompositeOperation = 'lighter'; for (const [x, y, r, c] of M.LIGHTS) { if (x - cx < -r || x - cx > W + r || y - cy < -r || y - cy > H + r) continue; const h = hsh(x, y), fl = h < 0.25 && (t * 0.6 + h * 7) % 1 < 0.035; ctx.globalAlpha = fl ? 0.25 : 0.88 + Math.sin(t * 2 + h * 9) * 0.12; ctx.drawImage(glowSpr(r, c), snap(x - cx - r), snap(y - cy - r)); } ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  if (!G.hidePl) LIFE.drawSky();
   if (M.def.petals) for (const p of PRT) { R(ctx, p.x, p.y, 1.5, 1, p.c); p1(ctx, p.x + (Math.sin(t * 4 + p.ph) > 0 ? 1.5 : -U), p.y + U, p.c); }
   for (const f of G.fx) { ctx.globalAlpha = Math.max(0, 1 - f.t); ctx.drawImage(ICON[f.icon], snap(f.x - cx - ICON[f.icon].lw / 2), snap(f.y - cy - 8 - f.t * 14)); ctx.globalAlpha = 1; }
   if (G.state === 'event' && G.ev.sp.act === 'hold' && G.ev.t > 0.3) ctx.drawImage(ICON[STAMPS[G.ev.sp.stamp][1]], snap(pl.x - cx - 7), snap(pl.y - cy - 46 + Math.sin(t * 6)));

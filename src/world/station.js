@@ -41,7 +41,7 @@ function commuter(n, dt) {
 }
 function concourse(id, o) {
   const leave = () => { Snd.fx('page'); go(o.hub); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1] + 16; pl.dir = 'd'; camSnap(); } };
-  MAPS[id] = { name: o.name, sub: 'SHINKANSEN TO ' + o.dest, tw: 40, th: 36, music: o.music,
+  MAPS[id] = { station: 1, name: o.name, sub: 'SHINKANSEN TO ' + o.dest, tw: 40, th: 36, music: o.music,
     hud: () => 'NOZOMI ' + o.track + ' - DEPARTS IN ' + mmss(departs()),
     zones: [[0, 0, 640, 222, o.name, 'SHINKANSEN PLATFORM ' + o.track], [0, 222, 640, 576, o.name, 'FOLLOW THE YELLOW SIGNS TO THE EXIT']],
     lay() { tRect(PL, 0, 0, 40, 36); },

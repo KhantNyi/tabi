@@ -71,7 +71,7 @@ const Snd = {
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { }
     const c = this.ctx = new AC(); this.unlock();
-    this.master = c.createGain(); this.master.gain.value = this.on ? 0.55 : 0; // sound may have been switched off before it started this.master.connect(c.destination);
+    this.master = c.createGain(); this.master.gain.value = this.on ? 0.55 : 0; this.master.connect(c.destination); // sound may have been switched off before it started
     this.mus = c.createGain(); this.mus.gain.value = 0.8; this.mus.connect(this.master);
     this.sfx = c.createGain(); this.sfx.gain.value = 0.9; this.sfx.connect(this.master);
     const d = c.createDelay(1); d.delayTime.value = 0.31; const fb = c.createGain(); fb.gain.value = 0.32;

@@ -105,6 +105,38 @@ Nara is one large map you explore on foot, with no trains. It runs from the stat
 - **Photos:** whenever you take a photo, an instant-photo card drops in and develops from a cream haze. It shows the view in front of you (with you out of the shot), a caption, and an orange date print. A few Fuji views are painted as postcards instead.
 - **Vending machines:** every vending machine in every city works. Pick one of eight hot and cold drinks, then stop the four-digit lucky number. Four of a kind (ATARI!) wins a second drink free. The drinks you have tried are kept in a collection, shown in the stamp book. At night the machines glow.
 
+## Life in the streets
+
+None of this is a goal; it is there so the places feel lived in. It all lives in `src/world/life.js`.
+
+- **People notice you.** People walking a route step aside for you, sometimes with a "SUMIMASEN!". People standing about glance at you as you pass, and some say hello. The greeting suits the time and the city: KONBANWA at night, MOUKARIMAKKA in Osaka, OIDEYASU in Kyoto, and a compliment if you are wearing a kimono.
+- **Shopkeepers call out** "IRASSHAIMASE!" (or "MAIDO!" in Osaka) as you walk past their door.
+- **Animals:**
+  - pigeons on plazas peck about and scatter when you walk through them, then flutter back;
+  - butterflies drift around the parks;
+  - a cat you have just petted follows you for a while.
+- **Little scenes** play nearby every 15 to 30 seconds:
+  - a bicycle rings its bell and slows down if you are in the way;
+  - a gust of petals or leaves blows past;
+  - a crow lands on a lamp and caws;
+  - a school group files past behind its teacher;
+  - two friends stop to chat;
+  - a tourist walks up and asks you to take their photo (press E);
+  - now and then, a festival shrine is carried down the street to a drum.
+- **Overheard chats:** half the time, the friends mention a stamp in this city you have not found yet, and where to look.
+- **Sounds of the place:**
+  - water lapping, birdsong in the parks, cars swishing past;
+  - temple bells near places to pray, the station chime, Shibuya's crossing chirp;
+  - a busker by some stations, getting louder as you walk closer;
+  - footsteps that change with the ground: grass, gravel, stone, wooden bridges and floors, tatami;
+  - a murmur of voices in busy rooms.
+- **Things moving:**
+  - steam over noodle shops and smoke from food stalls and incense burners;
+  - leaves that match their tree (maple, ginkgo, sakura) drifting down;
+  - water that glints;
+  - birds crossing the sky;
+  - street lights that breathe and neon that flickers at night.
+
 ## Photos
 
 Every TAKE A PHOTO spot gives you an instant-photo card. The camera frames the landmark the spot points at, not just whatever is on screen. It draws the scene again without you in it, and steps back for tall landmarks such as Kyoto Tower or Tsutenkaku. A spot can name its own frame (`frame: [x, y, w, h]`), and a few views are painted as postcards instead (Mirror Fuji, Chureito and the Skytree).
@@ -162,6 +194,7 @@ src/
     sprites.js          reusable art: people, trees, roofs, temples, shops, towers, icons
   world/
     station.js          the shinkansen concourses at the big stations: the train, gates, crowds and departure board
+    life.js             life in the streets: reactions, passing scenes, birds and butterflies, ambient sound, steam and leaves
     world.js            building a map: terrain, ground painter, roads, buildings, rooms,
                         furniture, NPCs, cars, forests, ledges, steps, bridges and walls,
                         plus the shared registries MAPS and CITIES, and the hooks net.js uses

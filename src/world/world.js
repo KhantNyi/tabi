@@ -73,10 +73,10 @@ const one = (name, w, h, fn, ol) => { const c = mk(w, h); fn(c.g); return SPR[na
 function plant(kind, x, y, force) {
   if (!force && !clearAt(x, y, 9)) return false;
   const v = SPR[kind], s = v[Math.floor(hsh(x * 3, y * 5) * v.length)];
-  if (kind === 'bamboo') { put(s, x, y, 14, 72, { split: 48, sw: 0.9 }); M.SHD.push([x, y, 8, 2.5]); block(x - 3, y - 3, x + 3, y); }
-  else if (kind === 'pine') { put(s, x, y, 32, 60, { split: 44, sw: 0.5 }); M.SHD.push([x, y, 13, 3.5]); block(x - 3, y - 4, x + 3, y); }
+  if (kind === 'bamboo') { put(s, x, y, 14, 72, { split: 48, sw: 0.9, kind }); M.SHD.push([x, y, 8, 2.5]); block(x - 3, y - 3, x + 3, y); }
+  else if (kind === 'pine') { put(s, x, y, 32, 60, { split: 44, sw: 0.5, kind }); M.SHD.push([x, y, 13, 3.5]); block(x - 3, y - 4, x + 3, y); }
   else if (kind === 'bush' || kind === 'rock') { put(s, x, y, s.lw / 2, s.lh - 1); M.SHD.push([x, y, 8, 2]); block(x - 5, y - 4, x + 5, y); }
-  else { put(s, x, y, 28, 60, { split: 46, sw: 0.6 }); M.SHD.push([x, y, 14, 4]); block(x - 3, y - 4, x + 3, y); }
+  else { put(s, x, y, 28, 60, { split: 46, sw: 0.6, kind }); M.SHD.push([x, y, 14, 4]); block(x - 3, y - 4, x + 3, y); }
   return true;
 }
 function prop(name, x, y, bw, o) {
@@ -171,7 +171,7 @@ function station(x, y, name) { tower(x, y, 92, 44, { c: '#e8e0d0', sign: name + 
 
 // ---------- rooms ----------
 function room(o) {
-  const g = M.ground.g, wl = o.wall || '#e8dcc0', f = o.floor || 'wood', rnd = RNG(M.id.length * 9 + 1);
+  const g = M.ground.g, wl = o.wall || '#e8dcc0', f = M.floor = o.floor || 'wood', rnd = RNG(M.id.length * 9 + 1);
   R(g, 0, 0, 320, 192, '#15101f'); R(g, 8, 4, 304, 44, wl); R(g, 8, 4, 304, 2, lite(wl, 0.35)); R(g, 8, 32, 304, 16, dark(wl, 0.16)); R(g, 8, 32, 304, U, dark(wl, 0.4)); R(g, 8, 46, 304, 2, dark(wl, 0.5));
   if (f === 'wood') { R(g, 8, 48, 304, 138, '#c89a6a'); for (let y = 48; y < 186; y += 8) { R(g, 8, y, 304, U, '#a47a50'); R(g, 8, y + U, 304, U, '#dcb080'); for (let x = 8 + (y * 5 % 37); x < 312; x += 44) R(g, x, y, U, 8, '#a47a50'); } }
   else if (f === 'tile') { for (let y = 48; y < 186; y += 12) for (let x = 8; x < 312; x += 12) { const k = ((x - 8) / 12 + (y - 48) / 12) & 1; R(g, x, y, 12, 12, k ? (o.t1 || '#e8e4ec') : (o.t2 || '#cfc8d8')); R(g, x, y, 12, U, '#f8f6fc'); } }
