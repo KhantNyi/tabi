@@ -2,6 +2,48 @@
 // ---------- minigames: each has init(m), update(m, dt) and draw(m), and finishes by calling endMini(won, lines) ----------
 const SUSHI = [['TUNA', '#d8404a'], ['SALMON', '#f08a5a'], ['EGG', '#f2d04a'], ['SHRIMP', '#f8b8a0'], ['CUCUMBER ROLL', '#5aa85a']], FIGS = ['MAGICAL GIRL', 'ROBOT PILOT', 'CAT KNIGHT', 'SPACE IDOL', 'NINJA FROG', 'GOLD DRAGON'], FIGC = ['#f06a8c', '#5aa8e0', '#e8a050', '#8a6aff', '#5aa85a', '#f2c14e'];
 const FORT = [['GREAT BLESSING', 'EVERYTHING YOU START TODAY WILL GO WELL.'], ['BLESSING', 'A VERY GOOD MEAL IS COMING YOUR WAY.'], ['SMALL BLESSING', 'WALK SLOWLY AND YOU WILL FIND IT.'], ['FUTURE BLESSING', 'NOT YET. BUT SOON.'], ['SMALL CURSE', 'TIE THIS PAPER TO THE RACK AND FORGET ABOUT IT.']];
+// ---------- the vending machine ----------
+// Choose a drink, pay, and it clunks into the tray. Then the four-digit lucky number spins: stop all four reels on the same
+// digit (ATARI) and the machine gives you a second drink free. Every drink you try goes into your collection (G.cans).
+const DRINKS = [ // name, hot, price, colour, shape, the label on the shelf, what it is like
+  ['GREEN TEA', 0, 140, '#5aa85a', 'bottle', 'UNSWEETENED, FROM THE FIRST PICKING OF THE YEAR.', 'COLD AND A LITTLE BITTER, LIKE A SHADY TEMPLE GARDEN IN A BOTTLE.'],
+  ['MELON SODA', 0, 150, '#4ac878', 'can', 'BRIGHT GREEN. EXTRA FIZZ.', 'IT TASTES OF NO MELON YOU HAVE EVER EATEN, AND YOU LOVE IT.'],
+  ['MILK SODA', 0, 150, '#f4f1e6', 'can', 'A FIZZY YOGURT DRINK. THE BLUE DOTS ARE FAMOUS.', 'CREAMY, FIZZY AND A LITTLE SOUR. MUCH NICER THAN IT SOUNDS.'],
+  ['SPORTS DRINK', 0, 150, '#5aa8e0', 'bottle', 'FOR WALKING ALL DAY. ALSO FOR SITTING ALL DAY.', 'IT TASTES FAINTLY OF SALT AND VERY MUCH OF BLUE. YOUR LEGS FEEL READY FOR ANOTHER TEMPLE.'],
+  ['MILK TEA', 1, 130, '#d8a878', 'tall', 'ROYAL MILK TEA. IT SAYS ROYAL RIGHT THERE ON THE CAN.', 'SWEET AND WARM. YOU HOLD IT IN BOTH HANDS FOR A WHILE BEFORE YOU OPEN IT.'],
+  ['CAN COFFEE', 1, 130, '#3a4a7a', 'short', 'TINY CAN. BIG FEELINGS.', 'VERY STRONG AND VERY SWEET. A MAN IN A SUIT NODS AT YOU WITH RESPECT.'],
+  ['CORN SOUP', 1, 130, '#f2c14e', 'can', 'SOUP. HOT. FROM A MACHINE. YES, REALLY.', 'CREAMY AND SWEET. THE LAST FEW KERNELS REFUSE TO LEAVE THE CAN, NO MATTER HOW YOU TAP IT.'],
+  ['OSHIRUKO', 1, 140, '#a84a48', 'can', 'SWEET RED BEAN SOUP WITH A RICE CAKE INSIDE.', 'THICK, HOT AND SWEET. THE LITTLE RICE CAKE SLIDES OUT ON THE LAST SIP.']
+];
+const COINS = { 130: [100, 10, 10, 10], 140: [100, 10, 10, 10, 10], 150: [100, 50] };
+function drinkSpr(k, ghost) {
+  const key = (ghost ? 'drinkG' : 'drink') + k; if (SPR[key]) return SPR[key];
+  if (ghost) return SPR[key] = tint(drinkSpr(k), '#e4d8bc', 1);
+  const [, , , col, shape] = DRINKS[k], c = mk(9, 16), g = c.g, l = lite(col, 0.35), d = dark(col, 0.3);
+  if (shape === 'bottle') {
+    const liq = k === 0 ? '#b8d080' : '#dceef8';
+    R(g, 3, 0, 3, 2, col); R(g, 3, 0, 3, U, l); R(g, 3.5, 2, 2, 2, '#eef6f8'); R(g, 2, 4, 5, 1.5, '#eef6f8'); R(g, 1, 5, 7, 11, liq); R(g, 1, 5, U, 11, '#ffffff'); R(g, 7.5, 5, U, 11, dark(liq, 0.25));
+    R(g, 1, 8, 7, 4.5, col); R(g, 1, 8, 7, U, l); R(g, 3, 9, 3, 2.5, '#f8f4ea'); if (k === 0) { R(g, 4, 9.5, 1, 1.5, '#5aa85a'); p1(g, 4.5, 9.5, '#8fd070'); } else R(g, 3.5, 10, 2, U, '#5aa8e0'); R(g, 1, 15, 7, 1, dark(liq, 0.3));
+  } else {
+    const h = shape === 'short' ? 10 : shape === 'tall' ? 14 : 12, w = shape === 'short' ? 6 : 7, x = (9 - w) / 2, y = 16 - h;
+    R(g, x, y, w, h, col); R(g, x, y, w, 1.5, '#c8c0d4'); R(g, x, y, w, U, '#f4f1f8'); R(g, x + 1, y + U, 1.5, U, '#8a8496'); R(g, x, 15, w, 1, '#a8a0b4');
+    if (k === 1) { R(g, x, y + 6, w, 3, dark(col, 0.2)); for (const [a, b] of [[1.5, 3], [4, 4.5], [2.5, 9.5], [5, 11]]) p1(g, x + a, y + b, '#e8fff0'); }
+    else if (k === 2) { for (const [a, b] of [[1.5, 3], [4.5, 4], [2.5, 6.5], [5, 8.5], [1.5, 9.5], [3.5, 11]]) disc(g, x + a, y + b, 0.7, '#4a7ad8'); }
+    else if (k === 4) { R(g, x, y + 4, w, 5, '#f8f0e0'); R(g, x + 2, y + 5.5, 3, 2, '#8a5a3a'); R(g, x, y + 4, w, U, '#c8a070'); }
+    else if (k === 5) { R(g, x, y + 4, w, 3, '#8a5a3a'); R(g, x, y + 4, w, U, '#f2c14e'); R(g, x + 1.5, y + 5, 3, U, '#f8f0e0'); }
+    else if (k === 6) { R(g, x + 1.5, y + 4, 4, 6, '#ffe08a'); for (let i = 0; i < 6; i++) p1(g, x + 2 + (i % 2) * 1.5, y + 4.5 + (i >> 1) * 2, '#e8a830'); R(g, x + 5, y + 3.5, 1, 4, '#5aa85a'); }
+    else if (k === 7) { disc(g, x + 3.5, y + 7, 2.2, '#f8f0e0'); for (const [a, b] of [[1.5, 3], [5, 4], [1.5, 10.5], [5.5, 10]]) p1(g, x + a, y + b, '#5a2028'); }
+    R(g, x + U, y + 1.5, U, h - 2.5, l); R(g, x + w - 1, y + 1.5, 1, h - 2.5, d);
+  }
+  return SPR[key] = outline(c);
+}
+function vendDone(m) {
+  const kinds = [...new Set(m.got)], fresh = kinds.filter(k => !G.cans[k]); for (const k of kinds) G.cans[k] = 1; save();
+  const n = count(G.cans), L = m.atari ? ['ATARI! FOUR OF A KIND. THE MACHINE PLAYS A LITTLE TUNE AND DROPS A SECOND DRINK, FREE.'] : [];
+  for (const k of m.got) L.push(DRINKS[k][0] + '. ' + DRINKS[k][6]);
+  if (fresh.length) L.push(n === DRINKS.length ? 'THAT IS EVERY DRINK IN THE MACHINE. YOU ARE NOW A VENDING MACHINE EXPERT.' : 'NEW FOR YOUR COLLECTION: ' + n + ' OF ' + DRINKS.length + ' DRINKS TRIED.');
+  endMini(true, L);
+}
 const nigiri = (x, y, k) => { disc(ctx, x, y, 9, '#c8c0d0'); disc(ctx, x, y - 0.5, 8.5, '#f8f4ea'); disc(ctx, x, y - 0.5, 6, '#e8e4ec'); R(ctx, x - 5, y - 1, 10, 4, '#fffaf0'); R(ctx, x - 6, y - 3.5, 12, 3.5, SUSHI[k][1]); R(ctx, x - 6, y - 3.5, 12, 1, lite(SUSHI[k][1], 0.4)); if (k === 2 || k === 4) R(ctx, x - 1, y - 3.5, 2, 6.5, '#2a3a34'); };
 const MG = {
   crane: {
@@ -49,6 +91,69 @@ const MG = {
       txtC(ctx, 'FORTUNE SLIP', 160, 30, '#c8382e', null, 2); const a = m.t < 1.3 ? Math.sin(m.t * 30) * 4 : 0; R(ctx, 104 + a, 52 - Math.abs(a), 30, 62, '#8a5a3a'); R(ctx, 104 + a, 52 - Math.abs(a), 30, 3, '#c89a6a'); R(ctx, 108 + a, 60 - Math.abs(a), 22, 30, '#c8382e'); txtC(ctx, '100', 119 + a, 72 - Math.abs(a), '#f2c14e'); R(ctx, 116 + a, 49 - Math.abs(a), 6, 3, '#1d1626');
       if (m.t > 1.4) { const k = Math.min(1, (m.t - 1.4) * 3); R(ctx, 158, 110 - k * 62, 76, k * 62, '#fffaf0'); R(ctx, 158, 110 - k * 62, 76, 1, '#d9cba8'); if (k >= 1) { R(ctx, 162, 52, 68, 12, '#c8382e'); txtC(ctx, FORT[m.f][0], 196, 56, '#fff8e8'); wrap(FORT[m.f][1], 64).forEach((l, i) => txtC(ctx, l, 196, 70 + i * 8, '#3a2e40')); } }
       txtC(ctx, m.t > 2 ? 'E TO KEEP IT' : 'SHAKE, SHAKE, SHAKE...', 160, 132, '#3a2e40');
+    }
+  },
+  vend: {
+    init(m) { m.vc = (m.sp && m.sp.vc) || '#f4f1e6'; m.i = 0; m.ph = 'pick'; m.pt = 0; m.free = false; m.got = []; m.coins = []; m.reel = [0, 1, 2, 3].map(() => Math.random() * 10 | 0); m.stop = 4; m.shake = 0; m.drop = 1; m.atari = false; m.sayT = 0; },
+    update(m, dt) {
+      const t0 = m.pt; m.pt += dt; const cross = s => t0 < s && m.pt >= s; if (m.shake > 0) m.shake -= dt; if (m.sayT > 0) m.sayT -= dt; m.drop = Math.min(1, m.drop + dt * 3.5);
+      if (KP.x) { if (m.got.length) vendDone(m); else { G.mg = null; G.state = 'play'; } return; }
+      if (m.ph === 'pick') {
+        const c = m.i % 4, r = m.i >> 2;
+        if (KP.l) { m.i = r * 4 + (c + 3) % 4; Snd.fx('ui'); } if (KP.r) { m.i = r * 4 + (c + 1) % 4; Snd.fx('ui'); } if (KP.u || KP.d) { m.i = (m.i + 4) % 8; Snd.fx('ui'); }
+        if (KP.a && m.t > 0.2) { m.ph = 'pay'; m.pt = 0; m.coins = m.free ? [] : COINS[DRINKS[m.i][2]]; }
+      } else if (m.ph === 'pay') { // coins in, the button, then the clunk
+        const done = m.coins.length * 0.16 + 0.15;
+        for (let j = 0; j < m.coins.length; j++) if (cross(j * 0.16 + 0.14)) Snd.fx('clink');
+        if (cross(done)) Snd.fx('ui');
+        if (cross(done + 0.3)) { Snd.fx('gacon'); m.shake = 0.22; m.got.push(m.i); m.drop = 0; m.say = m.free ? 'ENJOY!' : 'ARIGATO!'; m.sayT = 1.3; }
+        if (m.pt > done + 1) { m.pt = 0; if (m.free) m.ph = 'take'; else { m.ph = 'roll'; m.stop = 0; } }
+      } else if (m.ph === 'roll') { // LED digits that tick over, each reel a little faster than the one before; you get the digit you see
+        for (let r = m.stop; r < 4; r++) { const p0 = m.reel[r]; m.reel[r] += dt * (5 + r * 0.6); if (r === m.stop && Math.floor(m.reel[r]) !== Math.floor(p0)) Snd.fx('beep'); }
+        if (KP.a) { m.reel[m.stop] = Math.floor(m.reel[m.stop]); m.stop++; Snd.fx('ui'); if (m.stop === 4) { m.ph = 'judge'; m.pt = 0; } }
+      } else if (m.ph === 'judge') {
+        if (m.pt > 0.7) { const d = m.reel.map(p => Math.floor(p) % 10); m.pt = 0; if (d.every(v => v === d[0])) { m.ph = 'atari'; m.atari = true; Snd.fx('atari'); m.say = 'ATARI! ONE MORE!'; m.sayT = 2.2; } else { m.ph = 'take'; Snd.fx('land'); } }
+      } else if (m.ph === 'atari') { if (m.pt > 2.4) { m.ph = 'pick'; m.free = true; m.pt = 0; } }
+      else if (m.ph === 'take' && KP.a && m.pt > 0.3) vendDone(m);
+    },
+    draw(m) {
+      const vc = m.vc, X = 56 + (m.shake > 0 ? Math.round(Math.sin(G.t * 70)) : 0), at = m.ph === 'atari', blink = G.t % 0.3 < 0.15, D = DRINKS[m.i], RX = 152;
+      txtC(ctx, 'VENDING MACHINE', 160, 30, '#c8382e', null, 2);
+      // the machine: lit sign, a window of drinks with price tags and buttons, the lucky number, the coin slot and the tray
+      R(ctx, X - 1, 41, 86, 92, '#1d1626'); R(ctx, X, 42, 84, 90, vc); R(ctx, X, 42, 84, U, lite(vc, 0.6)); R(ctx, X, 42, 1.5, 90, lite(vc, 0.25)); R(ctx, X + 82, 42, 2, 90, dark(vc, 0.22));
+      for (let i = 0; i < 10; i++) { const on = at ? ((G.t * 14 | 0) + i) % 3 === 0 : (i + (G.t * 1.5 | 0)) % 2 === 0; disc(ctx, X + 6 + i * 8, 44.5, 1.2, on ? '#ffe86a' : dark(vc, 0.18)); }
+      R(ctx, X + 4, 47, 76, 59, '#3a3346'); R(ctx, X + 5, 48, 74, 57, at && blink ? '#fff4c8' : '#e4f6ff'); R(ctx, X + 5, 76, 74, 1.5, '#9ab8c8');
+      for (let i = 0; i < 8; i++) {
+        const cx = X + 14.25 + (i % 4) * 18.5, y0 = 49 + (i >> 2) * 28, hot = DRINKS[i][1], sel = i === m.i && m.ph === 'pick';
+        if (sel && (blink || !m.free)) { R(ctx, cx - 9, y0 - 1, 18, 27, '#ffd84a'); R(ctx, cx - 8, y0, 16, 25, at ? '#fff4c8' : '#f8fcff'); }
+        ctx.drawImage(drinkSpr(i), snap(cx - 5.5), y0);
+        R(ctx, cx - 8, y0 + 18, 16, 6, hot ? '#e0453a' : '#3f7ab0'); txtC(ctx, m.free ? 'FREE' : String(DRINKS[i][2]), cx, y0 + 18.5, '#fff8e8');
+        R(ctx, cx - 3, y0 + 25, 6, 1.5, m.ph !== 'pick' ? '#8a8496' : sel ? '#5ad88a' : m.free && !blink ? '#8a8496' : '#c8f0d0');
+      }
+      R(ctx, X + 8, 49, 1.5, 54, 'rgba(255,255,255,0.55)'); R(ctx, X + 11, 49, U, 54, 'rgba(255,255,255,0.4)');
+      if (at) txtO(ctx, 'ATARI!', X + 42, 68, blink ? '#ffd84a' : '#fff8e8', '#c8382e', 3);
+      R(ctx, X + 6, 108, 38, 12, '#1d1626');
+      for (let r = 0; r < 4; r++) {
+        const x = X + 8 + r * 9, idle = m.ph === 'pick' || m.ph === 'pay', col = idle ? '#6a2a24' : r < m.stop ? '#ff6a48' : '#c84434';
+        R(ctx, x, 109, 8, 10, '#2a1418'); if (!(at && blink)) txt(ctx, String(Math.floor(m.reel[r]) % 10), x + 1, 109, col, null, 2);
+      }
+      R(ctx, X + 52, 108, 12, 12, dark(vc, 0.15)); R(ctx, X + 52, 108, 12, U, dark(vc, 0.4)); R(ctx, X + 57.5, 110, 1, 7, '#1d1626'); R(ctx, X + 68, 109, 8, 5, '#c8c0d4'); R(ctx, X + 68, 109, 8, U, '#ffffff'); R(ctx, X + 68, 116, 8, 3, '#1d1626');
+      R(ctx, X + 14, 122, 56, 8, '#1d1626');
+      ctx.save(); ctx.beginPath(); ctx.rect(X + 14, 122, 56, 8); ctx.clip();
+      m.got.forEach((k, j) => { const last = j === m.got.length - 1, y = 124 - (last ? (1 - m.drop) * 12 - Math.abs(Math.sin(m.drop * 9)) * (1 - m.drop) * 3 : 0), x = X + 20 + j * 16, c = DRINKS[k][3]; R(ctx, x, y, 12, 5, c); R(ctx, x, y, 12, U, lite(c, 0.4)); R(ctx, x, y, 1.5, 5, '#c8c0d4'); R(ctx, x + 10.5, y, 1.5, 5, '#a8a0b4'); });
+      ctx.restore(); R(ctx, X + 14, 122, 56, 2.5, 'rgba(170,190,210,0.6)'); R(ctx, X + 14, 122, 56, U, 'rgba(255,255,255,0.7)');
+      if (m.sayT > 0) txtO(ctx, m.say, X + 42, 96 - Math.min(1, (1.3 - m.sayT) * 4) * 4, '#fff8e8', '#3a2e40');
+      // what is on the label, or the rules of the lucky number while it spins
+      if (m.ph === 'roll' || m.ph === 'judge' || at) {
+        txt(ctx, 'LUCKY NUMBER', RX, 46, '#c8382e', null, 2); wrap('STOP ALL FOUR ON THE SAME NUMBER AND THE NEXT DRINK IS FREE.', 114).forEach((l, i) => txt(ctx, l, RX, 60 + i * 7, '#6a5a6a'));
+      } else {
+        txt(ctx, D[0], RX, 46, '#3a2e40', null, tw(D[0], 2) > 114 ? 1 : 2); R(ctx, RX, 58, 21, 7, D[1] ? '#e0453a' : '#3f7ab0'); txtC(ctx, D[1] ? 'HOT' : 'COLD', RX + 10.5, 59, '#fff8e8'); txt(ctx, m.free ? 'FREE!' : D[2] + ' YEN', RX + 25, 59, m.free ? '#c8382e' : '#3a2e40');
+        wrap(D[5], 114).slice(0, 4).forEach((l, i) => txt(ctx, l, RX, 70 + i * 7, '#6a5a6a'));
+      }
+      txt(ctx, 'DRINKS TRIED ' + count(G.cans) + '/' + DRINKS.length, RX, 101, '#8a7a6a'); DRINKS.forEach((_, k) => ctx.drawImage(drinkSpr(k, !G.cans[k]), RX - 1 + k * 13, 108));
+      if (m.ph === 'pay' && m.coins.length) { const done = m.coins.length * 0.16 + 0.15; m.coins.forEach((v, j) => { const k = (m.pt - j * 0.16) / 0.14; if (k < 0 || k >= 1 || m.pt > done) return; const x = X + 100 - k * 42, y = 113 - Math.sin(k * 3.14) * 6; disc(ctx, x, y, 2.6, '#1d1626'); disc(ctx, x, y, 2.1, v === 10 ? '#d08a4a' : '#d8d4e0'); if (v === 50) disc(ctx, x, y, 0.7, '#1d1626'); p1(ctx, x - 1, y - 1, '#ffffff'); }); }
+      const B = { pick: m.free ? 'ATARI! PICK ONE MORE, IT IS FREE' : '< > CHOOSE - E BUY', pay: m.pt > m.coins.length * 0.16 + 0.45 ? 'GACON!' : m.free ? '' : 'CLINK... CLINK...', roll: 'E TO STOP NUMBER ' + (m.stop + 1) + ' OF 4', judge: '...', atari: 'ATARI!! ATARI!!', take: m.atari ? 'E TO TAKE THEM BOTH' : 'NOT THIS TIME. E TO TAKE YOUR DRINK' };
+      txtC(ctx, B[m.ph], 160, 136, '#3a2e40');
     }
   },
   dress: {

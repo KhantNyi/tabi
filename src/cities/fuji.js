@@ -16,32 +16,94 @@
   const cover = () => { const p = (G.t / 30 + 0.35) % 1; return p < 0.5 ? 1 : p < 0.58 ? 1 - (p - 0.5) / 0.08 : p < 0.92 ? 0 : (p - 0.92) / 0.08; };
   const clear = () => cover() < 0.2;
   const BLOBS = [[-36, 7, 22, 7], [-12, 2, 26, 8], [16, 5, 24, 7], [40, 11, 20, 6], [-54, 15, 18, 5], [2, 15, 30, 6], [30, 19, 22, 5]];
-  // an actor sorted just in front of the backdrop; it keeps its x on the player so it is never culled
-  function clouds(px, py, base, sc) {
-    M.ACT.push({ x: px, y: base + 1, px, py, sc, sayT: 0, upd(e) { e.x = pl.x; }, draw(e, x, y) {
-      const c = cover(), sx = e.px - (e.x - x), sy = e.py - (e.y - y); if (c <= 0.01) return;
-      ctx.globalAlpha = Math.min(1, c * 1.2) * 0.95;
-      for (const [dx, dy, rx, ry] of BLOBS) { const ox = (dx + Math.sign(dx || 1) * (1 - c) * 70) * e.sc; ell(ctx, sx + ox, sy + dy * e.sc + 1, rx * e.sc, ry * e.sc, '#d8e0ec'); ell(ctx, sx + ox - 2, sy + dy * e.sc - 1, rx * e.sc * 0.9, ry * e.sc * 0.8, '#ffffff'); }
-      ctx.globalAlpha = 1;
+  function puffs(g, sx, sy, sc) { // the cloud cap, parting sideways as it clears
+    const c = cover(); if (c <= 0.01) return; g.globalAlpha = Math.min(1, c * 1.2) * 0.95;
+    for (const [dx, dy, rx, ry] of BLOBS) { const ox = (dx + Math.sign(dx || 1) * (1 - c) * 70) * sc; ell(g, sx + ox, sy + dy * sc + 1, rx * sc, ry * sc, '#d8e0ec'); ell(g, sx + ox - 2, sy + dy * sc - 1, rx * sc * 0.9, ry * sc * 0.8, '#ffffff'); }
+    g.globalAlpha = 1;
+  }
+
+  // ---------- Fuji on the horizon ----------
+  // Fuji is twenty kilometres away, so walking down to the shore should hardly move it. The skyline (sky, mountain, far treeline)
+  // stays pinned to the world until it would scroll off the top of the view; then it holds there and slides down over the far
+  // water instead, squeezing the lake the way distance does. It can slide at most `slide` units, which stops short of anything
+  // you can walk on, so walking on into the park and the town scrolls it away as normal.
+  // With `mirror`, the still water under it holds an upside-down Fuji, the "sakasa Fuji" the lake is famous for.
+  const HZ = { bot: 0, top: 0 }; // where the skyline's bottom edge and summit were last drawn on screen; photos are framed from it
+  let SKYC = null, RFC = null;
+  const canvasFor = (c, w, h) => c && c.lw >= w && c.lh === h ? c : mk(Math.max(320, w), h);
+  function horizon(spr, base, slide, cl, mirror) {
+    const mask = mirror ? waterMask(base + slide + 80, mirror) : null;
+    M.ACT.push({ x: 0, y: base + slide, sayT: 0, upd(e) { e.x = pl.x; }, draw(e, x, y) {
+      const h = spr.lh, cx = snap(G.cx), cy = e.y - y, hold = Math.min(h, Math.max(cl.peak + 8, Math.round(H * 0.42))); // never so low that the sky runs out
+      const bot = snap(base - cy + Math.max(0, Math.min(slide, hold - (base - cy))));
+      HZ.bot = bot; HZ.top = bot - cl.peak;
+      // and it drifts sideways at a third of your pace, so it stays in view as you walk the shore
+      const c0 = (spr.lw - W) / 2, sx = snap(Math.max(0, Math.min(spr.lw - W, c0 + (cx - c0) * 0.35)));
+      SKYC = canvasFor(SKYC, W, h); const s = SKYC.g; s.clearRect(0, 0, SKYC.lw, h); s.drawImage(spr, -sx, 0); puffs(s, cl.x - sx, cl.y, cl.sc);
+      ctx.drawImage(SKYC, 0, 0, W, h, 0, bot - h, W, h);
+      if (mask) reflect(mask, bot, cx, cy);
     } });
   }
+  // the reflection: rows of the skyline, upside down, squashed onto the foreshortened water and wobbling a little,
+  // kept to the lake by a mask of its water (so it never paints over the shore or the pier)
+  function reflect(mask, bot, cx, cy) {
+    const rh = Math.min(Math.floor(H - bot), 110), src = SKYC.lh - 3; if (rh <= 0) return;
+    RFC = canvasFor(RFC, W, 110); const g = RFC.g; g.clearRect(0, 0, RFC.lw, 110);
+    for (let r = 0; r < rh; r++) {
+      const q = src - Math.floor(r / 0.55); if (q < 0) break;
+      g.globalAlpha = Math.max(0, 1 - r / 95); g.drawImage(SKYC, 0, q, W, 1, snap(Math.sin(G.t * 1.6 + r * 0.6) * Math.min(1.5, 0.25 + r * 0.03)), r, W, 1);
+    }
+    g.globalAlpha = 1; g.globalCompositeOperation = 'destination-in'; g.drawImage(mask, -cx, -(bot + cy)); g.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 0.42; ctx.drawImage(RFC, 0, 0, W, rh, 0, bot, W, rh); ctx.globalAlpha = 1;
+  }
+  // the lake's open water, from the painted terrain, down to world row h, less the rects in cuts (a pier)
+  function waterMask(h, cuts) {
+    const c = mk(M.w, h), DW = M.DW, n = Math.min(h * S, M.DH), im = c.g.createImageData(DW, n), d = new Uint32Array(im.data.buffer);
+    for (let i = 0; i < DW * n; i++) if (M.TY[i] === WA) d[i] = 0xffffffff;
+    c.g.putImageData(im, 0, 0); for (const [x, y, w, hh] of cuts) c.g.clearRect(x, y, w, hh); return c;
+  }
   const CLOUDY = [['THE CLOUDS HAVE SWALLOWED THE SUMMIT.', 'FUJI IS SHY. WAIT A LITTLE AND TRY AGAIN.'], ['A WHITE BLANKET SITS ON THE PEAK.', 'THE LOCALS SAY IT CLEARS IF YOU ARE PATIENT.'], ['NOTHING BUT CLOUD WHERE THE MOUNTAIN SHOULD BE.', 'KEEP AN EYE ON THE SKY AT THE TOP OF THE SCREEN.']];
-  function fujiSpot(id, x, y, verb, lines, r) {
+  // a Fuji photo frames the mountain where it stands on screen, summit at the top (the summit lookout). Two are painted as
+  // postcards instead: the mirror, whose reflection needs more height than a small screen has, and Chureito, where Fuji is
+  // off behind the trees
+  const aimFuji = () => [W / 2, HZ.top - 5];
+  function fujiSpot(id, x, y, verb, lines, r, shot) {
     M.SPOTS.push({ x, y, r: r || 15, label: verb, stamp: id, fn() {
       if (!clear()) { Snd.fx('wind'); dialog(CLOUDY[(G.t | 0) % CLOUDY.length]); return; }
-      G.state = 'event'; G.ev = { sp: { act: 'snap', stamp: id, lines }, t: 0 }; pl.mv = false; pl.dir = 'u';
+      G.state = 'event'; G.ev = { sp: Object.assign({ act: 'snap', stamp: id, lines }, shot || { aim: aimFuji }), t: 0 }; pl.mv = false; pl.dir = 'u';
     } });
+  }
+  // the mirror postcard: Fuji over the far trees, and the same Fuji upside down in the still lake
+  function mirrorPhoto(g, w, h) {
+    const hz = Math.round(h * 0.56), top = mk(w, hz), t = top.g, r = RNG(17);
+    dgrad(t, 0, 0, w, hz, ['#8ac0ec', '#b4d8f2', '#e4eef6']); for (const [x, y, a] of [[w * 0.14, 8, 14], [w * 0.86, 13, 11]]) { ell(t, x, y, a, 2, '#f4f8fc'); ell(t, x + 4, y - 1.5, a * 0.5, 1.5, '#ffffff'); }
+    mountain(t, w / 2, hz - 5, w * 0.56, hz - 13, '#6a7ab8', r, '#f8f4ee');
+    for (let x = 0; x < w; x += 2) { const th = 3 + hsh(x, 5) * 4; R(t, x, hz - th, 2, th, x % 6 ? '#3f6a4a' : '#4f7a5a'); }
+    g.drawImage(top, 0, 0); dgrad(g, 0, hz, w, h - hz, ['#4f92c0', '#3a76a6']);
+    g.globalAlpha = 0.6; for (let y = 0; y < h - hz; y++) { const q = hz - 1 - Math.floor(y / 0.8); if (q < 0) break; g.drawImage(top, 0, q, w, 1, snap(Math.sin(y * 1.7) * 0.5), hz + y, w, 1); } g.globalAlpha = 1;
+    for (let k = 0; k < 16; k++) R(g, r() * w, hz + 2 + r() * (h - hz - 3), 3 + r() * 7, U, 'rgba(255,255,255,0.55)');
+    g.drawImage(SPR.swan, Math.round(w * 0.1), h - 19);
+  }
+  // the Chureito postcard: the red pagoda among the cherry trees, the town below, and Fuji filling the sky behind
+  function chureitoPhoto(g, w, h) {
+    const r = RNG(41); dgrad(g, 0, 0, w, h, ['#8ac0ec', '#b4d8f2', '#e8eef4']);
+    for (const [x, y, a] of [[24, 12, 18], [128, 8, 14], [96, 20, 10]]) { ell(g, x, y, a, 2.5, '#f4f8fc'); ell(g, x + 5, y - 2, a * 0.5, 2, '#ffffff'); }
+    mountain(g, w * 0.64, h * 0.7, w * 0.62, h * 0.56, '#6a7ab8', r, '#f8f4ee');
+    for (let x = -10; x < w + 10; x += 14) ell(g, x + r() * 8, h * 0.72, 12 + r() * 8, 4 + r() * 2, '#7a98a8');
+    for (let x = w * 0.3; x < w + 6; x += 7) { const y = h * 0.74 + r() * 5, c = ['#e8e0d0', '#c8b8a8', '#a8b4c8'][r() * 3 | 0]; R(g, x, y, 6, 4, c); R(g, x - 0.5, y - 1.5, 7, 1.5, dark(c, 0.45)); }
+    pagoda(g, w * 0.24, h * 1.02, 5, 26, { bh: 6, rh: 5, step: 3 });
+    for (let i = 0; i < 46; i++) { const a = i / 46, x = a < 0.5 ? a * 2 * w * 0.5 - 6 : w - (a - 0.5) * 2 * w * 0.3 + 6, y = h - 2 - r() * (a < 0.5 ? 22 : 14) + (a < 0.5 ? 0 : 6), k = 4 + r() * 5; disc(g, x, y + 1, k, '#d87aa0'); disc(g, x - 1, y, k, '#f2a8c4'); disc(g, x - 2, y - 1, k * 0.5, '#ffd8e6'); }
   }
   const ropeway = (label, name, go) => () => rideTo({ label, name, go, spr: SPR.rope, speed: 26, dur: 4.2 });
 
   // ---------- the lake ----------
-  MAPS.kawaguchiko = { name: 'KAWAGUCHIKO', sub: 'MOUNT FUJI ACROSS A QUIET LAKE', tw: 60, th: 46, music: 'fuji',
-    zones: [[440, 224, 530, 350, 'THE PIER', 'A JETTY OUT INTO THE LAKE'], [0, 384, 280, 600, 'CHUREITO PAGODA', 'A HILLSIDE STAIR TO A RED PAGODA'], [576, 340, 960, 540, 'OISHI PARK', 'LAVENDER AND KOCHIA BY THE WATER'],
+  MAPS.kawaguchiko = { name: 'KAWAGUCHIKO', sub: 'MOUNT FUJI ACROSS A QUIET LAKE', tw: 60, th: 46, music: 'fuji', lookUp: [372, 440],
+    zones: [[440, 284, 530, 350, 'THE PIER', 'A JETTY OUT INTO THE LAKE'], [0, 384, 280, 600, 'CHUREITO PAGODA', 'A HILLSIDE STAIR TO A RED PAGODA'], [576, 340, 960, 540, 'OISHI PARK', 'LAVENDER AND KOCHIA BY THE WATER'],
       [280, 400, 576, 600, 'LAKESIDE INN', 'HOT SPRINGS WITH A VIEW'], [0, 600, 960, 736, 'KAWAGUCHIKO', 'A LAKE TOWN UNDER THE MOUNTAIN'], [0, 176, 960, 400, 'LAKE KAWAGUCHI', 'THE CLASSIC VIEW OF FUJI']],
     lay() {
       tRect(FR, 0, 0, 60, 46);
       tRect(GR, 1, 10, 59, 26); tOval(GR, 30, 26, 14, 3);
-      tRect(WA, 0, 0, 60, 11.5); tOval(WA, 30, 13, 27, 7.6); tOval(WA, 9, 13, 10, 6.4); tOval(WA, 51, 12.5, 10.5, 7);
+      tRect(WA, 0, 0, 60, 18.7); tOval(WA, 30, 18.7, 25, 2.2); tOval(WA, 47, 18.7, 6, 0.9); tOval(WA, 12, 18.7, 5, 0.6);
       // the pagoda hill: two terraces stepping up toward the lake, walled in by trees
       tRect(GR, 1, 24.5, 16.5, 41); tRect(FR, 1, 22.5, 16.5, 24.5); tRect(FR, 16.5, 22.5, 18.5, 37);
       tRect(GR, 18.5, 26, 36.5, 41); tRect(GR, 36.5, 22, 59, 41); tRect(FR, 35.5, 26, 37, 33.5);
@@ -55,21 +117,21 @@
     },
     deco() {
       const g = M.ground.g;
-      put(SPR.fujiBig, 480, 176, 480, 176); clouds(480, 30, 176, 1);
+      horizon(SPR.fujiBig, 176, 116, { x: 480, y: 92, sc: 0.85, peak: 88 }, [[452, 296, 64, 22], [468, 312, 32, 30]]);
       // ---- the pagoda hill
       ledge([[16, 480], [140, 478], [264, 481]], 12, 'stone'); steps(72, 480, 24, 16);
       ledge([[16, 576], [140, 574], [264, 577]], 12, 'stone'); steps(200, 576, 24, 16);
       put(SPR.pagoda, 104, 452, 52, 130); block(78, 436, 130, 452);
-      fujiSpot('kw_chureito', 168, 464, 'TAKE A PHOTO', ['THE RED PAGODA, THE CHERRY BLOSSOM, AND FUJI FLOATING BEHIND THEM.', 'IT IS THE PICTURE ON EVERY POSTER OF JAPAN. NOW IT IS YOURS TOO.'], 16);
+      fujiSpot('kw_chureito', 168, 464, 'TAKE A PHOTO', ['THE RED PAGODA, THE CHERRY BLOSSOM, AND FUJI FLOATING BEHIND THEM.', 'IT IS THE PICTURE ON EVERY POSTER OF JAPAN. NOW IT IS YOURS TOO.'], 16, { photo: chureitoPhoto });
       for (const [x, y] of [[36, 420], [228, 420], [246, 462], [30, 548], [112, 520], [244, 540], [40, 620], [150, 628], [250, 630]]) plant('sakura', x, y, 1);
       signpost(232, 652, ['CHUREITO PAGODA. 398 STEPS TO THE TOP.', '(SOMEONE HAS SCRATCHED OUT 398 AND WRITTEN "MANY".)']);
       npc('granny', 150, 548, { rad: 16, lines: ['TAKE THE STEPS SLOWLY. THE PAGODA IS NOT GOING ANYWHERE.', 'FROM THE TOP, THE MOUNTAIN LOOKS CLOSE ENOUGH TO TOUCH.'] });
       npc('tourist', 196, 448, { dir: 'u', lines: ['I HAVE BEEN HERE SINCE SUNRISE WAITING FOR THE CLOUDS TO MOVE.', 'THEY MOVE. THEN THEY COME BACK. THEN THEY MOVE.'] });
       // ---- the pier and the lake
-      bridge(472, 250, 496, 340, '#8a6a48', '#b8905a'); R(g, 452, 232, 64, 22, '#b8905a'); for (let x = 452; x < 516; x += 4) R(g, x, 232, U, 22, '#8a6a48'); R(g, 452, 254, 64, 3, 'rgba(20,30,60,0.3)'); block(452, 232, 516, 254, 0);
-      for (const x of [452, 512]) { prop('post', x + 2, 252, 2); }
-      fujiSpot('kw_mirror', 484, 244, 'LOOK ACROSS', ['THE WATER IS SO STILL THAT THERE ARE TWO FUJIS, ONE THE RIGHT WAY UP.', 'A FISH JUMPS AND THE SECOND MOUNTAIN SHIVERS.'], 16);
-      for (const [x, y] of [[396, 262], [560, 284], [610, 250], [270, 300]]) put(SPR.swan, x, y, 11, 17);
+      bridge(472, 314, 496, 340, '#8a6a48', '#b8905a'); R(g, 452, 296, 64, 20, '#b8905a'); for (let x = 452; x < 516; x += 4) R(g, x, 296, U, 20, '#8a6a48'); R(g, 452, 296, 64, U, '#d8b07a'); R(g, 452, 316, 64, 3, 'rgba(20,30,60,0.3)'); block(452, 296, 516, 316, 0);
+      for (const x of [452, 512]) { prop('post', x + 2, 314, 2); }
+      fujiSpot('kw_mirror', 484, 304, 'LOOK ACROSS', ['THE WATER IS SO STILL THAT THERE ARE TWO FUJIS, ONE THE RIGHT WAY UP.', 'A FISH JUMPS AND THE SECOND MOUNTAIN SHIVERS.'], 16, { photo: mirrorPhoto });
+      for (const [x, y] of [[392, 320], [566, 314], [640, 306], [300, 308]]) put(SPR.swan, x, y, 11, 17);
       npc('tourist', 530, 352, { rad: 20, lines: ['MY CAMERA HAS FOUR HUNDRED PHOTOS OF A CLOUD.', 'THE MOUNTAIN IS IN THERE SOMEWHERE.'] });
       npc('kid', 380, 360, { rad: 24, lines: ['WHY IS THE TOP WHITE?', 'IS IT SUGAR?'] });
       for (const [x, y] of [[90, 330], [210, 354], [330, 386], [620, 380], [700, 350], [860, 352], [930, 380]]) plant(hsh(x, y) < 0.5 ? 'sakura' : 'green2', x, y, 1);
@@ -95,10 +157,10 @@
     } };
 
   // ---------- the top of the ropeway ----------
-  MAPS.k_summit = { name: 'MT KACHIKACHI', sub: 'THE TANUKI AND THE RABBIT', tw: 40, th: 24, music: 'fuji',
+  MAPS.k_summit = { name: 'MT KACHIKACHI', sub: 'THE TANUKI AND THE RABBIT', tw: 40, th: 24, music: 'fuji', lookUp: [150, 230],
     lay() { tRect(FR, 0, 0, 40, 24); tRect(WA, 0, 0, 40, 6.75); tRect(PL, 8, 6.5, 32, 9); tOval(GR, 20, 15, 15, 7.5); tRect(GR, 15, 18, 25, 24); tRoad(DT, [[20, 23.5], [20, 15], [14, 13], [12, 10.5]], 0.6, GR); tRoad(DT, [[20, 15], [26, 13], [28, 10.5]], 0.6, GR); },
     deco() {
-      put(SPR.fujiS, 320, 108, 320, 108); clouds(320, 14, 108, 0.75); block(0, 0, 640, 112);
+      horizon(SPR.fujiS, 108, 0, { x: 320, y: 14, sc: 0.75, peak: 100 }); block(0, 0, 640, 112);
       fujiSpot('kw_summit', 320, 124, 'TAKE A PHOTO', ['FROM UP HERE THE LAKE IS A MIRROR AND THE TOWN IS A TOY.', 'AND FUJI FILLS THE WHOLE SKY, AS IF IT WERE STANDING RIGHT BEHIND YOU.'], 18);
       put(SPR.bellH, 320, 200, 15, 33); block(308, 194, 332, 200); stampSpot('kw_bell', 320, 210, 'RING THE BELL', 'bow', ['DONG. THE SOUND ROLLS DOWN THE HILL AND OUT OVER THE WATER.', 'THEY SAY IF TWO PEOPLE RING IT TOGETHER, THEY STAY TOGETHER.']);
       prop('tanuki', 200, 212, 7); prop('usagi', 440, 212, 6);
@@ -141,7 +203,7 @@
         dgrad(g, 0, 0, w, h - 8, ['#7ab8e8', '#a8d4f0', '#dcecf4']); for (let k = 0; k < w / 120; k++) { const x = r() * w, y = 8 + r() * (h * 0.3); ell(g, x, y, 16 + r() * 18, 3, '#f4f8fc'); ell(g, x + 6, y - 2, 9, 2.5, '#ffffff'); }
         mountain(g, cx, h - 14, hw, mh, '#6a7ab8', r, '#f8f4ee'); for (let x = -20; x < w + 20; x += 34) ell(g, x + r() * 20, h - 14, 30 + r() * 20, 8 + r() * 5, '#5a8a8a');
         for (let x = 0; x < w; x += 3) { const t = 6 + hsh(x, seed) * 7; R(g, x, h - 8 - t, 3, t + 8, x % 9 ? '#3f6a4a' : '#4f7a5a'); p1(g, x + 1, h - 8 - t, '#5a8a5a'); } R(g, 0, h - 2, w, 2, '#2f5a6a'); return c; };
-      SPR.fujiBig = scene(960, 176, 480, 300, 146, 3); SPR.fujiS = scene(640, 108, 320, 280, 86, 7);
+      SPR.fujiBig = scene(960, 176, 480, 170, 74, 3); SPR.fujiS = scene(640, 108, 320, 280, 86, 7);
       { const g = SPR.fujiS.g; R(g, 0, 100, 640, 8, '#8a6a48'); R(g, 0, 100, 640, 1, '#c4a070'); for (let x = 2; x < 640; x += 12) R(g, x, 94, 2, 14, '#8a6a48'); R(g, 0, 95, 640, 1.5, '#a8845a'); }
       SPR.rope = (() => { const c = mk(320, 84), g = c.g, r = RNG(21); dgrad(g, 0, 0, 320, 84, ['#7ab8e8', '#a8d4f0', '#e8f0f4']); mountain(g, 230, 50, 90, 46, '#6a7ab8', r, '#f8f4ee'); R(g, 0, 48, 320, 10, '#4a9ac8'); R(g, 0, 48, 320, 1, '#8ad0f0'); for (let x = 0; x < 320; x += 4) R(g, x, 52 + (x % 12 === 0 ? 2 : 0), 2, U, '#8ad0f0'); for (let x = -10; x < 330; x += 14) { const y = 58 + Math.sin(x / 40) * 4; ell(g, x, y + 14, 12, 16, '#4f7a5a'); ell(g, x + 4, y + 10, 7, 9, '#5a8a5a'); } line1(g, 0, 20, 320, 6, '#3a3346'); return c; })();
       variants('kochia', 2, (rnd, i) => { const c = mk(18, 16), g = c.g, col = i ? '#d8483a' : '#6ab85a'; ell(g, 9, 9.5, 8, 6, dark(col, 0.3)); ell(g, 9, 8.5, 7.5, 6, col); ell(g, 7, 6.5, 4, 3, lite(col, 0.3)); for (let k = 0; k < 14; k++) p1(g, 3 + rnd() * 12, 4 + rnd() * 9, dark(col, 0.2)); return outline(c); });

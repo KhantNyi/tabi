@@ -71,7 +71,12 @@ function plant(kind, x, y, force) {
   else { put(s, x, y, 28, 60, { split: 46, sw: 0.6 }); M.SHD.push([x, y, 14, 4]); block(x - 3, y - 4, x + 3, y); }
   return true;
 }
-function prop(name, x, y, bw, o) { const s = SPR[name]; put(s, x, y, s.lw / 2, s.lh - 1, o); if (bw) block(x - bw, y - 5, x + bw, y); M.SHD.push([x, y, Math.min(s.lw / 2, bw || 6) + 2, 2]); }
+function prop(name, x, y, bw, o) {
+  const s = SPR[name]; put(s, x, y, s.lw / 2, s.lh - 1, o); if (bw) block(x - bw, y - 5, x + bw, y); M.SHD.push([x, y, Math.min(s.lw / 2, bw || 6) + 2, 2]);
+  // every vending machine sells drinks (see MG.vend), and glows on a night street
+  if (VENDC[name]) { M.SPOTS.push({ x, y: y + 6, r: 12, label: 'BUY A DRINK', mini: 'vend', vc: VENDC[name] }); if (M.night) M.LIGHTS.push([x, y - 11, 15, '#cfeaff']); }
+}
+const VENDC = { vend: '#f4f1e6', vend2: '#e0563f', vend3: '#5aa8e0' };
 function door(x, y, to, lab) { M.SPOTS.push({ x, y: y + 7, r: 13, label: lab || 'ENTER', door: to }); }
 const TWC = ['#8a8aa8', '#a89a94', '#7a8a9a', '#9a8a7a', '#6a7a94', '#b0a8a0', '#8a7a8a'];
 function tower(x, y, w, h, o = {}) {

@@ -46,6 +46,7 @@ There are 21 stamps to collect, along with capsule figures and cats to pet. The 
 A lake town under Mount Fuji, explored on foot, plus a ropeway up to a small summit.
 
 - **Fuji and the clouds:** Fuji fills the skyline across the lake, but clouds cover the summit for part of every half minute. The Fuji photo stamps only count while the peak is clear, and a small sign next to the stamp counter says CLEAR or CLOUDY.
+- **Fuji on the horizon:** Fuji is far away, so it barely moves as you walk. Near the shore the camera lifts toward it, and the skyline stays at the top of the view, sliding over the far water rather than scrolling off. It drifts sideways at a third of your pace and scrolls away once you head inland. The still lake below shows an upside-down Fuji.
 - **Places:** Chureito Pagoda up a terraced hillside, a pier out into the lake, Oishi Park's lavender and kochia on a raised bank, and the Kachi Kachi ropeway to a lookout with a tanuki, a rabbit and a bell.
 - **Inside:** a lakeside onsen and a hoto noodle house.
 - **Collecting:** 8 stamps and 4 cats.
@@ -81,9 +82,14 @@ Nara is one large map you explore on foot, with no trains. It runs from the stat
 - Three places to go inside: the Great Buddha Hall (squeeze through the pillar), a mochi shop with a pounding minigame, and a hillside tea house.
 - 11 stamps and 3 cats, one of them in a walled garden you can only reach through a gap in its wall.
 
+## Everywhere
+
+- **Photos:** whenever you take a photo, an instant-photo card drops in and develops from a cream haze. It shows the view in front of you (with you out of the shot), a caption, and an orange date print. A few Fuji views are painted as postcards instead.
+- **Vending machines:** every vending machine in every city works. Pick one of eight hot and cold drinks, then stop the four-digit lucky number. Four of a kind (ATARI!) wins a second drink free. The drinks you have tried are kept in a collection, shown in the stamp book. At night the machines glow.
+
 ## Saving
 
-Progress is saved in `localStorage` as one save for the whole trip: stamps from every city, figures, cats, your outfit and where you were. A save from the Tokyo-only version is picked up automatically. Some small things reset when you reload: deer crackers, and which Kuromon stalls you have tasted.
+Progress is saved in `localStorage` as one save for the whole trip: stamps from every city, figures, cats, the drinks you have tried, your outfit and where you were. A save from the Tokyo-only version is picked up automatically. Some small things reset when you reload: deer crackers, and which Kuromon stalls you have tasted.
 
 ## Screens and phones
 
@@ -117,8 +123,8 @@ src/
     nara.js             Nara's map, rooms, deer, the mochi minigame and landmark art
     osaka.js            Osaka's four districts, the takoyaki minigame and landmark art
   game/
-    minigames.js        crane, sushi, capsule, fortune, fitting room
-    main.js             the game loop: walking, doors, trains, the shinkansen, stamp book, saving, drawing
+    minigames.js        crane, sushi, capsule, fortune, fitting room, vending machine
+    main.js             the game loop: walking, doors, trains, the shinkansen, stamp book, photo cards, saving, drawing
 ```
 
 Scripts are plain classic `<script>` tags that share one global scope, which is why the game works when opened straight from disk. Keep the load order in `index.html`: engine, then art, then world, then cities, then game.
@@ -135,6 +141,8 @@ Scripts are plain classic `<script>` tags that share one global scope, which is 
    - `line` lists the local train stations in order. Use `[]` if there are none, and give `areas: [[mapId, label], ...]` instead to lay out the stamp book.
    - `stamps` maps each stamp id to `[label, icon, area]`.
    - Optional: `minis` adds minigames and `hud()` shows a small counter next to the stamps.
+   - A map can set `lookUp: [y0, y1]` to lift the camera toward a view at its top (fully above `y0`, easing off by `y1`).
+   - A photo spot (`act: 'snap'`) can set `aim()` to frame its photo, or `photo(g, w, h)` to paint the picture itself.
 4. Put a `shinkansen(x, y)` spot on the hub map, add the city's position to `JPOS` in `main.js`, and add a `<script>` tag for it in `index.html` after `world.js`. The order of the tags is the order of the cities on the shinkansen and in the stamp book.
 5. A station is `station(x, y, name)`, or `busStop(x, y)` for a bus. To ride somewhere that isn't on the line, such as a ropeway, call `rideTo({ label, name, go: [mapId, x, y] })` from a spot's `fn`.
 
@@ -159,7 +167,7 @@ City streets can stay on a grid, since that's what they are. Parks, temples and 
 | `?st=japan`, `?st=shink` | open the shinkansen map, or a shinkansen ride |
 | `?ov=1` | draw the whole map at once (with `map=`), to check its layout |
 | `?st=book`, `?st=line`, `?st=ride` | open the stamp book, the train line or a train ride |
-| `?mini=crane&mt=1` | open a minigame (`crane`, `sushi`, `gacha`, `omikuji`, `dress`, `mochi`, `tea`, `tako`); `mt` fast-forwards it by that many seconds |
+| `?mini=crane&mt=1` | open a minigame (`crane`, `sushi`, `gacha`, `omikuji`, `dress`, `mochi`, `tea`, `tako`, `vend`); `mt` fast-forwards it by that many seconds |
 | `?sim=6000&seed=3` | walk around at random for that many frames before showing the first frame, pressing E often |
 
 If a script error happens, it is printed in a red bar at the top of the canvas.
