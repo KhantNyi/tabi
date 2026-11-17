@@ -18,7 +18,6 @@ const NET = (function () {
   const N = { on: false, code: '', status: '', link: '', queue: [], invite: null, toast: null, copied: 0, hits: [], box: null, myBell: -1e9, bellDone: -1e9 };
   let tx = null, last = 0, sent = '';
   const now = () => performance.now(), peer = id => OTHERS.find(o => o.id === id), colOf = n => NCOL[Math.max(0, NAMES.indexOf(n))];
-  const newCode = () => Array.from({ length: 4 }, () => CODE_CH[Math.random() * CODE_CH.length | 0]).join('');
   N.name = () => NAMES[Math.random() * NAMES.length | 0];
   N.later = fn => N.queue.push(fn); // runs when you are next free to walk (not mid-dialog, menu or minigame)
   N.say = (s, t) => { N.toast = { s, t: t || 3 }; };
@@ -139,56 +138,48 @@ const NET = (function () {
 
   // ---- the PLAY TOGETHER menu (T): your name, start or join a room, invite friends, see where everyone is
   const rows = () => N.on ? ['name', 'invite', 'leave'] : ['name', 'start', 'join'];
-  N.open = () => { G.state = 'tog'; G.tog = { sel: 1, edit: -1, code: (N.code || 'TABI').split('') }; Snd.fx('page'); };
+  const newCode = () => Array.from({ length: 4 }, () => CODE_CH[Math.random() * CODE_CH.length | 0]).join('');
+  N.open = () => { G.state = 'tog'; G.tog = { sel: 1 }; Snd.fx('page'); };
   function share() {
     if (N.link && navigator.share && TOUCH) { navigator.share({ title: GAME.title, text: 'Come for a walk through Japan with me', url: N.link }).catch(() => { }); return; }
     try { navigator.clipboard.writeText(N.link || N.code).catch(() => { }); } catch (e) { }
     N.copied = 2; Snd.fx('pick');
   }
+  const close = () => { Snd.fx('page'); MENU.done(); };
   N.updTog = () => {
     const T = G.tog, RW = rows();
-    if (T.edit >= 0) { // typing a room code, arcade style
-      const c = T.code, k = CODE_CH.indexOf(c[T.edit]);
-      if (KP.u || KP.d) { c[T.edit] = CODE_CH[(Math.max(0, k) + (KP.u ? 1 : CODE_CH.length - 1)) % CODE_CH.length]; Snd.fx('ui'); }
-      if (KP.l && T.edit > 0) { T.edit--; Snd.fx('ui'); } if (KP.r && T.edit < 3) { T.edit++; Snd.fx('ui'); }
-      if (KP.a) { T.edit = -1; T.sel = 1; N.join(c.join('')); Snd.fx('yay'); } else if (KP.x || KP.b) T.edit = -1;
-      return;
-    }
     if (KP.u) { T.sel = (T.sel + RW.length - 1) % RW.length; Snd.fx('ui'); } if (KP.d) { T.sel = (T.sel + 1) % RW.length; Snd.fx('ui'); }
     const r = RW[T.sel];
     if (r === 'name' && (KP.l || KP.r || KP.a)) { G.name = NAMES[(NAMES.indexOf(G.name) + (KP.l ? NAMES.length - 1 : 1)) % NAMES.length]; save(); Snd.fx('ui'); }
     else if (KP.a && r === 'start') { N.join(newCode()); T.sel = 1; Snd.fx('yay'); }
-    else if (KP.a && r === 'join') { T.edit = 0; Snd.fx('ui'); }
+    else if (KP.a && r === 'join') MENU.open('join', 'tog');
     else if (KP.a && r === 'invite') share();
     else if (KP.a && r === 'leave') { N.leave(); T.sel = 1; Snd.fx('page'); }
-    else if (KP.x || KP.b || KP.t) { G.state = 'play'; Snd.fx('page'); }
+    else if (KP.x || KP.b || KP.t || KP.p) close();
   };
   const where = o => { if (o.ride) return 'ON THE WAY'; if (o.map === M.id) return 'RIGHT HERE'; const d = MAPS[o.map]; if (!d) return '...'; const c = CITIES[d.city]; return d.name.split(' - ')[0] + (c && c !== CITY ? ', ' + c.name : ''); };
   N.drawTog = () => {
-    const T = G.tog, RW = rows(), pw = Math.min(264, W - 12), ph = 160, x = Math.floor((W - pw) / 2), y = Math.max(4, Math.floor((H - ph) / 2)), mx = W / 2;
+    const T = G.tog, RW = rows(), big = TOUCH, rh = big ? 22 : 15, pw = Math.min(264, W - 12), ph = 112 + RW.length * rh, x = Math.floor((W - pw) / 2), y = Math.max(4, Math.floor((H - ph) / 2)), mx = W / 2;
     N.hits = []; N.box = [x, y, pw, ph]; R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(x, y, pw, ph); txtC(ctx, 'PLAY TOGETHER', mx, y + 7, '#c8382e', null, 2);
     if (N.on) { txtC(ctx, 'ROOM', mx, y + 21, '#8a7a6a'); txtC(ctx, N.code, mx, y + 29, '#3a2e40', null, 3); txtC(ctx, OTHERS.length ? OTHERS.length + 1 + ' TRAVELLERS' : N.status, mx, y + 46, OTHERS.length ? '#3f9a5a' : '#b8a888'); }
     else wrap('WALK AROUND JAPAN WITH FRIENDS. EVERYONE KEEPS THEIR OWN STAMP BOOK, AND SOME THINGS ARE BETTER DONE TOGETHER.', pw - 20).slice(0, 4).forEach((l, i) => txtC(ctx, l, mx, y + 22 + i * 7, '#6a5a6a'));
-    const LBL = { start: 'START A NEW ROOM', leave: 'LEAVE THE ROOM', invite: N.copied > 0 ? 'COPIED!' : N.link ? (TOUCH && navigator.share ? 'SHARE THE INVITE LINK' : 'COPY THE INVITE LINK') : 'COPY THE ROOM CODE' };
+    const LBL = { start: 'START A NEW ROOM', join: 'JOIN A ROOM WITH A CODE', leave: 'LEAVE THE ROOM', invite: N.copied > 0 ? 'COPIED!' : N.link ? (TOUCH && navigator.share ? 'SHARE THE INVITE LINK' : 'COPY THE INVITE LINK') : 'COPY THE ROOM CODE' };
     RW.forEach((r, i) => {
-      const ry = y + 56 + i * 15, sel = i === T.sel && T.edit < 0, c = sel ? '#c8382e' : '#3a2e40';
-      if (sel) R(ctx, x + 6, ry, pw - 12, 13, '#f2e2c0'); N.hits.push([x + 6, ry, pw - 12, 13, i]);
-      if (r === 'name') { txt(ctx, 'YOUR NAME', x + 12, ry + 4, c); const s = '< ' + G.name + ' >'; txt(ctx, s, x + pw - 12 - tw(s), ry + 4, c); disc(ctx, x + pw - 18 - tw(s), ry + 6.5, 2.5, '#3a2e40'); disc(ctx, x + pw - 18 - tw(s), ry + 6.5, 1.8, colOf(G.name)); }
-      else if (r === 'join') { txt(ctx, T.edit >= 0 ? 'E TO JOIN' : 'JOIN A ROOM', x + 12, ry + 4, T.edit >= 0 ? '#c8382e' : c); T.code.forEach((ch, j) => { const lx = x + pw - 12 - (4 - j) * 11, ed = T.edit === j; R(ctx, lx, ry + 1, 9, 11, ed ? '#c8382e' : '#e4d8bc'); txtC(ctx, ch, lx + 4.5, ry + 4, ed ? '#fff8e8' : '#3a2e40'); N.hits.unshift([lx, ry, 9, 13, 'c' + j]); }); }
-      else txt(ctx, LBL[r], x + 12, ry + 4, c);
+      const ry = y + 56 + i * rh, sel = i === T.sel, c = sel ? '#c8382e' : '#3a2e40', ty = ry + (rh - 2 - 5) / 2;
+      if (sel) R(ctx, x + 6, ry, pw - 12, rh - 2, '#f2e2c0'); N.hits.push([x + 6, ry, pw - 12, rh - 2, i]);
+      if (r === 'name') { txt(ctx, 'YOUR NAME', x + 12, ty, c); const s = '< ' + G.name + ' >'; txt(ctx, s, x + pw - 12 - tw(s), ty, c); disc(ctx, x + pw - 18 - tw(s), ty + 2.5, 2.5, '#3a2e40'); disc(ctx, x + pw - 18 - tw(s), ty + 2.5, 1.8, colOf(G.name)); }
+      else txt(ctx, LBL[r], x + 12, ty, c);
     });
-    if (N.on && OTHERS.length) OTHERS.slice(0, 4).forEach((o, i) => { const yy = y + 105 + i * 8; disc(ctx, x + 14, yy + 2, 2.5, '#3a2e40'); disc(ctx, x + 14, yy + 2, 1.8, o.col); txt(ctx, o.name, x + 20, yy, '#3a2e40'); const s = where(o); txt(ctx, s, x + pw - 12 - tw(s), yy, '#8a7a6a'); });
-    else wrap(N.on ? (N.link ? 'SEND FRIENDS THE LINK, OR THEY CAN PRESS T IN THEIR GAME AND JOIN WITH THIS CODE.' : 'FRIENDS OPEN THE GAME, PRESS T AND JOIN WITH THIS CODE.') : 'ONE OF YOU STARTS A ROOM. THE OTHERS JOIN WITH ITS CODE.', pw - 24).slice(0, 3).forEach((l, i) => txtC(ctx, l, mx, y + 106 + i * 7, '#a89878'));
-    txtC(ctx, TOUCH ? 'TAP TO CHOOSE - TAP OUTSIDE TO CLOSE' : T.edit >= 0 ? 'UP/DOWN LETTER - LEFT/RIGHT MOVE - E JOIN' : 'UP/DOWN CHOOSE - E SELECT - ESC CLOSE', mx, y + ph - 11, '#b8a888');
+    const fy = y + 60 + RW.length * rh;
+    if (N.on && OTHERS.length) OTHERS.slice(0, 4).forEach((o, i) => { const yy = fy + i * 8; disc(ctx, x + 14, yy + 2, 2.5, '#3a2e40'); disc(ctx, x + 14, yy + 2, 1.8, o.col); txt(ctx, o.name, x + 20, yy, '#3a2e40'); const s = where(o); txt(ctx, s, x + pw - 12 - tw(s), yy, '#8a7a6a'); });
+    else wrap(N.on ? (N.link ? 'SEND FRIENDS THE LINK, OR THEY CAN JOIN WITH THIS CODE FROM PLAY TOGETHER IN THEIR GAME.' : 'FRIENDS OPEN THE GAME, GO TO PLAY TOGETHER AND JOIN WITH THIS CODE.') : 'ONE OF YOU STARTS A ROOM. THE OTHERS JOIN WITH ITS CODE.', pw - 24).slice(0, 3).forEach((l, i) => txtC(ctx, l, mx, fy + i * 7, '#a89878'));
+    txtC(ctx, TOUCH ? 'TAP TO CHOOSE - TAP OUTSIDE TO CLOSE' : 'UP/DOWN CHOOSE - E SELECT - ESC CLOSE', mx, y + ph - 11, '#b8a888');
   };
   const inBox = (p, b) => b && p.x >= b[0] && p.x <= b[0] + b[2] && p.y >= b[1] && p.y <= b[1] + b[3];
   N.tapTog = p => {
     const T = G.tog, h = N.hits.find(b => inBox(p, b)), RW = rows();
-    if (!h) { if (T.edit >= 0) T.edit = -1; else if (!inBox(p, N.box)) KP.x = 1; return; }
-    const k = h[4];
-    if (typeof k === 'string') { const j = +k[1]; T.sel = RW.indexOf('join'); if (T.edit !== j) { T.edit = j; Snd.fx('ui'); } else KP.u = 1; return; }
-    if (T.edit >= 0) { if (RW[k] === 'join') KP.a = 1; else T.edit = -1; return; }
-    if (RW[k] === 'name') { T.sel = k; KP.r = 1; } else if (k === T.sel) KP.a = 1; else { T.sel = k; Snd.fx('ui'); }
+    if (!h) { if (!inBox(p, N.box)) KP.x = 1; return; }
+    T.sel = h[4]; if (RW[T.sel] === 'name') KP.r = 1; else KP.a = 1; // one tap does it
   };
 
   // ---- SAY SOMETHING (C): a bow, a cheer or a preset phrase in a speech bubble
@@ -199,10 +190,10 @@ const NET = (function () {
     if (i !== G.sayI) { G.sayI = i; Snd.fx('ui'); } if (KP.a) choose(i); else if (KP.x || KP.b || KP.c) G.state = 'play';
   };
   N.drawSay = () => {
-    const n = PHRASES.length, pw = Math.min(200, W - 12), cw = (pw - 16) / 2, ph = 34 + Math.ceil(n / 2) * 14, x = Math.floor((W - pw) / 2), y = H - ph - (TOUCH && H > W ? 120 : 12);
+    const n = PHRASES.length, rh = TOUCH ? 20 : 14, pw = Math.min(200, W - 12), cw = (pw - 16) / 2, ph = 34 + Math.ceil(n / 2) * rh, x = Math.floor((W - pw) / 2), y = H - ph - (TOUCH && H > W ? 120 : 12);
     N.hits = []; N.box = [x, y, pw, ph]; panel(x, y, pw, ph); txtC(ctx, 'SAY SOMETHING', W / 2, y + 6, '#c8382e', null, 2);
-    PHRASES.forEach(([s, em], i) => { const bx = x + 8 + (i % 2) * cw, by = y + 20 + (i >> 1) * 14, sel = i === G.sayI; if (sel) R(ctx, bx, by, cw - 2, 12, '#f2e2c0'); txt(ctx, (em ? '* ' : '') + s, bx + 4, by + 4, sel ? '#c8382e' : em ? '#8a5a3a' : '#3a2e40'); N.hits.push([bx, by, cw - 2, 12, i]); });
-    if (!N.on) txtC(ctx, 'ONLY YOU CAN HEAR YOU. PRESS T TO PLAY TOGETHER.', W / 2, y + ph - 9, '#b8a888');
+    PHRASES.forEach(([s, em], i) => { const bx = x + 8 + (i % 2) * cw, by = y + 20 + (i >> 1) * rh, sel = i === G.sayI; if (sel) R(ctx, bx, by, cw - 2, rh - 2, '#f2e2c0'); txt(ctx, (em ? '* ' : '') + s, bx + 4, by + (rh - 7) / 2, sel ? '#c8382e' : em ? '#8a5a3a' : '#3a2e40'); N.hits.push([bx, by, cw - 2, rh - 2, i]); });
+    if (!N.on) txtC(ctx, 'ONLY YOU CAN HEAR YOU. PLAY TOGETHER IS IN THE MENU.', W / 2, y + ph - 9, '#b8a888');
   };
   N.tapSay = p => { const h = N.hits.find(b => inBox(p, b)); if (h) choose(h[4]); else if (!inBox(p, N.box)) KP.x = 1; };
   return N;

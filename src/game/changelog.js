@@ -1,7 +1,14 @@
 'use strict';
-// ---------- what is new: shown on the last page of the stamp book (and from the title screen with V) ----------
+// ---------- what is new: shown on the last page of the stamp book, and from WHAT IS NEW on the main menu ----------
 // Newest first. The first entry is the game's version. Text uses the pixel font, so capitals and simple punctuation only.
 const CHANGELOG = [
+  ['0.7', '17 NOV 2026', 'MAIN MENU AND PHONES', [
+    'A MAIN MENU: CONTINUE, PLAY TOGETHER, WHAT IS NEW, SETTINGS AND NEW TRIP.',
+    'A MENU WHILE YOU WALK (ESC, OR THE MENU BUTTON ON A PHONE) INSTEAD OF A ROW OF SMALL BUTTONS.',
+    'TYPE A ROOM CODE WITH YOUR OWN KEYBOARD, OR PASTE AN INVITE LINK.',
+    'NO MORE ZOOMING IN BY ACCIDENT WHEN YOU TAP QUICKLY ON A PHONE.',
+    'MINIGAMES AND TRAIN RIDES FIT A PHONE HELD UPRIGHT, AND THE BUTTONS ARE BIGGER TO TAP.',
+    'SETTINGS REMEMBER WHETHER THE SOUND IS ON.']],
   ['0.6', '17 NOV 2026', 'PLAY TOGETHER', [
     'START OR JOIN A ROOM WITH T (THE 2P BUTTON ON A PHONE) AND WALK AROUND WITH FRIENDS.',
     'SAY HELLO, BOW OR CHEER WITH C (THE ... BUTTON).',

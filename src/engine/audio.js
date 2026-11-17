@@ -66,7 +66,7 @@ const Snd = {
     if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     const c = this.ctx = new AC();
-    this.master = c.createGain(); this.master.gain.value = 0.55; this.master.connect(c.destination);
+    this.master = c.createGain(); this.master.gain.value = this.on ? 0.55 : 0; // sound may have been switched off before it started this.master.connect(c.destination);
     this.mus = c.createGain(); this.mus.gain.value = 0.8; this.mus.connect(this.master);
     this.sfx = c.createGain(); this.sfx.gain.value = 0.9; this.sfx.connect(this.master);
     const d = c.createDelay(1); d.delayTime.value = 0.31; const fb = c.createGain(); fb.gain.value = 0.32;

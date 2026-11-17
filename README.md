@@ -18,17 +18,24 @@ You can also serve the folder with any static server if you prefer, for example 
 |---|---|---|
 | Walk | Arrows / WASD | Drag anywhere on the left side (floating joystick) |
 | Interact, talk, enter, confirm | E / Space / Enter | E button, or tap to advance dialogue |
+| Menu while walking (stamp book, play together, settings, main menu) | Esc / P | ☰ |
 | Back out of menus and minigames | Esc | ✕ button, or tap outside a menu |
 | Stamp book | Tab / B | BOOK |
-| Play together (start, join or leave a room) | T | 2P |
+| Play together (start, join or leave a room) | T | Menu, then PLAY TOGETHER |
 | Say something (bow, cheer, a preset phrase) | C | ··· (while in a room) |
-| What's new | V on the title screen, or the last page of the stamp book | Tap the version line on the title screen |
+| What's new | Main menu, or the last page of the stamp book | the same |
 | Train line | E at a station | Tap a stop, then tap it again to ride |
 | Shinkansen to another city | E at the blue shinkansen sign by the main station (Tokyo Station, Kyoto Station, Namba, Kawaguchiko, Nara). Every train-line menu says where it is. | Tap a city, then tap it again to ride |
 | Turn the stamp book's page | Left / Right | Tap the left or right side |
-| Music on/off | M | ♫ |
-| Fullscreen | F | ⤢ (turns on by itself when you start on a phone) |
-| New game (on the title screen) | N | - |
+| Sound on/off | M, or Settings | Settings |
+| Fullscreen | F, or Settings | Settings (turns on by itself when you start on a phone) |
+| New trip (start over) | Main menu | Main menu |
+
+## Menus
+
+The game opens on a **main menu**: CONTINUE (or START YOUR TRIP), PLAY TOGETHER, WHAT IS NEW, SETTINGS and NEW TRIP, which asks before it clears anything. While walking, Esc (☰ on a phone) opens a smaller menu with the stamp book, PLAY TOGETHER, SAY SOMETHING, settings and the way back to the main menu. **Settings** has sound (remembered), fullscreen, your nickname for playing together, and HOW TO PLAY.
+
+Every menu is a column of buttons: arrow keys and E, or one tap on a button. Esc, or a tap outside the buttons, goes back to wherever you came from.
 
 ## Tokyo
 
@@ -92,7 +99,7 @@ Nara is one large map you explore on foot, with no trains. It runs from the stat
 
 ## Playing together
 
-Two or more people can walk around Japan together. Press T (2P on a phone), choose START A NEW ROOM, and share the four-letter code. Friends press T, choose JOIN A ROOM and enter it. When the game is hosted on a website, the menu offers an invite link instead (`?room=CODE`), and opening the link joins.
+Two or more people can walk around Japan together. Choose PLAY TOGETHER (from either menu, or press T), then START A NEW ROOM, and share the four-letter code. Friends choose JOIN A ROOM WITH A CODE and type it in. When the game is hosted on a website, the menu offers an invite link instead (`?room=CODE`), and opening the link joins.
 
 - **Seeing each other:** friends on your map appear in their own outfits with a name tag. Friends elsewhere on the same map get an arrow at the edge of the screen. The menu lists where everyone is. When a friend's tab goes quiet, their avatar fades.
 - **Talking:** C opens SAY SOMETHING, with a bow, a cheer and eight preset phrases. There is no free-text chat, and names are animal nicknames (TANUKI, NEKO...), so a stranger who guessed a code could only wave.
@@ -107,7 +114,7 @@ Players connect directly to each other over WebRTC, using [Trystero](https://git
 
 ## What's new
 
-The last page of the stamp book lists every version and what it added. Press V on the title screen to open it directly. Returning players get a note when the version changes. Versions live in `src/game/changelog.js`, newest first. The top entry is the game's version.
+The last page of the stamp book lists every version and what it added, and WHAT IS NEW on the main menu opens it directly. Returning players get a note when the version changes. Versions live in `src/game/changelog.js`, newest first. The top entry is the game's version.
 
 ## Saving
 
@@ -119,7 +126,10 @@ The view fills the whole screen on every device, with the controls drawn on top 
 
 - **Desktop and phones held sideways:** pixels stay a whole-number size, and a bigger or wider screen shows more of the city rather than bigger pixels.
 - **Phones held upright:** you see a narrower, taller slice of the city. The stamp book and the train line switch to one-column lists.
-- **Menus and rooms:** menus stay centred, and rooms smaller than the screen sit in the middle of it.
+- **Menus and rooms:** menus stay centred, and rooms smaller than the screen sit in the middle of it. On a phone held upright, menu buttons grow to a comfortable size for thumbs.
+- **Minigames and train rides** are laid out for a 320-wide screen. On a phone held upright they are shrunk to fit the width.
+- **Touch:** only BOOK and ☰ sit in the corner. The joystick and buttons hide while a menu is open, because menus are tapped directly. Double-tap and pinch zoom are switched off, so tapping quickly never zooms the page.
+- **Room codes** are typed into a real text box, so the phone's own keyboard comes up. Pasting a whole invite link works too. The text is large enough that iOS does not zoom in on it.
 
 On iPhone, Safari can't make a web page fullscreen. Use Share, then Add to Home Screen, and open it from there instead.
 
@@ -148,12 +158,13 @@ src/
   game/
     minigames.js        crane, sushi, capsule, fortune, fitting room, vending machine
     changelog.js        the versions and what each one added (the stamp book's last page)
+    menus.js            the main menu, the menu while walking, settings, how to play, typing a room code
     main.js             the game loop: walking, doors, trains, the shinkansen, stamp book, photo cards, saving, drawing
   net/
     net.js              playing together: rooms, friends' avatars, SAY SOMETHING, and the moments made for two
 ```
 
-Scripts are plain classic `<script>` tags that share one global scope, which is why the game works when opened straight from disk. Keep the load order in `index.html`: engine, art, world, cities, then `minigames.js`, `changelog.js`, `net.js` and finally `main.js`, which boots the game.
+Scripts are plain classic `<script>` tags that share one global scope, which is why the game works when opened straight from disk. Keep the load order in `index.html`: engine, art, world, cities, then `minigames.js`, `changelog.js`, `net.js`, `menus.js` and finally `main.js`, which boots the game.
 
 ## Adding a city
 
@@ -195,6 +206,7 @@ City streets can stay on a grid, since that's what they are. Parks, temples and 
 | `?st=book`, `?st=line`, `?st=ride` | open the stamp book, the train line or a train ride |
 | `?mini=crane&mt=1` | open a minigame (`crane`, `sushi`, `gacha`, `omikuji`, `dress`, `mochi`, `tea`, `tako`, `vend`); `mt` fast-forwards it by that many seconds |
 | `?room=ABCD&net=local` | join a room through a BroadcastChannel instead of the internet, so two tabs of one browser can play together (serve the folder over http for this) |
+| `?st=menu&kind=pause` | open a menu (`main`, `pause`, `settings`, `help`, `confirm`, `join`) |
 | `?st=tog`, `?st=say`, `?st=book&pg=together`, `?st=book&pg=updates` | open the play-together menu, SAY SOMETHING, or a page of the stamp book |
 | `?sim=6000&seed=3` | walk around at random for that many frames before showing the first frame, pressing E often |
 

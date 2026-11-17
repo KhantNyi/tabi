@@ -1,6 +1,6 @@
 'use strict';
 // ---------- top-down basics: canvas, input, noise, people seen from front/back/side, UI bits ----------
-const cv = document.getElementById('game'), ctx = cv.getContext('2d');
+const cv = document.getElementById('game'); let ctx = cv.getContext('2d'); // layout() points ctx at an offscreen canvas for a moment
 const TOUCH = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
 if (TOUCH) document.body.classList.add('touch');
 // The view fills the screen. Landscape: pick a whole-number zoom (screen pixels per canvas pixel) that keeps at least
@@ -24,6 +24,12 @@ function fit() {
 }
 const W0 = 320, H0 = 180; // the smallest view the menus are laid out for
 addEventListener('resize', fit); fit();
+addEventListener('orientationchange', () => setTimeout(fit, 250)); // iOS reports the new size a little late
+// Phones: no double-tap or pinch zoom (iOS allows both even with user-scalable=no), and no long-press callouts.
+// Text boxes are left alone so they can still be tapped into.
+let _lastTouch = 0;
+document.addEventListener('touchend', e => { const t = performance.now(); if (t - _lastTouch < 380 && e.target.tagName !== 'INPUT') e.preventDefault(); _lastTouch = t; }, { passive: false });
+for (const ev of ['gesturestart', 'gesturechange', 'dblclick']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
 // fullscreen: F on a keyboard, the corner button on touch, and automatically when a touch player starts the game
 const FS_OK = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
 function fullscreen(on) {
@@ -37,9 +43,9 @@ for (const el of document.querySelectorAll('[data-fs]')) el.addEventListener('po
 
 // ---------- input ----------
 const K = {}, KP = {};
-const KEYS = { ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd', KeyE: 'a', Enter: 'a', Space: 'a', KeyX: 'a', KeyZ: 'a', Tab: 'b', KeyB: 'b', KeyQ: 'b', KeyM: 'm', KeyN: 'n', KeyT: 't', KeyC: 'c', KeyV: 'v', Escape: 'x' };
+const KEYS = { ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd', KeyE: 'a', Enter: 'a', Space: 'a', KeyX: 'a', KeyZ: 'a', Tab: 'b', KeyB: 'b', KeyQ: 'b', KeyM: 'm', KeyN: 'n', KeyT: 't', KeyC: 'c', KeyP: 'p', Escape: 'x' };
 function press(k) { if (!K[k]) KP[k] = 1; K[k] = 1; Snd.init(); }
-addEventListener('keydown', e => { const k = KEYS[e.code]; if (k) { e.preventDefault(); press(k); } });
+addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; const k = KEYS[e.code]; if (k) { e.preventDefault(); press(k); } }); // typing into a text box is not walking
 addEventListener('keyup', e => { const k = KEYS[e.code]; if (k) K[k] = 0; });
 addEventListener('blur', () => { for (const k in K) K[k] = 0; });
 for (const el of document.querySelectorAll('[data-k]')) {
@@ -49,7 +55,7 @@ for (const el of document.querySelectorAll('[data-k]')) {
 }
 // taps on the screen, in world units, for menus that can be tapped (title, dialogue, the train line, the stamp book)
 let TAP = null;
-const TAPPY = () => ['title', 'dialog', 'got', 'line', 'book', 'japan', 'tog', 'say'].includes(G.state);
+const TAPPY = () => ['menu', 'dialog', 'got', 'line', 'book', 'japan', 'tog', 'say'].includes(G.state);
 function tapAt(e) { const r = cv.getBoundingClientRect(); TAP = { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H }; Snd.init(); }
 cv.addEventListener('pointerdown', e => { if (TAPPY()) tapAt(e); else Snd.init(); });
 const buzz = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { } };
@@ -151,6 +157,15 @@ function frameOf(e) {
   const bl = q % 4 > 3.86, br = q * 1.6 % 2 < 1;
   if (side) return F.s[bl ? 'blink' : br ? 'idle0' : 'idle1'][fi];
   return e.dir === 'd' ? F.d[bl ? 6 : br ? 0 : 5] : F.u[br ? 0 : 5];
+}
+// A fixed 320x180 layout (a minigame, the train window): drawn as it is where it fits. On narrower screens (a phone held
+// upright) it is drawn off screen and shrunk to the width, smoothly, so its small text stays readable. yc: where its centre goes.
+let _lay = null;
+function layout(need, fn, yc) {
+  if (W >= need) { ctx.save(); ctx.translate(Math.floor((W - W0) / 2), Math.floor((H - H0) / 2)); fn(); ctx.restore(); return; }
+  if (!_lay) _lay = mk(W0, H0); const main = ctx; ctx = _lay.g; ctx.clearRect(0, 0, W0, H0); try { fn(); } finally { ctx = main; }
+  const k = (W - 4) / need, w = W0 * k, h = H0 * k; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(_lay, (W - w) / 2, Math.round((yc != null ? yc : H / 2) - h / 2), w, h); ctx.imageSmoothingEnabled = false;
 }
 function panel(x, y, w, h) { R(ctx, x + 1, y, w - 2, h, '#1d1626'); R(ctx, x, y + 1, w, h - 2, '#1d1626'); R(ctx, x + 1, y + 1, w - 2, h - 2, '#f8f0dc'); R(ctx, x + 2, y + 2, w - 4, 1, '#fffaf0'); R(ctx, x + 2, y + h - 3, w - 4, 1, '#d9cba8'); }
 function keycap(x, y, s) { const w = tw(s) + 6; R(ctx, x, y, w, 10, '#1d1626'); R(ctx, x + 1, y + 1, w - 2, 7, '#fff8e8'); R(ctx, x + 1, y + 8, w - 2, 1, '#b8a888'); txt(ctx, s, x + 3, y + 2, '#1d1626'); return w; }
