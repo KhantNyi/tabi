@@ -159,6 +159,7 @@ function buildSprites() {
   variants('sakura', 3, tr(LEAF.sakura)); variants('green', 4, tr(LEAF.green)); variants('green2', 2, tr(LEAF.green2)); variants('maple', 2, tr(LEAF.maple)); variants('ginkgo', 3, tr(LEAF.maple2));
   variants('pine', 3, (rnd, i) => { const c = mk(64, 62); pine(c.g, 32, 60, 40 + i * 3, rnd); return c; });
   variants('bush', 3, (rnd, i) => { const c = mk(26, 16); bush(c.g, 13, 15, 16 + i * 2, i === 2 ? LEAF.sakura : LEAF.green, rnd); return c; });
+  variants('rock', 3, (rnd, i) => { const c = mk(22, 14), g = c.g, w = 8 + i * 1.5; ell(g, 11, 9, w, 4.5, '#6b6478'); ell(g, 10, 8, w - 1, 4, '#8c8498'); ell(g, 8.5, 6.5, w * 0.55, 2.2, '#aaa4b8'); p1(g, 7, 6, '#c8c0d4'); if (i !== 1) { ell(g, 14, 9, 3, 1.5, '#6aa85a'); p1(g, 13, 8.5, '#8fd070'); } R(g, 3, 12.5, 16, 1, '#514a60'); return outline(c); });
   one('lantern', 14, 25, g => stoneLantern(g, 6, 24, true, false)); one('bench', 20, 13, g => bench(g, 1, 12)); one('vend', 14, 22, g => vending(g, 1, 21)); one('vend2', 14, 22, g => vending(g, 1, 21, '#e0563f')); one('vend3', 14, 22, g => vending(g, 1, 21, '#5aa8e0'));
   one('lamp', 12, 34, g => streetLamp(g, 8, 33, 30)); one('torii', 60, 50, g => torii(g, 30, 49, 40, 44)); one('toriiW', 84, 70, g => torii(g, 42, 69, 60, 62, '#9a6a40'));
   one('hall', 176, 92, g => templeHall(g, 88, 90, 108, 30, { gold: 1 })); one('hallG', 176, 92, g => templeHall(g, 88, 90, 108, 30, { wall: '#8a5a3a', roof: '#4a8a7a', door: '#6a4028' }));
@@ -166,6 +167,12 @@ function buildSprites() {
   one('stall', 30, 30, g => { R(g, 2, 12, 26, 18, '#8a5a3a'); R(g, 3, 13, 24, 9, '#ffd98a'); for (let i = 0; i < 6; i++) R(g, 4 + i * 4, 17, 3, 4, ['#e0563f', '#f2c14e', '#f06a8c'][i % 3]); R(g, 2, 22, 26, 2, '#c89a6a'); for (let i = 0; i < 8; i++) R(g, i * 4 - 1, 4, 4, 8, i % 2 ? '#f8f4ea' : '#e0563f'); R(g, -1, 4, 32, 1, '#ffa890'); R(g, -1, 11, 32, 1, '#8a2a24'); });
   SPR.car = ['#e0563f', '#f4f1e6', '#5aa8e0', '#f2c14e', '#3a3a4e', '#5aa85a'].map((c, i) => { const k = mk(30, 15), g = k.g; R(g, 1, 6, 28, 6, c); R(g, 1, 6, 28, 1, lite(c, 0.4)); R(g, 1, 11, 28, 1, dark(c, 0.35)); R(g, 6, 1, 16, 6, c); R(g, 6, 1, 16, 1, lite(c, 0.4)); R(g, 8, 2.5, 5.5, 3.5, '#bfe8ff'); R(g, 14.5, 2.5, 5.5, 3.5, '#bfe8ff'); R(g, 8, 2.5, 5.5, 1, '#ffffff'); disc(g, 7, 12, 2.5, '#1d1626'); disc(g, 22, 12, 2.5, '#1d1626'); disc(g, 7, 12, 1, '#9a94a8'); disc(g, 22, 12, 1, '#9a94a8'); R(g, 27.5, 7.5, 1.5, 2, '#fff0b0'); R(g, 1, 7.5, 1, 2, '#ff5a5a'); if (i === 3) { R(g, 12, -0.5, 4, 2, '#3f9a5a'); R(g, 1, 8.5, 28, 1, '#3a3a4e'); } const o = outline(k); return [o, flip(o)]; });
   SPR.cat = [['#e8a050', '#fff3d0'], ['#f4f1e6', '#3a3346'], ['#8a8498', '#e0dae8']].map(([a, b]) => { const c = mk(13, 12), g = c.g, d = dark(a, 0.25); R(g, 9.5, 7, 1, 3.5, a); R(g, 9.5, 6, 1.5, 1, a); R(g, 3, 6, 6, 5.5, a); R(g, 2.5, 8, 7, 3.5, a); R(g, 3, 6, 1, 5, d); R(g, 4.5, 7.5, 3, 4, b); R(g, 3, 2, 6, 4.5, a); R(g, 2.5, 3, 7, 3, a); R(g, 3, 0.5, 1, 1.5, a); R(g, 3, 1, 2, 1, a); R(g, 8, 0.5, 1, 1.5, a); R(g, 7, 1, 2, 1, a); R(g, 4, 3.5, U, 1, '#3a2434'); R(g, 7.5, 3.5, U, 1, '#3a2434'); p1(g, 5.75, 4.75, '#f09a9a'); return outline(c); });
+  one('post', 6, 14, g => { R(g, 1, 0, 3, 14, '#6a4a30'); R(g, 1, 0, 1, 14, '#a8744a'); R(g, 0.5, 0, 4, 1, '#3a2a20'); }, 1);
+  one('busstop', 12, 28, g => { R(g, 5, 8, 2, 20, '#6b6478'); disc(g, 6, 5, 5, '#3f7ab0'); disc(g, 6, 5, 3.5, '#f4f1e6'); R(g, 3, 4, 6, 2, '#3f7ab0'); R(g, 2, 26, 8, 2, '#4a4458'); }, 1);
+  one('lanternM', 14, 25, g => stoneLantern(g, 6, 24, true, true));
+  one('shsign', 26, 28, g => { R(g, 12, 12, 2, 16, '#6b6478'); R(g, 12, 12, U, 16, '#c8c0d4'); R(g, 0, 0, 26, 13, '#1d1626'); R(g, 1, 1, 24, 11, '#3f7ab0'); R(g, 1, 1, 24, U, '#8ac0e8'); R(g, 6, 4, 15, 4, '#f4f1e6'); R(g, 4, 5, 2, 3, '#f4f1e6'); R(g, 3, 6, 1, 2, '#f4f1e6'); R(g, 5, 6.5, 16, 1, '#3f7ab0'); R(g, 7, 4.5, 3, 1.5, '#1d1626'); R(g, 5, 8, 16, U, '#8a8496'); }, 1);
+  one('sign', 18, 20, g => { R(g, 8, 8, 2, 12, '#6a4638'); R(g, 8, 8, U, 12, '#a8744a'); R(g, 0, 0, 18, 10, '#3a2630'); R(g, 1, 1, 16, 8, '#e8d8b0'); R(g, 1, 1, 16, U, '#fff8e0'); for (const y of [3, 5, 7]) R(g, 3, y, 9 + (y * 3 % 4), U, '#6a4638'); R(g, 14, 3.5, 1.5, 3, '#c8382e'); }, 1);
+  icon('shink', g => { R(g, 2, 3, 10, 6, '#f4f1e6'); R(g, 1, 5, 2, 4, '#f4f1e6'); R(g, 0, 7, 2, 2, '#f4f1e6'); R(g, 2, 7, 10, 1, '#3f7ab0'); R(g, 4, 4, 2, 2, '#2a3a5a'); R(g, 7, 4, 4, 2, '#2a3a5a'); R(g, 1, 9, 11, 1, '#8a8496'); });
   icon('train', g => { R(g, 1, 2, 10, 8, '#5aa85a'); R(g, 1, 2, 10, 1, '#8fd070'); R(g, 2, 4, 3, 3, '#cfeaff'); R(g, 7, 4, 3, 3, '#cfeaff'); R(g, 1, 8, 10, 1, '#f4f1e6'); R(g, 2, 10, 2, 2, '#2a2430'); R(g, 8, 10, 2, 2, '#2a2430'); });
 }
 
@@ -175,3 +182,85 @@ function sideTowers(y0) { const rnd = RNG(M.h); for (const x of [14, M.w - 14]) 
 function lamps(y, col) { for (let x = 130; x < M.w - 30; x += 96) { prop('lamp', x, y, 2); M.LIGHTS.push([x - 4, y - 28, 20, col || '#ffe8a8']); } }
 const eaters = (xs, y, lines) => xs.forEach((x, i) => npc(WALK[(i * 3 + x) % 6], x, y, { dir: 'u', tint: WCOL[(x >> 3) % 8], lines: [lines[i % lines.length]] }));
 function plaza(y) { for (let x = 60; x < M.w - 40; x += 92) { plant('ginkgo', x + hsh(x, y) * 24, y, 1); if ((x / 92 | 0) % 2) prop('bench', x + 46, y + 8, 9); else prop('vend', x + 46, y + 4, 6); } crowd(4, 40, y + 22, M.w - 40, y + 22, 6); }
+
+// ---------- shaping a map: wild forest, water, ledges, steps, bridges, walls ----------
+// A map is a rectangle of terrain, but the part you can walk is whatever shape lay() carves out of it.
+// These helpers give that shape edges and levels, so a place can wind, climb and loop instead of being one flat box.
+function blockTer(t) { for (let j = 0; j < M.GH; j++) for (let i = 0; i < M.GW; i++) if (M.TER[j * M.GW + i] === t) block(i * 8, j * 8, i * 8 + 8, j * 8 + 8); }
+// wild(): every forest (FR) cell becomes woodland you cannot cross. Trees near the edge are real objects you can walk behind;
+// the deep interior is painted straight onto the ground, so a big forest costs nothing to draw.
+// gap: how many 8px cells next to a path stay free of trees, so narrow paths are not hidden behind canopies
+function wild(kinds, gap = 1) {
+  kinds = kinds || ['green', 'pine', 'green', 'green2'];
+  const GW = M.GW, GH = M.GH, D = new Uint8Array(GW * GH).fill(99); let q = [];
+  for (let k = 0; k < GW * GH; k++) if (M.TER[k] !== FR) { D[k] = 0; q.push(k); }
+  for (let d = 1; d < 12 && q.length; d++) { const n = []; for (const k of q) { const i = k % GW, j = k / GW | 0; for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const x = i + a, y = j + b; if (x < 0 || y < 0 || x >= GW || y >= GH) continue; const m = y * GW + x; if (D[m] > d) { D[m] = d; n.push(m); } } } q = n; }
+  for (let k = 0; k < GW * GH; k++) if (D[k] >= 2) { const i = k % GW, j = k / GW | 0; block(i * 8, j * 8, i * 8 + 8, j * 8 + 8); }
+  const rnd = RNG(M.w * 7 + M.h), deep = [], dist = (x, y) => D[Math.max(0, Math.min(GH - 1, Math.floor(y / 8))) * GW + Math.max(0, Math.min(GW - 1, Math.floor(x / 8)))];
+  for (let y = 8, r = 0; y < M.h + 44; y += 11, r++) for (let x = (r % 2) * 8 - 2; x < M.w + 10; x += 16) {
+    const px = Math.round(x + rnd() * 8 - 4), py = Math.round(y + rnd() * 6 - 3), d = dist(px, py), kind = kinds[rnd() * kinds.length | 0]; if (d < gap || (d === gap && rnd() < 0.55)) continue;
+    if (d <= 8 && py < M.h) plant(kind, px, py, 1); else deep.push([kind, px, py]);
+  }
+  const g = M.ground.g; for (const [kind, x, y] of deep) { const v = SPR[kind], sp = v[Math.floor(hsh(x * 3, y * 5) * v.length)]; g.drawImage(sp, x - (kind === 'pine' ? 32 : kind === 'bamboo' ? 14 : 28), y - (kind === 'bamboo' ? 72 : 60)); }
+}
+// ledge(): a retaining wall or cliff face running left to right through pts (px). The ground north of it reads as higher.
+const LEDGE = { rock: ['#8a8496', '#aaa4b8', '#6b6478', '#514a60'], stone: ['#b8b0a4', '#d8d0c4', '#8e887c', '#6a6458'], earth: ['#a8845a', '#c4a070', '#8a6a48', '#5a4630'] };
+function ledgeY(pts, x) { for (let k = 1; k < pts.length; k++) { const [ax, ay] = pts[k - 1], [bx, by] = pts[k]; if (x <= bx || k === pts.length - 1) { const t = Math.max(0, Math.min(1, (x - ax) / (bx - ax))); return snap(ay + (by - ay) * t * t * (3 - 2 * t)); } } }
+function ledge(pts, h = 12, kind = 'rock') {
+  const g = M.ground.g, [c, hi, lo, dk] = LEDGE[kind], x0 = pts[0][0], x1 = pts[pts.length - 1][0];
+  for (let x = x0; x < x1; x += U) {
+    const y = ledgeY(pts, x), X = Math.round(x * S);
+    R(g, x, y, U, h, c);
+    if (kind === 'stone') { for (let r = 0; r * 4 < h; r++) { const q = (X + (r & 1) * 9) % 18; R(g, x, y + r * 4, U, U, lo); if (q === 0) R(g, x, y + r * 4, U, 4, lo); else if (q === 1) R(g, x, y + r * 4 + U, U, 3, hi); else if (hsh(X >> 2, r + 40) < 0.2) R(g, x, y + r * 4 + 1.5, U, 1, hi); } }
+    else { const n = vn(X / 9, 3.1); R(g, x, y + h * (0.2 + n * 0.5), U, 1 + hsh(X >> 2, 9) * 2, lo); if (hsh(X, 3) < 0.14) R(g, x, y + 2 + hsh(X, 5) * (h - 5), U, 2, hi); if (hsh(X >> 1, 11) < 0.07) R(g, x, y + 1, U, h - 2, lo); }
+    R(g, x, y + h - 1.5, U, 1.5, dk); R(g, x, y + h, U, 2.5, 'rgba(20,24,40,0.24)');
+    if (kind === 'earth') { R(g, x, y - 1, U, 2.5 + hsh(X >> 1, 2) * 2.5, '#4c9446'); R(g, x, y - 1.5, U, 1, '#8fd070'); } else { R(g, x, y - U, U, 1.5, hi); R(g, x, y - 1, U, U, dk); }
+  }
+  for (let x = Math.floor(x0 / 4) * 4; x < x1; x += 4) { const y = ledgeY(pts, x + 2); block(x, y - 2, x + 4, y + h - 1); }
+}
+// steps(): a flight of stairs through a ledge; x is the middle, y the top of the ledge. Keep x and w multiples of 8.
+function steps(x, y, w = 24, h = 16, c = '#c8c0b4') {
+  const g = M.ground.g, x0 = x - w / 2;
+  for (let r = 0; r * 2.5 < h + 3; r++) { const yy = y - 3 + r * 2.5; R(g, x0, yy, w, 2.5, r % 2 ? c : lite(c, 0.18)); R(g, x0, yy, w, U, lite(c, 0.5)); R(g, x0, yy + 2, w, U, dark(c, 0.4)); }
+  for (const xx of [x0 - 3, x0 + w]) { R(g, xx, y - 5, 3, h + 6, dark(c, 0.3)); R(g, xx, y - 5, 3, 1, lite(c, 0.3)); R(g, xx, y - 5, U, h + 6, lite(c, 0.1)); R(g, xx, y + h, 3, 1.5, dark(c, 0.55)); }
+  block(x0, y - 6, x0 + w, y + h, 0);
+}
+// bridge(): a deck across water. The rail nearest the camera is a real object, so you walk behind it.
+function bridge(x0, y0, x1, y1, col = '#c0442f', wd = '#b8905a') {
+  const g = M.ground.g, w = x1 - x0, h = y1 - y0, hz = w >= h, d = dark(col, 0.35), l = lite(col, 0.35);
+  R(g, x0, y1, w, 3, 'rgba(20,30,60,0.3)'); R(g, x0, y0, w, h, wd);
+  if (hz) { for (let x = x0; x < x1; x += 4) R(g, x, y0, U, h, dark(wd, 0.3)); R(g, x0, y0, w, U, lite(wd, 0.4)); R(g, x0, y0 - 6, w, 1.5, col); R(g, x0, y0 - 6, w, U, l); R(g, x0, y0 - 3, w, 1, d); for (let x = x0; x <= x1 - 2; x += Math.max(8, w / Math.round(w / 12))) { R(g, x, y0 - 8, 2, 8, col); R(g, x, y0 - 8, U, 8, l); R(g, x, y0 - 8, 2, U, '#1d1626'); } }
+  else { for (let y = y0; y < y1; y += 4) R(g, x0, y, w, U, dark(wd, 0.3)); for (const x of [x0 - 2, x1]) { R(g, x, y0 - 6, 2, h + 6, col); R(g, x, y0 - 6, U, h + 6, l); for (let y = y0; y <= y1; y += 12) { R(g, x - U, y - 8, 3, 3, d); R(g, x - U, y - 8, 3, U, l); } } }
+  block(x0, y0, x1, y1, 0); if (!hz) { block(x0 - 2, y0 + 6, x0, y1 - 6); block(x1, y0 + 6, x1 + 2, y1 - 6); } // you cannot step off the side
+  if (hz) { const c = mk(w, 9), q = c.g; R(q, 0, 2, w, 1.5, col); R(q, 0, 2, w, U, l); R(q, 0, 5, w, 1, d); for (let x = 0; x <= w - 2; x += Math.max(8, w / Math.round(w / 12))) { R(q, x, 0, 2, 9, col); R(q, x, 0, U, 9, l); R(q, x, 0, 2, U, '#1d1626'); } put(c, x0 + w / 2, y1 + 3, w / 2, 8); }
+}
+// walls: wallH runs left to right, wallV runs top to bottom. Leave gaps between calls for gates.
+const _walls = {};
+function wallH(x0, x1, y, c = '#e8d8b0', rc = '#4a4660') {
+  const w = x1 - x0, key = w + c + rc; let s = _walls[key];
+  if (!s) { s = _walls[key] = mk(w, 22); const g = s.g; R(g, 0, 7, w, 12, c); for (const yy of [9.5, 12, 14.5]) R(g, 0, yy, w, U, lite(c, 0.6)); R(g, 0, 7, w, 1.5, dark(c, 0.35)); R(g, 0, 19, w, 3, '#8c8498'); R(g, 0, 19, w, U, '#c8c0d4'); for (let x = 3; x < w; x += 7) R(g, x, 19.5, U, 2.5, '#6b6478'); R(g, 0, 0, w, 7, rc); R(g, 0, 0, w, 1, lite(rc, 0.35)); R(g, 0, 1, w, U, dark(rc, 0.3)); for (let x = 0; x < w; x += 2) R(g, x, 2, U, 4.5, dark(rc, 0.25)); R(g, 0, 6, w, 1, dark(rc, 0.5)); for (const x of [0, w - 1]) R(g, x, 0, 1, 22, dark(c, 0.5)); }
+  put(s, (x0 + x1) / 2, y, w / 2, 21); block(x0, y - 7, x1, y); M.SHD.push([(x0 + x1) / 2, y + 1, w / 2, 2.5]);
+}
+function wallV(x, y0, y1, c = '#e8d8b0', rc = '#4a4660') {
+  const HT = 15;
+  for (let y = y0; y < y1; y += 16) {
+    const n = Math.min(16, y1 - y), last = y + n >= y1, s = mk(8, n + (last ? HT : 0)), g = s.g;
+    R(g, 0, 0, 8, n, rc); R(g, 3.5, 0, 1, n, lite(rc, 0.35)); R(g, 0, 0, 1, n, dark(rc, 0.45)); R(g, 7, 0, 1, n, dark(rc, 0.45)); for (let k = 0; k < n; k += 2) { R(g, 1, k, 2.5, U, dark(rc, 0.25)); R(g, 4.5, k, 2.5, U, dark(rc, 0.25)); }
+    if (last) { R(g, 1, n, 6, HT - 3, c); R(g, 1, n, 6, 1.5, dark(c, 0.4)); R(g, 1, n, U, HT - 3, lite(c, 0.4)); R(g, 6.5, n, U, HT - 3, dark(c, 0.3)); R(g, 0.5, n + HT - 3, 7, 3, '#8c8498'); R(g, 0.5, n + HT - 3, 7, U, '#c8c0d4'); }
+    put(s, x, y + n, 4, n + HT);
+  }
+  block(x - 4, y0, x + 4, y1);
+}
+// start a ride scene that ends at another map: rideTo({ label, name, go: [mapId, x, y], spr, speed, dur })
+function rideTo(o) { G.state = 'ride'; G.ride = Object.assign({ t: 0, dur: 4 }, o); Snd.play(null); Snd.fx('train'); }
+// the bullet-train gate that links cities, and a wooden signpost you can read
+function shinkansen(x, y) { prop('shsign', x + 20, y + 5, 3); M.SPOTS.push({ x, y: y + 7, r: 14, label: 'SHINKANSEN', shink: 1 }); M.sk = [x, y + 12]; }
+// a bus stop that opens the city's line, like a station
+function busStop(x, y) { prop('busstop', x, y, 2); M.SPOTS.push({ x, y: y + 7, r: 14, label: 'BUS', train: 1 }); M.st = [x, y + 12]; }
+// rooftops seen from above, for the blocked ground behind a row of shops
+function roofs(x0, y0, x1, y1, seed) { const g = M.ground.g, r = RNG(seed || x0 + y0); block(x0, y0, x1, y1); for (let y = y0; y < y1; y += 6) for (let x = x0; x < x1; x += 12) { const k = (x / 12 + y / 6) % 2; R(g, x, y, 12, 6, k ? '#4a4458' : '#3a3448'); R(g, x, y, 12, U, '#6a6478'); } for (let k = 0; k < (x1 - x0) * (y1 - y0) / 2400; k++) { const x = x0 + r() * (x1 - x0 - 14), y = y0 + r() * (y1 - y0 - 10); R(g, x, y, 10, 7, '#8a8496'); R(g, x, y, 10, 1, '#b8b0c6'); R(g, x + 2, y + 2, 2, 2, '#5a5468'); } }
+// a row of buildings along the bottom edge, seen from behind the street
+function bottomRow(seed) { const rnd = RNG(seed || M.w); for (let x = 24; x < M.w + 10;) { const w = 40 + (rnd() * 4 | 0) * 8; tower(x, M.h + 62, w, 62 + (rnd() * 3 | 0) * 6); x += w + 3; } block(0, M.h - 6, M.w, M.h); }
+function signpost(x, y, lines) { prop('sign', x, y, 3); M.SPOTS.push({ x, y: y + 5, r: 12, label: 'READ', lines }); }
+// city(): register a city and claim every map defined since the last one
+function city(def) { CITIES[def.id] = def; for (const id in MAPS) if (!MAPS[id].city) MAPS[id].city = def.id; return def; }

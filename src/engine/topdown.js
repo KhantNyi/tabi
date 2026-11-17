@@ -49,7 +49,7 @@ for (const el of document.querySelectorAll('[data-k]')) {
 }
 // taps on the screen, in world units, for menus that can be tapped (title, dialogue, the train line, the stamp book)
 let TAP = null;
-const TAPPY = () => ['title', 'dialog', 'got', 'line', 'book'].includes(G.state);
+const TAPPY = () => ['title', 'dialog', 'got', 'line', 'book', 'japan'].includes(G.state);
 function tapAt(e) { const r = cv.getBoundingClientRect(); TAP = { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H }; Snd.init(); }
 cv.addEventListener('pointerdown', e => { if (TAPPY()) tapAt(e); else Snd.init(); });
 const buzz = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { } };

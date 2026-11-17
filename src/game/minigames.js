@@ -52,10 +52,10 @@ const MG = {
     }
   },
   dress: {
-    init(m) { m.i = G.fit; }, update(m) { if (KP.l) { m.i = (m.i + FITS.length - 1) % FITS.length; Snd.fx('ui'); } if (KP.r) { m.i = (m.i + 1) % FITS.length; Snd.fx('ui'); } if (KP.x || KP.b) { G.mg = null; G.state = 'play'; } else if (KP.a && m.t > 0.2) { G.fit = m.i; pl.F = plLook(m.i); save(); Snd.fx('yay'); endMini(m.i !== 0, ['YOU WALK OUT WEARING THE ' + FITN[m.i] + '. IT SUITS YOU.']); } },
+    init(m) { m.k = !!(m.sp && m.sp.kimono); m.lo = m.k ? KIMONO : 0; m.n = m.k ? FITS.length - KIMONO : KIMONO; m.i = G.fit >= m.lo && G.fit < m.lo + m.n ? G.fit : m.lo; }, update(m) { const j = m.i - m.lo; if (KP.l) { m.i = m.lo + (j + m.n - 1) % m.n; Snd.fx('ui'); } if (KP.r) { m.i = m.lo + (j + 1) % m.n; Snd.fx('ui'); } if (KP.x || KP.b) { G.mg = null; G.state = 'play'; } else if (KP.a && m.t > 0.2) { G.fit = m.i; pl.F = plLook(m.i); save(); Snd.fx('yay'); endMini(m.k || m.i !== 0, m.k ? ['YOU WALK OUT IN A ' + FITN[m.i] + ', WOODEN SANDALS CLACKING ON THE STONES.', 'THREE TOURISTS ASK TO TAKE YOUR PHOTO.'] : ['YOU WALK OUT WEARING THE ' + FITN[m.i] + '. IT SUITS YOU.']); } },
     draw(m) {
-      txtC(ctx, 'FITTING ROOM', 160, 30, '#c8382e', null, 2); R(ctx, 128, 44, 64, 72, '#8a8496'); R(ctx, 131, 47, 58, 66, '#cfeaff'); R(ctx, 135, 49, 5, 62, '#ffffff'); const f = plLook(m.i).d[Math.floor(G.t * 2) % 2 ? 0 : 5]; ctx.drawImage(f, 140, 54, 40, 56);
-      txt(ctx, '<', 112, 78, '#c8382e', null, 2); txt(ctx, '>', 200, 78, '#c8382e', null, 2); FITS.forEach((c, i) => { R(ctx, 105 + i * 14, 120, 10, 6, '#1d1626'); R(ctx, 106 + i * 14, 121, 8, 4, c); if (i === m.i) R(ctx, 105 + i * 14, 127, 10, 1, '#c8382e'); }); txtC(ctx, FITN[m.i] + ' - E TO WEAR IT', 160, 132, '#3a2e40');
+      txtC(ctx, m.k ? 'KIMONO RENTAL' : 'FITTING ROOM', 160, 30, '#c8382e', null, 2); R(ctx, 128, 44, 64, 72, '#8a8496'); R(ctx, 131, 47, 58, 66, '#cfeaff'); R(ctx, 135, 49, 5, 62, '#ffffff'); const f = plLook(m.i).d[Math.floor(G.t * 2) % 2 ? 0 : 5]; ctx.drawImage(f, 140, 54, 40, 56);
+      txt(ctx, '<', 112, 78, '#c8382e', null, 2); txt(ctx, '>', 200, 78, '#c8382e', null, 2); FITS.slice(m.lo, m.lo + m.n).forEach((c, j) => { const i = m.lo + j, x = 160 - m.n * 7 + j * 14; R(ctx, x, 120, 10, 6, '#1d1626'); R(ctx, x + 1, 121, 8, 4, c); if (i === m.i) R(ctx, x, 127, 10, 1, '#c8382e'); }); txtC(ctx, FITN[m.i] + ' - E TO WEAR IT', 160, 132, '#3a2e40');
     }
   }
 };

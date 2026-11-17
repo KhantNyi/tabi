@@ -38,6 +38,14 @@ const TRACKS = {
       'E6/4 C6/2 G5/2 C6/4 E6/4', 'D6/4 A5/2 F#5/2 A5/4 D6/4', 'D6/2 B5/2 F#5/2 B5/2 D6/4 F#6/4', 'E6/6 D6/2 B5/4 G5/4',
       'C6/2 E6/2 G6/4 E6/2 C6/2 G5/4', 'F#5/2 A5/2 D6/4 C6/2 A5/2 F#5/4', 'G5/2 B5/2 D6/2 G6/2 D6/4 B5/4', 'G5/8 -/8']
   },
+  fuji: {
+    bpm: 78, lead: 'soft', arp: [0, 1, 2, 3, 2, 1, 2, 3], drums: 'none', bass: 'walk',
+    chords: 'C_ G_ Am F C_ Em F G_ Am Em F C_ Dm G_ C_ C_',
+    mel: ['E5/4 G5/4 C6/6 B5/2', 'D6/4 B5/4 G5/8', 'A5/4 C6/4 E6/4 D6/4', 'C6/8 A5/8',
+      'G5/2 A5/2 G5/2 E5/2 C5/4 E5/4', 'G5/4 B5/4 E6/8', 'F5/4 A5/4 C6/4 A5/4', 'D6/12 -/4',
+      'E6/4 D6/2 C6/2 A5/8', 'G5/4 B5/4 E5/8', 'F5/2 G5/2 A5/4 C6/4 F6/4', 'E6/8 C6/8',
+      'D6/4 C6/4 A5/4 F5/4', 'G5/4 B5/4 D6/4 B5/4', 'C6/16', '-/16']
+  },
   nara: {
     bpm: 70, lead: 'box', arp: [0, 1, 2, 1, 3, 1, 2, 1], drums: 'none', bass: 'drone',
     chords: 'Fp Amp Bbp Fp Dmp Bbp Cp Fp Fp Amp Bbp Fp Dmp Bbp Cp Fp',

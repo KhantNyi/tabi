@@ -1,6 +1,6 @@
 'use strict';
 // ---------- Tokyo: eight districts on one train line, the rooms inside their buildings, and what there is to do ----------
-// A city registers itself in CITIES. Its districts and rooms go in the shared MAPS table, so their ids must not clash with other cities.
+// A city registers itself with city(). Its districts and rooms go in the shared MAPS table, so their ids must not clash with other cities.
 (function () {
   const LINE = [['shibuya', 'SHIBUYA'], ['harajuku', 'HARAJUKU'], ['shinjuku', 'SHINJUKU'], ['ueno', 'UENO'], ['asakusa', 'ASAKUSA'], ['akiba', 'AKIHABARA'], ['tokyo', 'TOKYO STATION'], ['tower', 'TOKYO TOWER']];
   const STAMPS = {
@@ -77,16 +77,16 @@
       npc('maiko', 320, 200, { lines: ['WELCOME HOME, TRAVELLER! THE CAFE IS UPSTAIRS!', 'TODAY\'S SPECIAL IS OMELETTE RICE WITH A KETCHUP CAT!'], tint: '#3a3a4e' }); npc('kid', 200, 200, { lines: ['I HAVE BEEN TRYING FOR THE GOLD DRAGON ALL WEEK.'] });
     } };
   MAPS.asakusa = { name: 'ASAKUSA', sub: 'OLD TOKYO UNDER THE BIG RED LANTERN', tw: 40, th: 34, music: 'kyoto', petals: 1,
-    lay() { tRect(PV, 0, 26.5, 40, 34); tRect(VL, 11, 6, 29, 15.5); tRect(PL, 18.5, 15.5, 21.5, 26.5); roads([[30, 2]], []); },
+    lay() { tRect(FR, 0, 0, 40, 26.5); tOval(GR, 20, 13.5, 16.5, 10.5); tOval(GR, 34, 13, 6, 7); tOval(GR, 7.5, 18, 7, 7.5); tOval(GR, 29, 21, 9, 5); tRect(GR, 1.5, 22.5, 38.5, 26.5); tRect(PV, 0, 26.5, 40, 34); tRect(VL, 11, 6, 29, 15.5); tRect(PL, 18.5, 15.5, 21.5, 26.5); roads([[30, 2]], []); },
     deco() {
       put(SPR.hall, 320, 150, 88, 90); block(260, 128, 380, 150); door(320, 150, 'sensoji'); fur('burner', 320, 214);
       put(SPR.pagoda, 196, 196, 52, 130); block(166, 178, 226, 196); put(SPR.skytree, 566, 190, 21, 250); block(556, 182, 576, 190);
       put(SPR.kaminari, 320, 440, 55, 85); block(276, 434, 300, 440); block(340, 434, 364, 440);
       for (let y = 266; y < 420; y += 30) for (const x of [280, 360]) prop('stall', x, y, 13);
       for (const y of [170, 200, 230]) for (const x of [296, 344]) prop('lantern', x, y, 4);
-      woods(40, 420, 1); for (const [x, y] of [[120, 130], [150, 250], [100, 330], [220, 300], [200, 380], [430, 130], [470, 240], [420, 330], [520, 300], [500, 400], [590, 330], [250, 110], [400, 110]]) plant(hsh(x, y) < 0.6 ? 'sakura' : 'pine', x, y, 1);
+      for (const [x, y] of [[120, 130], [150, 250], [100, 330], [220, 300], [200, 380], [430, 130], [470, 240], [420, 330], [520, 300], [500, 400], [590, 330], [250, 110], [400, 110]]) plant(hsh(x, y) < 0.6 ? 'sakura' : 'pine', x, y, 1);
       station(70, 448, 'ASAKUSA'); house(170, 448, 60, 28, { sign: 'KIMONO', noren: '#8a6aff', rh: 14, lantern: true }); house(470, 448, 60, 28, { sign: 'TEMPURA', noren: '#f2a03a', rh: 14, lantern: true }); house(560, 448, 56, 28, { sign: 'SENBEI', noren: '#3f7a5a', rh: 14 });
-      sideTowers(470); prop('rick', 410, 456, 9); prop('vend', 124, 446, 6);
+      sideTowers(470); prop('rick', 410, 456, 9); wild(['green', 'pine', 'green2', 'sakura']); prop('vend', 124, 446, 6);
       stampSpot('kaminari', 320, 458, 'TAKE A PHOTO', 'snap', ['THE THUNDER GATE, WITH A LANTERN AS TALL AS A BUS.', 'THE GODS OF WIND AND THUNDER STAND GUARD ON EITHER SIDE.'], 13);
       stampSpot('sky', 560, 210, 'TAKE A PHOTO', 'snap', ['THE SKYTREE, 634 METRES OF STEEL ACROSS THE RIVER.', 'OLD TOKYO IN FRONT, NEW TOKYO BEHIND.'], 16);
       M.SPOTS.push({ x: 320, y: 224, r: 13, label: 'WAFT THE SMOKE', fx: 'wind', lines: ['YOU WAVE THE INCENSE SMOKE OVER YOUR HEAD.', 'IT IS SAID TO MAKE YOU WISER. YOU FEEL ABOUT THE SAME.'] });
@@ -94,38 +94,40 @@
       npc('yukata', 426, 462, { lines: ['RICKSHAW RIDE? I KNOW EVERY BACK STREET.', 'MY LEGS ARE STRONGER THAN ANY TAXI.'] }); npc('granny', 274, 300, { lines: ['FRESH MELON BREAD! STILL WARM!', 'NO EATING WHILE WALKING, DEAR.'] }); npc('kimono', 380, 200, { rad: 30, lines: ['DRAW A FORTUNE INSIDE THE HALL.', 'IF IT IS BAD LUCK, JUST TIE IT UP AND LEAVE IT.'] }); M.ACT.push({ cat: true, x: 232, y: 214, k: 0 });
     } };
   MAPS.ueno = { name: 'UENO', sub: 'PARK, PANDAS AND MUSEUMS', tw: 40, th: 30, music: 'nara', petals: 1,
-    lay() { tRect(PV, 0, 22.5, 40, 30); roads([[26, 2]], []); tRoad(DT, [[5, 23], [9, 20], [9, 11.5]], 0.9, GR); tRoad(DT, [[9, 20], [20.5, 20], [20.5, 9.5]], 0.9, GR); tRoad(DT, [[20.5, 20], [33, 21], [36, 16], [33, 10.5], [20.5, 13]], 0.8, GR); tOval(WA, 28, 16, 5.5, 3.2); },
+    lay() { tRect(FR, 0, 0, 40, 22.5); tOval(GR, 20, 14, 17.5, 9.2); tOval(GR, 9, 13, 7.5, 8); tOval(GR, 31, 15.5, 8, 7); tOval(GR, 20, 6.5, 7, 4); tRect(GR, 3, 19.5, 37.5, 22.5); tRect(PV, 0, 22.5, 40, 30); roads([[26, 2]], []); tRoad(DT, [[8.5, 22.6], [9, 20], [9, 11.5]], 0.9, GR); tRoad(DT, [[14.5, 22.6], [14.5, 20]], 0.8, GR); tRoad(DT, [[9, 20], [20.5, 20], [20.5, 9.5]], 0.9, GR); tRoad(DT, [[20.5, 20], [33, 21], [36, 16], [33, 10.5], [20.5, 13]], 0.8, GR); tOval(WA, 28, 16, 5.5, 3.2); },
     deco() {
       tower(144, 168, 76, 34, { c: '#8fc97a', sign: 'UENO ZOO', sc: '#3f7a5a', to: 'zoo', top: false }); plant('bush', 96, 168, 1); plant('bush', 192, 168, 1);
       tower(328, 136, 128, 48, { c: '#e8e0d0', sign: 'MUSEUM', sc: '#5a4a48', to: 'museum', top: false, lit: 0, art: (g, x, t, b) => { roof(g, x + 64, t - 12, 20, 70, 13, '#6a7a8a'); for (let i = 0; i < 9; i++) { R(g, x + 6 + i * 14.5, t + 2, 4, 44, '#f8f4ea'); R(g, x + 6 + i * 14.5, t + 2, 1, 44, '#ffffff'); R(g, x + 9 + i * 14.5, t + 2, 1, 44, '#c8c0b0'); } R(g, x + 54, b - 18, 20, 18, '#3a2630'); R(g, x + 56, b - 16, 16, 16, '#ffd98a'); } });
       prop('saigo', 250, 300, 7); for (const [x, y] of [[388, 232], [470, 262], [450, 240]]) put(SPR.swan, x, y, 11, 17);
       for (let x = 60; x < 330; x += 34) { plant('sakura', x + 190, 300, 1); if (x < 250) plant('sakura', x + 40, 292, 1); } for (let y = 200; y < 300; y += 34) { plant('sakura', 120, y, 1); plant('sakura', 172, y + 10, 1); plant('sakura', 306, y, 1); plant('sakura', 352, y + 12, 1); }
-      woods(40, 370, 1); for (const [x, y] of [[230, 120], [240, 220], [430, 120], [520, 130], [580, 190], [600, 280], [560, 340], [70, 240], [66, 120], [420, 340], [500, 190]]) plant(hsh(x, y) < 0.5 ? 'green2' : 'pine', x, y, 1);
+      ledge([[0, 348], [320, 346], [640, 348]], 12, 'stone'); block(0, 358, 640, 370); steps(136, 347, 24, 22); steps(232, 347, 24, 22);
+      for (const [x, y] of [[230, 120], [240, 220], [430, 120], [520, 130], [580, 190], [600, 280], [560, 340], [70, 240], [66, 120], [420, 340], [500, 190]]) plant(hsh(x, y) < 0.5 ? 'green2' : 'pine', x, y, 1);
       for (const [x, y] of [[226, 330], [300, 336], [400, 300], [470, 300]]) prop('bench', x, y, 9); for (const [x, y] of [[360, 266], [520, 270]]) prop('lantern', x, y, 4);
       station(70, 384, 'UENO'); house(180, 384, 60, 28, { sign: 'BENTO', noren: '#e0563f', rh: 14 }); tower(290, 384, 70, 44, { c: '#c8b8a0', sign: 'AMEYOKO MARKET', sc: '#e0563f' }); tower(400, 384, 60, 48, {}); tower(480, 384, 70, 44, { sign: 'KISSATEN', sc: '#8a5a3a' }); tower(570, 384, 60, 48, {});
-      sideTowers(410); prop('vend', 130, 382, 6);
-      M.SPOTS.push({ x: 250, y: 308, r: 12, label: 'READ', lines: ['A BRONZE SAMURAI OUT WALKING HIS DOG.', 'PEOPLE HAVE MET UNDER THIS STATUE FOR A HUNDRED YEARS.'] }); M.SPOTS.push({ x: 448, y: 276, r: 30, label: 'WATCH', lines: ['SWAN BOATS PEDAL IN LAZY CIRCLES AMONG THE LOTUS LEAVES.'] });
+      sideTowers(410); prop('vend', 112, 400, 6); wild(['green', 'green2', 'pine', 'sakura', 'green']);
+      M.SPOTS.push({ x: 250, y: 308, r: 12, label: 'READ', lines: ['A BRONZE SAMURAI OUT WALKING HIS DOG.', 'PEOPLE HAVE MET UNDER THIS STATUE FOR A HUNDRED YEARS.'] }); M.SPOTS.push({ x: 448, y: 300, r: 30, label: 'WATCH', lines: ['SWAN BOATS PEDAL IN LAZY CIRCLES AMONG THE LOTUS LEAVES.'] });
       cars(438, -1, 2); cars(446, 1, 2); crowd(5, 40, 394, 600, 394, 5); crowd(5, 150, 322, 330, 322, 6); crowd(3, 146, 190, 146, 310, 6); crowd(3, 328, 150, 328, 310, 6);
       npc('kid', 180, 186, { lines: ['PANDAS! PANDAS! PANDAS!', 'DAD SAYS WE CAN SEE THE PANDAS AGAIN AFTER LUNCH.'] }); npc('granny', 420, 310, { rad: 24, lines: ['THE LOTUS FLOWERS OPEN EARLY IN THE MORNING.', 'I FEED THE DUCKS. THE SIGN SAYS NOT TO. I DO ANYWAY.'] }); M.ACT.push({ cat: true, x: 276, y: 306, k: 2 });
     } };
   MAPS.tower = { name: 'TOKYO TOWER', sub: 'SHIBA PARK AT DUSK', tw: 40, th: 30, music: 'tokyo', night: 1, tint: '#d8a0a8',
-    lay() { tRect(PV, 0, 22.5, 40, 30); tRect(PL, 13, 16, 28, 22.5); tRect(VL, 29, 12, 38, 19); tRoad(DT, [[28, 20], [33.5, 20], [33.5, 18]], 0.9, GR); roads([[26, 2]], []); },
+    lay() { tRect(FR, 0, 0, 40, 22.5); tOval(GR, 17, 16, 15, 8); tOval(GR, 32, 12.5, 8, 7); tOval(GR, 8, 10, 6, 6); tRect(GR, 2, 19.5, 38.5, 22.5); tRect(PV, 0, 22.5, 40, 30); tRect(PL, 13, 16, 28, 22.5); tRect(VL, 29, 12, 38, 19); tRoad(DT, [[28, 20], [33.5, 20], [33.5, 18]], 0.9, GR); roads([[26, 2]], []); },
     deco() {
       put(SPR.ttower, 328, 318, 56, 229); block(286, 306, 306, 318); block(350, 306, 370, 318); M.LIGHTS.push([328, 250, 40, '#ff9a5a'], [328, 170, 26, '#ffb070']);
       tower(328, 312, 44, 24, { c: '#f0e8dc', sign: 'TOWER', sc: '#ff6f3c', to: 'tdeck', lab: 'GO UP', top: false, lit: 1 });
       put(SPR.hall, 536, 262, 88, 90); block(476, 240, 596, 262); prop('box', 536, 270, 7); for (const x of [504, 568]) prop('lantern', x, 292, 4);
-      woods(40, 370, 1); for (const [x, y] of [[90, 150], [150, 220], [100, 300], [200, 160], [220, 280], [420, 180], [440, 300], [600, 320], [470, 320], [240, 100], [400, 100], [560, 120], [160, 110], [80, 230]]) plant(hsh(x, y) < 0.4 ? 'maple' : hsh(x, y) < 0.7 ? 'green' : 'pine', x, y, 1);
+      ledge([[464, 306], [608, 306]], 10, 'stone'); steps(536, 306, 24, 14); wallV(462, 196, 306); wallV(610, 196, 306);
+      for (const [x, y] of [[90, 150], [150, 220], [100, 300], [200, 160], [220, 280], [420, 180], [440, 300], [600, 320], [470, 320], [240, 100], [400, 100], [560, 120], [160, 110], [80, 230]]) plant(hsh(x, y) < 0.4 ? 'maple' : hsh(x, y) < 0.7 ? 'green' : 'pine', x, y, 1);
       for (const [x, y] of [[236, 340], [420, 340]]) { prop('lamp', x, y, 2); M.LIGHTS.push([x - 4, y - 28, 20, '#ffe8a8']); } prop('bench', 260, 350, 9); prop('bench', 396, 350, 9);
       station(70, 384, 'ONARIMON'); tower(190, 384, 60, 46, { sign: 'CAFE', sc: '#8a5a3a' }); tower(480, 384, 70, 44, { sign: 'SOUVENIRS', sc: '#ff6f3c' }); tower(570, 384, 60, 48, {}); tower(400, 384, 60, 40, {});
-      sideTowers(410); lamps(398);
+      sideTowers(410); lamps(398); wild(['green', 'maple', 'pine', 'green2', 'green']);
       stampSpot('zojo', 536, 280, 'PRAY', 'bow', ['A TEMPLE SIX HUNDRED YEARS OLD, WITH THE TOWER RIGHT BEHIND IT.', 'THE BELL IS RUNG 108 TIMES ON NEW YEAR\'S EVE.']);
       cars(438, -1, 2); cars(446, 1, 2); crowd(5, 40, 394, 600, 394, 5); crowd(4, 240, 330, 420, 356, 8); crowd(2, 480, 300, 590, 320, 6);
-      npc('tourist', 290, 344, { lines: ['IT IS THIRTEEN METRES TALLER THAN THE ONE IN PARIS.', 'THEY PAINT IT ORANGE AND WHITE SO PLANES CAN SEE IT.'] }); npc('kimono', 370, 350, { lines: ['IT LIGHTS UP WHEN THE SUN GOES DOWN. JUST WAIT.'] }); M.ACT.push({ cat: true, x: 500, y: 300, k: 1 });
+      npc('tourist', 290, 344, { lines: ['IT IS THIRTEEN METRES TALLER THAN THE ONE IN PARIS.', 'THEY PAINT IT ORANGE AND WHITE SO PLANES CAN SEE IT.'] }); npc('kimono', 370, 350, { lines: ['IT LIGHTS UP WHEN THE SUN GOES DOWN. JUST WAIT.'] }); M.ACT.push({ cat: true, x: 500, y: 290, k: 1 });
     } };
   MAPS.tokyo = { name: 'TOKYO STATION', sub: 'RED BRICK, GINZA GLASS', tw: 42, th: 28, music: 'tokyo',
     lay() { tRect(PV, 0, 0, 42, 28); tRect(PL, 2, 16, 23, 17); roads([[17, 3]], [[24, 3]]); },
     deco() {
-      put(SPR.brick, 196, 256, 150, 95); block(52, 238, 340, 256); M.SPOTS.push({ x: 196, y: 263, r: 14, label: 'TRAINS', train: 1 }); M.st = [196, 268];
+      put(SPR.brick, 196, 256, 150, 95); block(52, 238, 340, 256); M.SPOTS.push({ x: 150, y: 263, r: 14, label: 'TRAINS', train: 1 }); M.st = [150, 268]; shinkansen(246, 256);
       house(470, 256, 60, 28, { sign: 'SUSHI', noren: '#3d5a80', rh: 14, lantern: true, to: 'sushi' }); put(SPR.clock, 580, 256, 35, 118); block(551, 240, 609, 256); door(580, 256, 'mall', 'ENTER STORE');
       tower(644, 256, 40, 96, { c: '#b8c8d8' }); cityEdge();
       for (const [x, y] of [[80, 366], [180, 372], [300, 362], [470, 370], [580, 364]]) plant('ginkgo', x, y, 1); prop('bench', 130, 360, 9); prop('bench', 240, 360, 9); prop('vend', 520, 254, 6); lamps(270);
@@ -221,9 +223,9 @@
     npc('chef', 160, 78, { lines: ['WHATEVER PASSES, TAKE IT! FRESH THIS MORNING!'] }); M.SPOTS.push({ x: 190, y: 120, r: 12, label: 'SIT DOWN', mini: 'sushi', stamp: 'sushi' });
   } };
 
-  CITIES.tokyo = {
+  city({
     id: 'tokyo', name: 'TOKYO', tagline: 'EIGHT DISTRICTS - ONE TRAIN LINE - NO HURRY',
-    start: 'shibuya', line: LINE, stamps: STAMPS, cats: 7,
+    start: 'shibuya', hub: 'tokyo', line: LINE, stamps: STAMPS, cats: 7,
     sprites() { // landmark art only this city needs
       one('ttower', 110, 230, g => { for (let i = 0; i < 444; i++) { const t = i / 444, hw = snap(1 + 222 * 0.19 * Math.pow(Math.max(0, t - 0.1) / 0.9, 2.1)); if (t < 0.12) continue; const k = t >= 0.8 ? snap((t - 0.8) / 0.2 * hw * 0.6) : 0, c = Math.floor(t * 9) % 2 ? '#e8d8c0' : '#d8552c'; if (k < 1.5) R(g, 55 - hw, 6 + i / 2, hw * 2, U, c); else { R(g, 55 - hw, 6 + i / 2, hw - k, U, c); R(g, 55 + k, 6 + i / 2, hw - k, U, c); } } tokyoTower(g, 55, 228, 222); }, 1); one('box', 16, 10, g => { R(g, 1, 2, 14, 8, '#8a5a3a'); R(g, 1, 2, 14, 3, '#5a3a28'); for (let x = 2; x < 15; x += 2) R(g, x, 2, 1, 3, '#a8744a'); R(g, 6, 6.5, 4, 2, '#f2c14e'); }, 1);
       one('hachi', 18, 26, g => { R(g, 2, 16, 14, 9, '#8c8498'); R(g, 2, 16, 14, 1, '#c8c0d4'); R(g, 1, 24, 16, 2, '#6b6478'); dogStatue(g, 3, 16, '#a8845a'); }, 1);
@@ -245,5 +247,5 @@
       icon('claw', g => { R(g, 5, 0, 2, 4, '#9a94a8'); R(g, 3, 4, 6, 1, '#c8c0d4'); R(g, 3, 5, 1, 3, '#c8c0d4'); R(g, 8, 5, 1, 3, '#c8c0d4'); disc(g, 6, 9, 2.5, '#f06a8c'); P(g, 5, 8, '#1d1626'); P(g, 7, 8, '#1d1626'); });
       icon('stick', g => { line(g, 1, 11, 11, 1, '#c9a070'); R(g, 3, 7, 3, 3, '#b86a3a'); R(g, 5, 5, 3, 3, '#d9903a'); R(g, 7, 3, 3, 3, '#b86a3a'); P(g, 6, 6, '#5aa85a'); });
     }
-  };
+  });
 })();
