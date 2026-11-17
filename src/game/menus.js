@@ -109,7 +109,7 @@ const MENU = (function () {
     s.display = 'block'; s.left = r.left + x * k + 'px'; s.top = r.top + y * k + 'px'; s.width = w * k + 'px'; s.height = h * k + 'px'; s.fontSize = Math.max(16, Math.round(h * k * 0.55)) + 'px';
   }
   function sync() { if (!(G.state === 'menu' && G.menu.kind === 'join') && box.style.display !== 'none') { box.style.display = 'none'; if (document.activeElement === box) box.blur(); scrollTo(0, 0); } }
-  box.addEventListener('input', () => { if (/room=/i.test(box.value)) box.value = code(); }); // a pasted invite link becomes its code
+  box.addEventListener('input', () => { const m = /room=([a-z0-9]{4,})/i.exec(box.value); if (m) box.value = m[1].toUpperCase().slice(0, 8); }); // a pasted invite link becomes its code
   box.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); join(); } else if (e.key === 'Escape') { e.preventDefault(); box.blur(); back(); } });
   return { open, done, update, draw, tap, sync };
 })();
