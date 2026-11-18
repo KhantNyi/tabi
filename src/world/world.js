@@ -34,8 +34,15 @@ function paintGround() {
   const look = (wx, wy) => { const u = wx / 8 - 0.5, v = wy / 8 - 0.5, i = Math.floor(u), j = Math.floor(v), fu = u - i, fv = v - j; acc.fill(0); acc[cell(i, j)] += (1 - fu) * (1 - fv); acc[cell(i + 1, j)] += fu * (1 - fv); acc[cell(i, j + 1)] += (1 - fu) * fv; acc[cell(i + 1, j + 1)] += fu * fv; let b = 0; for (let k = 1; k < 8; k++) if (acc[k] > acc[b]) b = k; return b; };
   for (let Y = 0; Y < DH; Y++) for (let X = 0; X < DW; X++) { const wx = X / S, wy = Y / S; let t = cell(Math.floor(wx / 8), Math.floor(wy / 8)); if (!HARD[t]) { t = look(wx, wy); if (!HARD[t]) { const t2 = look(wx + (vn(X / 22, Y / 22) - 0.5) * 7, wy + (vn(X / 22 + 31, Y / 22 + 17) - 0.5) * 7); if (!HARD[t2]) t = t2; } else t = cell(Math.floor(wx / 8), Math.floor(wy / 8)); } ty[Y * DW + X] = t; }
   const im = c.g.createImageData(DW, DH), px = new Uint32Array(im.data.buffer), at = (X, Y) => ty[Math.max(0, Math.min(DH - 1, Y)) * DW + Math.max(0, Math.min(DW - 1, X))], C = a => a.map(c32);
-  const PG = C(['#55a04c', '#64b054', '#74bf5e', '#3c8440', '#8fd070']), PFR = C(['#3d7f48', '#488c4c', '#559a52', '#2c6238', '#6aac5a']), PD = C(['#d0aa72', '#dab87e', '#e4c68e', '#a88454', '#b89662', '#f0d8a4']);
-  const PP = C(['#b6b0be', '#c2bcc9', '#aaa5b6', '#8a8496', '#d4cfda', '#77718a']), PVL = C(['#e6dec8', '#d4cab0', '#f4eedc', '#a8a0a8', '#c8beaa']), PW = C(['#3e92c2', '#4aa0ce', '#58aed8', '#2d76a6', '#4a3626', '#7a5c44', '#8c6c50', '#a6dcee']);
+  const DF = M.def || {}, SNOW = DF.snow, SEA = DF.sea; // a map can lie under snow, on white or grey sand, or by the open sea
+  let PG = C(['#55a04c', '#64b054', '#74bf5e', '#3c8440', '#8fd070']), PFR = C(['#3d7f48', '#488c4c', '#559a52', '#2c6238', '#6aac5a']), PD = C(['#d0aa72', '#dab87e', '#e4c68e', '#a88454', '#b89662', '#f0d8a4']);
+  if (SNOW) { PG = C(['#dfe7f2', '#e9eff8', '#f5f8fc', '#b4c4da', '#ffffff']); PFR = C(['#d0dbea', '#dae3ef', '#e6edf6', '#a8b8d0', '#f4f8fc']); PD = C(['#cdd6e4', '#d6deea', '#e0e6f0', '#a8b4c8', '#b8c4d4', '#f4f8fc']); }
+  if (DF.sand === 'white') PD = C(['#f0e4c4', '#f5ebd0', '#faf2e0', '#d8c8a0', '#e2d4b0', '#ffffff']); else if (DF.sand === 'grey') PD = C(['#b4a486', '#bead90', '#c8b89a', '#968668', '#a49476', '#dcd0b4']);
+  const WT = C(['#f2fbf8', '#9eeede', '#5cd6d2', '#2fb6cc', '#1c8ec0', '#156a9e', '#86dce4']), WO = C(['#eef6f2', '#a2d2c4', '#68b2b4', '#3e8aa8', '#2c6a96', '#20507c', '#7cb8c4']);
+  // how far each patch of sea is from land, for the shallows: one pass outward from every shore
+  let SD = null; if (SEA) { const N = DW * DH, q = new Int32Array(N); let qh = 0, qt = 0; SD = new Uint8Array(N).fill(255); for (let i = 0; i < N; i++) if (ty[i] !== WA) { SD[i] = 0; q[qt++] = i; }
+    while (qh < qt) { const i = q[qh++], d = SD[i] + 1; if (d > 250) continue; const x = i % DW; if (x > 0 && SD[i - 1] > d) { SD[i - 1] = d; q[qt++] = i - 1; } if (x < DW - 1 && SD[i + 1] > d) { SD[i + 1] = d; q[qt++] = i + 1; } if (i >= DW && SD[i - DW] > d) { SD[i - DW] = d; q[qt++] = i - DW; } if (i < N - DW && SD[i + DW] > d) { SD[i + DW] = d; q[qt++] = i + DW; } } }
+  const PP = SNOW ? C(['#c0c6d4', '#c8cedc', '#b8becc', '#949aac', '#dce2ec', '#848aa0']) : C(['#b6b0be', '#c2bcc9', '#aaa5b6', '#8a8496', '#d4cfda', '#77718a']), PVL = C(['#e6dec8', '#d4cab0', '#f4eedc', '#a8a0a8', '#c8beaa']), PW = C(['#3e92c2', '#4aa0ce', '#58aed8', '#2d76a6', '#4a3626', '#7a5c44', '#8c6c50', '#a6dcee']);
   const PA = C(['#4b4b5c', '#525264', '#454556', '#c8c2d2', '#3c3c4c']), PL_ = C(['#dcd4c8', '#cfc6b8', '#b4aa9c', '#eee8dc', '#8a8496']);
   const isG = t => t === GR || t === FR;
   for (let Y = 0; Y < DH; Y++) for (let X = 0; X < DW; X++) {
@@ -49,12 +56,14 @@ function paintGround() {
     else if (t === VL) { col = PVL[h < 0.13 ? 1 : h > 0.86 ? 2 : 0]; if ((Y + Math.round(Math.sin(X / 26) * 3)) % 10 === 0) col = PVL[4]; if (at(X, Y - 3) !== VL || at(X, Y + 3) !== VL || at(X - 3, Y) !== VL || at(X + 3, Y) !== VL) col = PVL[3]; }
     else if (t === AS) { const n = vn(X / 30, Y / 30); col = PA[h < 0.06 ? 4 : n < 0.45 ? 0 : n < 0.7 ? 1 : 2]; if (h > 0.985) col = PA[1]; if (at(X, Y - 3) !== AS) col = PA[4]; }
     else if (t === PL) { const k = ((X >> 4) + (Y >> 4)) & 1; col = PL_[k]; if ((X & 15) === 0 || (Y & 15) === 0) col = PL_[2]; else if ((X & 15) === 1 || (Y & 15) === 1) col = PL_[3]; if (at(X, Y - 2) !== PL || at(X, Y + 2) !== PL || at(X - 2, Y) !== PL || at(X + 2, Y) !== PL) col = PL_[4]; }
+    else if (SEA) { const d = SD[i] + (vn(X / 26, Y / 26) - 0.5) * 22, P = SEA === 'tropic' ? WT : WO; col = d < 4 ? P[0] : d < 26 ? P[1] : d < 64 ? P[2] : d < 120 ? P[3] : d < 190 ? P[4] : P[5]; if (d >= 6 && (Y + Math.round(Math.sin(X / 23 + Y / 61) * 3)) % 15 === 0 && h < 0.7) col = P[6]; else if (h > 0.996) col = P[0]; }
     else { let k = 0; for (let d = 1; d <= 12; d++) if (at(X, Y - d) !== WA) { k = d; break; } const n = vn(X / 34, Y / 12) + (h - 0.5) * 0.06; if (k && k <= 2) col = PW[4]; else if (k && k <= 7) col = PW[h < 0.3 ? 6 : 5]; else if (k) col = PW[3]; else if (at(X - 2, Y) !== WA || at(X + 2, Y) !== WA || at(X, Y + 2) !== WA) col = PW[7]; else col = PW[n < 0.42 ? 0 : n < 0.62 ? 1 : 2]; }
     px[i] = col;
   }
   c.g.putImageData(im, 0, 0);
   const g = c.g, rnd = RNG(M.w + M.id.length), FL = ['#fff8e8', '#ffd84a', '#f9a8c8', '#b8a0f0', '#ff8a6a'];
-  for (let n = 0; n < M.w * M.h / 110; n++) { const x = snap(rnd() * M.w), y = snap(rnd() * M.h), t = terr(x, y), q = rnd(); if (!isG(t) || !isG(terr(x + 3, y + 2)) || !isG(terr(x - 3, y - 2))) continue; if (q < 0.66) { R(g, x, y, U, 2, '#3c8440'); R(g, x + 1, y + U, U, 1.5, '#8fd070'); } else if (q < 0.86 && t === GR) { const col = FL[n % 5]; for (let k = 0; k < 3; k++) { const fx = x + (rnd() * 8 - 4), fy = y + (rnd() * 5 - 2); R(g, snap(fx) - U, fy, 1.5, 1, col); p1(g, fx, fy + U, '#ffe08a'); } } else { R(g, x, y, 2, 1, '#9a94a8'); R(g, x, y, 1.5, U, '#c8c0d4'); } }
+  if (SNOW) for (let n = 0; n < M.w * M.h / 60; n++) { const x = snap(rnd() * M.w), y = snap(rnd() * M.h); if (isG(terr(x, y))) p1(g, x, y, rnd() < 0.5 ? '#ffffff' : '#c8d8f0'); } // glints in the snow
+  else for (let n = 0; n < M.w * M.h / 110; n++) { const x = snap(rnd() * M.w), y = snap(rnd() * M.h), t = terr(x, y), q = rnd(); if (!isG(t) || !isG(terr(x + 3, y + 2)) || !isG(terr(x - 3, y - 2))) continue; if (q < 0.66) { R(g, x, y, U, 2, '#3c8440'); R(g, x + 1, y + U, U, 1.5, '#8fd070'); } else if (q < 0.86 && t === GR) { const col = FL[n % 5]; for (let k = 0; k < 3; k++) { const fx = x + (rnd() * 8 - 4), fy = y + (rnd() * 5 - 2); R(g, snap(fx) - U, fy, 1.5, 1, col); p1(g, fx, fy + U, '#ffe08a'); } } else { R(g, x, y, 2, 1, '#9a94a8'); R(g, x, y, 1.5, U, '#c8c0d4'); } }
 }
 // roads: [tileRow, tilesWide] for streets, [tileCol, tilesWide] for avenues
 function roads(hs, vs) { M.hs = hs; M.vs = vs || []; for (const [y, n] of hs) tRect(AS, 0, y, M.w / T, y + n); for (const [x, n] of M.vs) tRect(AS, x, 0, x + n, M.h / T); }
@@ -74,7 +83,7 @@ function plant(kind, x, y, force) {
   if (!force && !clearAt(x, y, 9)) return false;
   const v = SPR[kind], s = v[Math.floor(hsh(x * 3, y * 5) * v.length)];
   if (kind === 'bamboo') { put(s, x, y, 14, 72, { split: 48, sw: 0.9, kind }); M.SHD.push([x, y, 8, 2.5]); block(x - 3, y - 3, x + 3, y); }
-  else if (kind === 'pine') { put(s, x, y, 32, 60, { split: 44, sw: 0.5, kind }); M.SHD.push([x, y, 13, 3.5]); block(x - 3, y - 4, x + 3, y); }
+  else if (kind === 'pine' || kind === 'snowpine') { put(s, x, y, 32, 60, { split: 44, sw: 0.5, kind }); M.SHD.push([x, y, 13, 3.5]); block(x - 3, y - 4, x + 3, y); }
   else if (kind === 'bush' || kind === 'rock') { put(s, x, y, s.lw / 2, s.lh - 1); M.SHD.push([x, y, 8, 2]); block(x - 5, y - 4, x + 5, y); }
   else { put(s, x, y, 28, 60, { split: 46, sw: 0.6, kind }); M.SHD.push([x, y, 14, 4]); block(x - 3, y - 4, x + 3, y); }
   return true;
@@ -262,7 +271,7 @@ function wild(kinds, gap = 1) {
     const px = Math.round(x + rnd() * 8 - 4), py = Math.round(y + rnd() * 6 - 3), d = dist(px, py), kind = kinds[rnd() * kinds.length | 0]; if (d < gap || (d === gap && rnd() < 0.55)) continue;
     if (d <= 8 && py < M.h) plant(kind, px, py, 1); else deep.push([kind, px, py]);
   }
-  const g = M.ground.g; for (const [kind, x, y] of deep) { const v = SPR[kind], sp = v[Math.floor(hsh(x * 3, y * 5) * v.length)]; g.drawImage(sp, x - (kind === 'pine' ? 32 : kind === 'bamboo' ? 14 : 28), y - (kind === 'bamboo' ? 72 : 60)); }
+  const g = M.ground.g; for (const [kind, x, y] of deep) { const v = SPR[kind], sp = v[Math.floor(hsh(x * 3, y * 5) * v.length)]; g.drawImage(sp, x - (kind === 'pine' || kind === 'snowpine' ? 32 : kind === 'bamboo' ? 14 : 28), y - (kind === 'bamboo' ? 72 : 60)); }
 }
 // ledge(): a retaining wall or cliff face running left to right through pts (px). The ground north of it reads as higher.
 const LEDGE = { rock: ['#8a8496', '#aaa4b8', '#6b6478', '#514a60'], stone: ['#b8b0a4', '#d8d0c4', '#8e887c', '#6a6458'], earth: ['#a8845a', '#c4a070', '#8a6a48', '#5a4630'] };
@@ -319,7 +328,7 @@ function shinkansen(x, y) { prop('shsign', x + 20, y + 5, 3); M.SPOTS.push({ x, 
 // a bus stop that opens the city's line, like a station
 function busStop(x, y) { prop('busstop', x, y, 2); M.SPOTS.push({ x, y: y + 7, r: 14, label: 'BUS', train: 1 }); M.st = [x, y + 12]; }
 // rooftops seen from above, for the blocked ground behind a row of shops
-function roofs(x0, y0, x1, y1, seed) { const g = M.ground.g, r = RNG(seed || x0 + y0); block(x0, y0, x1, y1); for (let y = y0; y < y1; y += 6) for (let x = x0; x < x1; x += 12) { const k = (x / 12 + y / 6) % 2; R(g, x, y, 12, 6, k ? '#4a4458' : '#3a3448'); R(g, x, y, 12, U, '#6a6478'); } for (let k = 0; k < (x1 - x0) * (y1 - y0) / 2400; k++) { const x = x0 + r() * (x1 - x0 - 14), y = y0 + r() * (y1 - y0 - 10); R(g, x, y, 10, 7, '#8a8496'); R(g, x, y, 10, 1, '#b8b0c6'); R(g, x + 2, y + 2, 2, 2, '#5a5468'); } }
+function roofs(x0, y0, x1, y1, seed) { const g = M.ground.g, r = RNG(seed || x0 + y0); block(x0, y0, x1, y1); const sn = M.def && M.def.snow, C2 = sn ? ['#e2e8f2', '#d4dcea', '#f4f8fc', '#b8c4d4', '#ffffff', '#9aa6ba'] : ['#4a4458', '#3a3448', '#6a6478', '#8a8496', '#b8b0c6', '#5a5468']; for (let y = y0; y < y1; y += 6) for (let x = x0; x < x1; x += 12) { const k = (x / 12 + y / 6) % 2; R(g, x, y, 12, 6, k ? C2[0] : C2[1]); R(g, x, y, 12, U, C2[2]); } for (let k = 0; k < (x1 - x0) * (y1 - y0) / 2400; k++) { const x = x0 + r() * (x1 - x0 - 14), y = y0 + r() * (y1 - y0 - 10); R(g, x, y, 10, 7, C2[3]); R(g, x, y, 10, 1, C2[4]); R(g, x + 2, y + 2, 2, 2, C2[5]); } }
 // a row of buildings along the bottom edge, seen from behind the street
 function bottomRow(seed) { const rnd = RNG(seed || M.w); for (let x = 24; x < M.w + 10;) { const w = 40 + (rnd() * 4 | 0) * 8; tower(x, M.h + 62, w, 62 + (rnd() * 3 | 0) * 6); x += w + 3; } block(0, M.h - 6, M.w, M.h); }
 function signpost(x, y, lines) { prop('sign', x, y, 3); M.SPOTS.push({ x, y: y + 5, r: 12, label: 'READ', lines }); }

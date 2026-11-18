@@ -4,9 +4,9 @@
 // behind the shops down a gap in the row. The castle sits inside two moats behind stone walls; Shinsekai's tower stands
 // on legs you can walk under; Kuromon is a straight market arcade, because markets are.
 (function () {
-  const LINE = [['osa_namba', 'NAMBA'], ['osa_kuromon', 'KUROMON'], ['osa_shinsekai', 'SHINSEKAI'], ['osa_castle', 'OSAKA CASTLE']];
+  const LINE = [['osa_namba', 'NAMBA'], ['osa_kuromon', 'KUROMON'], ['osa_shinsekai', 'SHINSEKAI'], ['osa_castle', 'OSAKA CASTLE'], ['osa_kansai', 'KANSAI AIRPORT']];
   const STAMPS = {
-    osa_runman: ['THE RUNNING MAN', 'runner', 'osa_namba'], osa_crab: ['GIANT CRAB', 'crab', 'osa_namba'], osa_tako: ['TAKOYAKI', 'tako', 'osa_namba'], osa_okono: ['OKONOMIYAKI', 'okono', 'osa_namba'], osa_hozen: ['HOZEN-JI', 'lantern', 'osa_namba'], osa_cruise: ['TOMBORI CRUISE', 'boat', 'osa_namba'],
+    osa_runman: ['THE RUNNING MAN', 'runner', 'osa_namba'], osa_crab: ['GIANT CRAB', 'crab', 'osa_namba'], osa_tako: ['TAKOYAKI', 'tako', 'osa_namba'], osa_okono: ['OKONOMIYAKI', 'okono', 'osa_namba'], osa_hozen: ['HOZEN-JI', 'lantern', 'osa_namba'], osa_cruise: ['TOMBORI CRUISE', 'boat', 'osa_namba'], osa_island: ['AN AIRPORT ON THE SEA', 'plane', 'osa_kansai'],
     osa_market: ['KUROMON TASTING', 'fish', 'osa_kuromon'],
     osa_tower: ['TSUTENKAKU', 'tsuten', 'osa_shinsekai'], osa_billiken: ['BILLIKEN\'S FEET', 'billiken', 'osa_shinsekai'], osa_kushi: ['KUSHIKATSU', 'kushi', 'osa_shinsekai'],
     osa_castle: ['OSAKA CASTLE', 'castle', 'osa_castle'], osa_keep: ['VIEW FROM THE KEEP', 'sun', 'osa_castle'], osa_plum: ['PLUM GROVE', 'plum', 'osa_castle']
@@ -161,6 +161,9 @@
     }
   };
 
+  airport('osa_kansai', { name: 'KANSAI AIRPORT', short: 'OSAKA', code: 'KIX', sub: 'AN ISLAND IN OSAKA BAY', gate: 7, music: 'osaka', welcome: 'WELCOME TO OSAKA', other: 'haneda', city: ['osa_namba', 'NAMBA'], view: 'sea',
+    window: ['osa_island', ['THE WHOLE AIRPORT STANDS ON AN ISLAND THEY BUILT OUT IN THE SEA.', 'PLANES CLIMB AWAY OVER THE WATER, AND THE CITY IS A HAZE ON THE FAR SHORE.']],
+    tip: 'THIS AIRPORT IS ON AN ISLAND WE BUILT IN THE SEA. IT IS SINKING, VERY SLOWLY. DO NOT WORRY.' });
   concourse('os_shinkansen', { name: 'SHIN-OSAKA', hub: 'osa_namba', music: 'osaka', track: 26, dest: 'TOKYO', bento: ['TAKO MESHI', 'RICE COOKED WITH OCTOPUS AND GINGER. OSAKA PUTS OCTOPUS IN EVERYTHING, AND IS RIGHT TO.'] });
   city({
     id: 'osaka', name: 'OSAKA', tagline: 'EAT UNTIL YOU DROP', start: 'osa_namba', hub: 'osa_namba', concourse: 'os_shinkansen', line: LINE, stamps: STAMPS, cats: 5, minis: { tako: TAKO },

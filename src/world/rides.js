@@ -133,24 +133,25 @@ const RIDES = (function () {
 
   // ---------- boats you steer ----------
   function boatActor(B, wx, wy) { return { boat: B, x: wx, y: wy, vx: 0, vy: 0, face: 'r', ph: rnd() * 6, row: 0, sayT: 0, rider: true, temp: 1, always: 1, t: 0,
-    draw(e, x, y) { if (B.kind === 'row') drawRow(e, x, y); else drawSwan(e, x, y); } }; }
+    draw(e, x, y) { if (B.draw) B.draw(e, x, y); else if (B.kind === 'row') drawRow(e, x, y); else drawSwan(e, x, y); } }; }
   function startBoat(B) {
     const w = findWater(B.dock[0], B.dock[1]); if (!w) { dialog(['THE BOATS ARE ALL OUT RIGHT NOW. COME BACK IN A MINUTE.']); return; }
     const e = boatActor(B, w[0], w[1]); e.face = w[0] < pl.x ? 'l' : 'r'; M.ACT.push(e); G.state = 'boat'; G.ridee = e; pl.ride = e; pl.x = e.x; pl.y = e.y; SND.splash(1); Snd.fx('ui');
     NET.say && NET.say(TOUCH ? 'STEER WITH THE STICK. E AT THE DOCK TO RETURN THE BOAT.' : 'STEER WITH THE ARROWS. E AT THE DOCK TO RETURN THE BOAT.', 4);
   }
   function endBoat(e, quick) { const B = e.boat, long = e.t > 20; e.dead = 1; pl.ride = null; G.ridee = null; pl.x = B.dock[0]; pl.y = B.dock[1]; pl.dir = 'd'; G.state = 'play'; if (quick) G.fade = 1; Snd.fx('page');
-    if (B.stamp && STAMPS[B.stamp] && long) dialog([B.kind === 'row' ? 'YOU TIE THE BOAT UP. YOUR ARMS ACHE IN THE BEST WAY.' : 'YOU STEP OUT ONTO THE DOCK, LEGS STILL PEDALLING A LITTLE.'], () => award(B.stamp));
+    if (B.stamp && STAMPS[B.stamp] && long) dialog([B.doneLine || (B.kind === 'row' ? 'YOU TIE THE BOAT UP. YOUR ARMS ACHE IN THE BEST WAY.' : 'YOU STEP OUT ONTO THE DOCK, LEGS STILL PEDALLING A LITTLE.')], () => award(B.stamp));
     else if (B.stamp && !G.stamps[B.stamp]) dialog(['BACK ALREADY? STAY OUT A LITTLE LONGER NEXT TIME.']); }
   function boatTick(e, dt) {
     let ix = (K.r ? 1 : 0) - (K.l ? 1 : 0), iy = (K.d ? 1 : 0) - (K.u ? 1 : 0); if (JOY.on) { ix = JOY.x; iy = JOY.y; } const m = Math.hypot(ix, iy); if (m > 1) { ix /= m; iy /= m; }
-    const top = e.boat.kind === 'row' ? 34 : 30, k = Math.min(1, dt * 1.6); e.vx += (ix * top - e.vx) * k; e.vy += (iy * top * 0.75 - e.vy) * k; e.t += dt;
+    const top = e.boat.top || (e.boat.kind === 'row' ? 34 : 30), k = Math.min(1, dt * 1.6); e.vx += (ix * top - e.vx) * k; e.vy += (iy * top * 0.75 - e.vy) * k; e.t += dt;
     const nx = e.x + e.vx * dt, ny = e.y + e.vy * dt, okAt = (x, y) => water(x - 12, y) && water(x + 12, y) && water(x, y - 5) && water(x, y + 4);
     if (okAt(nx, e.y)) e.x = nx; else { if (Math.abs(e.vx) > 12) SND.bump(); e.vx *= -0.35; } if (okAt(e.x, ny)) e.y = ny; else { if (Math.abs(e.vy) > 12) SND.bump(); e.vy *= -0.35; }
     if (Math.abs(e.vx) > 3) e.face = e.vx < 0 ? 'l' : 'r'; const spd = Math.hypot(e.vx, e.vy);
     if (e.boat.kind === 'row') { if (spd > 4) { const r0 = e.row; e.row += dt * 5; if (Math.cos(r0) <= 0 && Math.cos(e.row) > 0) { SND.splash(0.5); for (let q = 0; q < (lowFx() ? 1 : 3); q++) fx.push({ k: 'drop', x: e.x + (rnd() - 0.5) * 20, y: e.y + 2, vy: -14 - rnd() * 8, t: 0, life: 0.5 }); } } }
     else if (spd > 4 && rnd() < dt * 8) fx.push({ k: 'drop', x: e.x - (e.face === 'l' ? -1 : 1) * 14, y: e.y - 2, vy: -10 - rnd() * 8, t: 0, life: 0.45 });
     if (spd > 5 && rnd() < dt * spd / 4) wake(e, 13);
+    if (e.boat.tick) e.boat.tick(e, dt);
     pl.x = e.x; pl.y = e.y;
     const dd = Math.hypot(e.x - e.boat.dock[0], e.y - e.boat.dock[1]); G.tgt = dd < 46 ? { x: e.x, y: e.y - 4, label: 'RETURN THE BOAT', boat: e } : null;
   }
@@ -202,14 +203,14 @@ const RIDES = (function () {
   function build() {
     if (M.indoor) return;
     M.BR = M.BR || [];
-    for (const o of M.OBJ) if (o.spr === SPR.bench && free(o.x, o.y + 8) && free(o.x - 4, o.y + 10) && free(o.x + 4, o.y + 10)) M.SPOTS.push({ x: o.x, y: o.y + 6, r: 10, label: 'SIT DOWN', fn: () => sitAt(o) });
+    for (const o of M.OBJ) if ((o.base || o.spr) === SPR.bench && free(o.x, o.y + 8) && free(o.x - 4, o.y + 10) && free(o.x + 4, o.y + 10)) M.SPOTS.push({ x: o.x, y: o.y + 6, r: 10, label: 'SIT DOWN', fn: () => sitAt(o) });
     for (const sp of M.SPOTS.slice()) if ((sp.act === 'bow' && sp.label === 'PRAY') || sp.label === 'WAFT THE SMOKE') shrine(sp);
     const T = TOURS[M.id]; if (T) {
       const e = tourActor(T); M.ACT.push(e);
       if (T.kind === 'rick') { const old = M.OBJ.find(o => o.spr === SPR.rick); if (old) M.OBJ.splice(M.OBJ.indexOf(old), 1); const pul = M.ACT.find(n => n.lines && n.lines.some(l => /RICKSHAW/.test(l))); if (pul) { e.stand = pul; pul.spot = { label: 'RIDE THE RICKSHAW', fn: () => startTour(e) }; pul.x = T.at[0] + 22; pul.y = T.at[1] + 2; pul.hx = pul.x; pul.hy = pul.y; pul.F = e.pullF; pul.dir = 'l'; } block(T.at[0] - 12, T.at[1] - 4, T.at[0] + 12, T.at[1]); }
       else M.SPOTS.push({ x: T.dock[0], y: T.dock[1] + 6, r: 15, label: T.board, fn: () => startTour(e) });
     }
-    const B = BOATS[M.id]; if (B) { M.SPOTS.push({ x: B.dock[0], y: B.dock[1] + 4, r: 14, label: B.label, fn: () => startBoat(B) }); const w = findWater(B.dock[0], B.dock[1]); if (w) M.ACT.push({ x: w[0] + 26, y: w[1] + 2, face: 'l', ph: 1, sayT: 0, draw(e, x, y) { if (G.ridee && G.ridee.boat === B) return; (B.kind === 'row' ? drawRow : drawSwan)(e, x, y); } }); }
+    const B = BOATS[M.id]; if (B) { M.SPOTS.push({ x: B.dock[0], y: B.dock[1] + 4, r: 14, label: B.label, fn: () => startBoat(B) }); const w = findWater(B.dock[0], B.dock[1]); if (w) M.ACT.push({ x: w[0] + 26, y: w[1] + 2, face: 'l', ph: 1, sayT: 0, draw(e, x, y) { if (G.ridee && G.ridee.boat === B) return; (B.draw || (B.kind === 'row' ? drawRow : drawSwan))(e, x, y); } }); }
     const P = PONDS[M.id]; if (P) { let n = 0; for (let i = 0; i < 60 && n < 7; i++) { const x = P[0] + (rnd() - 0.5) * 120, y = P[1] + (rnd() - 0.5) * 60; if (water(x, y) && water(x + 8, y) && water(x - 8, y)) { koi(x, y, n); n++; } } if (P[2] && n) M.SPOTS.push({ x: P[2][0], y: P[2][1], r: 13, label: 'FEED THE KOI', fn: () => feed(P) }); }
   }
 
@@ -252,5 +253,5 @@ const RIDES = (function () {
     icon('oar', g => { ell(g, 6, 8, 5.5, 2, '#8a5a3a'); line(g, 1, 2, 10, 11, '#c8a070'); R(g, 9, 9, 3, 3, '#c8a070'); R(g, 0, 11, 12, 1, '#7ac8dc'); });
     icon('boat', g => { R(g, 1, 6, 10, 3, '#f4f1e6'); R(g, 1, 8, 10, 1, '#3f7ab0'); R(g, 3, 3, 6, 3, '#5ad8f0'); R(g, 0, 10, 12, 1, '#7ac8dc'); });
   }
-  return { build, tick, update, drawFx, drawSit, washEvent, sprites, EMA, TOURS, BOATS, startTour, startBoat, drawRickshaw }; // drawRickshaw is exposed for testing
+  return { sitAt, build, tick, update, drawFx, drawSit, washEvent, sprites, EMA, TOURS, BOATS, startTour, startBoat, drawRickshaw }; // drawRickshaw is exposed for testing
 })();

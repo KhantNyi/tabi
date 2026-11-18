@@ -2,7 +2,7 @@
 
 A slow, no-fail, top-down pixel-art walk through Japan. Ride the train between districts, step inside shops and temples, talk to people, collect stamps and play a few small games along the way.
 
-There are five places to visit, joined by the shinkansen: **Tokyo**, **Kawaguchiko** (Mount Fuji), **Kyoto**, **Nara** and **Osaka**. Each has its own stamp book page, 76 stamps in all.
+There are nine places to visit: **Tokyo**, **Kamakura**, **Kawaguchiko** (Mount Fuji), **Kyoto**, **Nara**, **Osaka**, **Hiroshima** (with Miyajima), **Sapporo** and **Okinawa**. Most are joined by the shinkansen; Sapporo is a flight and Okinawa is a cruise. Each place has its own stamp book page, 132 stamps in all.
 
 Everything is drawn in code and the music is synthesized in the browser, so there are no image or audio files and no build step.
 
@@ -100,6 +100,60 @@ Nara is one large map you explore on foot, with no trains. It runs from the stat
 - Three places to go inside: the Great Buddha Hall (squeeze through the pillar), a mochi shop with a pounding minigame, and a hillside tea house.
 - 11 stamps and 3 cats, one of them in a walled garden you can only reach through a gap in its wall.
 
+## Kamakura
+
+An old capital by the sea, an hour from Tokyo by train. Three stops on the little green Enoden line.
+
+- **Kamakura:** snack shops along Komachi-dori up to Tsurugaoka Hachimangu. The red hall stands at the top of a long stair above two lotus ponds, joined by a drum bridge. Cherry trees line the raised path down to the great torii. A rickshaw goes from the station square.
+- **Hase:** the Great Buddha sits in the open air, and you can go inside him. Hasedera climbs past rows of little stone Jizo to a hall and a lookout over the bay, with a hillside path of hydrangeas above.
+- **The crossing by the sea:**
+  - The Enoden runs past on a clock everyone shares, one way and then the other. The crossing gates come down with bells and flashing lights, and the classic photo only counts while a train is in it.
+  - Below the road are the beach, surfers on the swell, and kites wheeling overhead. Buy a shirasu bun at the beach hut and one of them takes it.
+  - The surf school runs the surfing minigame: paddle into a wave, stand up in time, then stay in the green pocket.
+
+## Hiroshima and Miyajima
+
+- **Hiroshima Station and Hondori:** streetcars ring their bells along the main road (the photo needs one in it). The covered arcade has a lemonade stand, and Okonomimura, where you build a Hiroshima okonomiyaki layer by layer: drop each layer as it slides over the stack, and whatever overhangs is trimmed.
+- **Peace Memorial Park:** the Dome across the river, the Children's Peace Monument (fold a paper crane by pressing the arrow each fold asks for), the Peace Bell, the Flame of Peace and the cenotaph. Praying there is a quiet bow, with no coin and no clapping. The tone in the park is gentle on purpose.
+- **Miyajima** is a boat ride from the park, or the train and ferry from the station.
+  - The tide comes and goes on the shared clock, and the note at the top of the screen shows where it is. At high tide the great torii and the shrine float on the sea. At low tide the water draws back and you can walk out across the sand to touch the torii. If the tide catches you, it nudges you back to shore.
+  - Deer wander the shore. There are grilled oysters, the world's biggest rice scoop and a pagoda on the hill. Fill maple-leaf moulds with batter at the momiji manju shop: hold E to pour and stop at the line.
+
+## Sapporo
+
+Sapporo is in February, during the Snow Festival. Snow falls on every map, your footprints stay in it for a while, and everyone's breath steams. Snow settles on every roof, sign and branch, and icicles hang from the eaves. You get here by plane: the airport sign at Odori, or a flight from any airport gate. New Chitose Airport is on the line.
+
+- **Odori Park:**
+  - snow sculptures (a castle as big as a house, a giant owl) and ice sculptures that glint;
+  - a snow slide to go down;
+  - grilled corn, and a snowball toss where you knock down five bears as they pop up;
+  - the old clock tower, and the TV tower with a clock showing the real time.
+- **Susukino:** neon on the snow, ice sculptures lit from inside, a streetcar loop, and lamb on a dome-shaped grill. In Ramen Yokocho, the chef calls out your toppings; add them in the order he said.
+- **Otaru:**
+  - a canal of old stone warehouses at dusk, with gas lamps and snow candles, and a canal cruise;
+  - a glass workshop: hold E to blow a float, a cup and a vase, and let go at the ring;
+  - a hall of music boxes, and a steam clock that whistles every minute and a half (the HUD counts down to it).
+
+## Okinawa
+
+You come to Okinawa by sea, though there are flights from the airports too. The cruise ship is a scene of its own: out on the open sea, then sunset on deck, then a night under the stars, then land at dawn, with dolphins playing at the bow. A monorail runs above the streets of Naha.
+
+- **Naha Port:** the ship at the wharf (board it to sail anywhere), a shrine on a cliff over a little beach, and a giant shisa lion-dog to pat.
+- **Kokusai-dori:** red-tiled roofs with shisa on them, sata andagi doughnuts, the Makishi fish market and Okinawa soba. Eisa drummers dance in the road; join them in a rhythm game.
+- **Shuri Castle:** curving limestone walls, the Shureimon gate, and the red Seiden above its striped courtyard.
+- **Emerald Beach:**
+  - white sand, water in every shade of blue, and sea turtles coming up to breathe;
+  - shells to collect, a hammock, and purple sweet potato ice cream;
+  - a glass-bottomed boat to steer over the reef. Look through the glass and find five kinds of sea life for the stamp.
+
+## Getting around Japan
+
+The shinkansen sign (or a city's own gateway: Kamakura's JR sign, Sapporo's airport sign, Okinawa's ship) opens a map of all of Japan with the way to each place:
+- **the shinkansen** between the cities on Honshu;
+- **a local train** between Tokyo and Kamakura;
+- **a flight** to or from Sapporo, landing at the city's airport. When the city has no airport, an airport train takes you the rest of the way.
+- **a cruise** to or from Okinawa. Arriving anywhere else, a train takes you on from the port.
+
 ## Everywhere
 
 - **Photos:** whenever you take a photo, an instant-photo card drops in and develops from a cream haze. It shows the view in front of you (with you out of the shot), a caption, and an orange date print. A few Fuji views are painted as postcards instead.
@@ -136,6 +190,25 @@ None of this is a goal; it is there so the places feel lived in. It all lives in
   - water that glints;
   - birds crossing the sky;
   - street lights that breathe and neon that flickers at night.
+
+## Airports
+
+A new trip starts in the air: the plane lands at **Haneda**, and you step off at the arrivals gate. Existing saves carry on where they were. Both airports are stops on their city's train line, so you can come back any time: Haneda on Tokyo's line, **Kansai** on Osaka's.
+
+- **Arrivals:** take the moving walkway down to the immigration booths and show your passport (that's the WELCOME TO JAPAN stamp). Then find your suitcase on the baggage carousel: it's the one with the red ribbon. Press E when it reaches the yellow box. After that comes customs.
+- **The main hall:**
+  - a departure board whose letters flip over;
+  - an IC card machine (after that, the gates beep when you ride the train);
+  - money exchange, information, shops, and travellers wheeling suitcases;
+  - announcements with the two-note chime;
+  - trains, and a bus straight to the city centre.
+- **Departures:** check in (your suitcase is heavier for every city you've visited), walk through security (the arches beep), and sit in the gate lounge.
+- **The gate desk** is where you choose a flight: to the other airport, or **FLY HOME**. Flights are a window-seat view of take-off, the cloud layer (Fuji pokes through between Tokyo and Osaka) and the landing. Your first domestic flight earns a stamp.
+- **Flying home** ends the trip with a scrapbook: the cities you saw, your stamps, cats, drinks, figures, wishes and how many steps you walked. You never have to fly home. Afterwards you can keep wandering, or start a new trip.
+- **Haneda's observation deck** (up the escalator): planes take off and land in front of the bay, with Fuji on the horizon.
+- **Kansai** stands on an island in the sea; look out of the gate lounge window for its stamp.
+
+It all lives in `src/world/airport.js`. `airport(id, {...})` builds a terminal the way `concourse()` builds a station, and a city calls it before `city()`.
 
 ## Rides and small things to do
 
@@ -215,6 +288,8 @@ src/
     sprites.js          reusable art: people, trees, roofs, temples, shops, towers, icons
   world/
     station.js          the shinkansen concourses at the big stations: the train, gates, crowds and departure board
+    airport.js          the airports: arrivals, departures, the observation deck, flights and the scrapbook ending
+    places.js           shared by the far cities: travel by plane and ship, the cruise scene, passing trains and crossings, snow, waves
     rides.js            rickshaw tours, the canal cruise, boats to steer, benches, bowing, shrine basins and racks, koi
     life.js             life in the streets: reactions, passing scenes, birds and butterflies, ambient sound, steam and leaves
     world.js            building a map: terrain, ground painter, roads, buildings, rooms,
@@ -229,6 +304,10 @@ src/
     kyoto.js            Kyoto's five districts, the tea ceremony, kimono rental, monkeys
     nara.js             Nara's map, rooms, deer, the mochi minigame and landmark art
     osaka.js            Osaka's four districts, the takoyaki minigame and landmark art
+    kamakura.js         Kamakura: the shrine, the Great Buddha, the Enoden crossing, the beach and the surfing minigame
+    hiroshima.js        Hiroshima and Miyajima: streetcars, the Peace Park, the tide, paper cranes, okonomiyaki and maple cakes
+    sapporo.js          Sapporo in the snow: Odori, Susukino, Otaru, New Chitose, and the snowball, ramen and glass minigames
+    okinawa.js          Okinawa: the port and its ship, Kokusai-dori, Shuri, the beach and its glass-bottomed boat, the eisa
   game/
     minigames.js        crane, sushi, capsule, fortune, fitting room, vending machine
     changelog.js        the versions and what each one added (the stamp book's last page)
@@ -254,7 +333,8 @@ Scripts are plain classic `<script>` tags that share one global scope, which is 
    - Optional: `minis` adds minigames and `hud()` shows a small counter next to the stamps.
    - A map can set `lookUp: [y0, y1]` to lift the camera toward a view at its top (fully above `y0`, easing off by `y1`).
    - A photo spot (`act: 'snap'`) can set `aim()` to frame its photo, or `photo(g, w, h)` to paint the picture itself.
-4. Put a `shinkansen(x, y)` spot on the hub map, add the city's position to `JPOS` in `main.js`, and add a `<script>` tag for it in `index.html` after `world.js`. The order of the tags is the order of the cities on the shinkansen and in the stamp book.
+   - Getting there: `via: 'plane'` makes the city a flight away, and `via: 'ship'` makes it a cruise (`dock: [mapId, x, y, dir]` is where the ship comes in). `local: 'tokyo'` makes the trip to that city a local train. `gate: [how, where]` changes the travel hint on the train line, and `rideSpr` names the view from the local train's window.
+4. Put a `shinkansen(x, y)` spot on the hub map (or `gateway(x, y, label, sprite)` for any other way out), add the city's position to `JPOS` in `main.js`, and add a `<script>` tag for it in `index.html` after `world.js`. The order of the tags is the order of the cities on the shinkansen and in the stamp book.
 5. A station is `station(x, y, name)`, or `busStop(x, y)` for a bus. To ride somewhere that isn't on the line, such as a ropeway, call `rideTo({ label, name, go: [mapId, x, y] })` from a spot's `fn`.
 
 ### Making a map that isn't a box

@@ -3,7 +3,7 @@
 const GAME = { title: 'TABI', save: 'tabi', version: CHANGELOG[0][0] }; // the game's name lives here and nowhere else; the version is the newest changelog entry
 const CLIST = Object.values(CITIES); // every city, in the order index.html loads them
 let CITY = CITIES[new URLSearchParams(location.search).get('city')] || CLIST[0]; // the city you are in; go() keeps it in step with the map
-const G = { state: 'menu', menu: { kind: 'main', sel: 0, t: 0 }, mstack: [], ret: null, t: 0, cx: 0, cy: 0, fade: 1, flash: 0, banner: 0, stamps: {}, figs: {}, fit: 0, look: null, cats: {}, cans: {}, ema: {}, knots: {}, name: NET.name(), seen: '', cl: 0, tgt: null, fx: [], back: null, dist: CITY.start, hasSave: false };
+const G = { state: 'menu', menu: { kind: 'main', sel: 0, t: 0 }, mstack: [], ret: null, t: 0, cx: 0, cy: 0, fade: 1, flash: 0, banner: 0, stamps: {}, figs: {}, fit: 0, look: null, cats: {}, cans: {}, ema: {}, knots: {}, steps: 0, ic: 0, arrived: 0, name: NET.name(), seen: '', cl: 0, tgt: null, fx: [], back: null, dist: CITY.start, hasSave: false };
 const pl = { x: 70, y: 204, dir: 'd', mv: false, wt: 0, ph: 0, act: null }, PRT = [];
 const FITS = ['#3fa7a0', '#f06a8c', '#f2c14e', '#8a6aff', '#3a3a4e', '#f4f1e6', '#e0563f', '#5aa85a', '#c8486a', '#4a6fa5', '#f0a8c0', '#5a8a6a'], KIMONO = 8, OBI = ['#f2c14e', '#f4f1e6', '#8a6aff', '#e8c070'], FITN = ['TEAL JACKET', 'PINK HOODIE', 'YELLOW RAINCOAT', 'PURPLE BOMBER', 'BLACK COAT', 'WHITE SHIRT', 'RED TRACK TOP', 'GREEN PARKA', 'RED KIMONO', 'INDIGO YUKATA', 'SAKURA KIMONO', 'MOSS KIMONO']; // from KIMONO on, rented in Kyoto
 // ---------- your traveller ----------
@@ -26,15 +26,15 @@ function lookParts(l) {
 }
 const plLook = (i, l = G.look) => { const k = 'pl' + i + ':' + lookKey(l); return LOOKS[k] || (LOOKS[k] = makeLook(Object.assign({}, PLAYER_LOOK, lookParts(l), i >= KIMONO ? { robe: FITS[i], obi: OBI[i - KIMONO], shirt: FITS[i], pants: FITS[i], shoes: '#f4f1e6', pack: null, skirt: false } : { shirt: FITS[i] }))); };
 // one save for the whole trip (older saves were kept per city under 'tabi-tokyo')
-function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, look: lookKey(G.look), cats: G.cats, cans: G.cans, ema: G.ema, knots: G.knots, name: G.name, seen: G.seen, mute: !Snd.on, dist: G.dist })); } catch (e) { } }
-function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.look = lookOf(s.look); G.cats = s.cats || {}; G.cans = s.cans || {}; G.ema = s.ema || {}; G.knots = s.knots || {}; if (NAMES.includes(s.name)) G.name = s.name; G.seen = s.seen || ''; if (s.mute && Snd.on) Snd.toggle(); if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
+function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, look: lookKey(G.look), cats: G.cats, cans: G.cans, ema: G.ema, knots: G.knots, steps: Math.round(G.steps || 0), ic: G.ic, arrived: G.arrived, name: G.name, seen: G.seen, mute: !Snd.on, dist: G.dist })); } catch (e) { } }
+function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.look = lookOf(s.look); G.cats = s.cats || {}; G.cans = s.cans || {}; G.ema = s.ema || {}; G.knots = s.knots || {}; G.steps = s.steps || 0; G.ic = s.ic || 0; G.arrived = s.arrived == null ? 1 : s.arrived; if (NAMES.includes(s.name)) G.name = s.name; G.seen = s.seen || ''; if (s.mute && Snd.on) Snd.toggle(); if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
 const count = o => Object.keys(o).length, STAMPS = {}, SCITY = {}; for (const c of CLIST) for (const k in c.stamps) { STAMPS[k] = c.stamps[k]; SCITY[k] = c; }
 const nst = c => count(c.stamps), got = c => Object.keys(c.stamps).filter(k => G.stamps[k]).length, catsIn = c => Object.keys(G.cats).filter(k => (MAPS[k.split(':')[0]] || {}).city === c.id).length;
 const areas = c => c.areas || c.line; // the sections of a city's page in the stamp book
 const stampInfo = id => STAMPS[id] || TSTAMPS[id]; // a city's stamp, or one from the TOGETHER page
 const BOOKP = () => CLIST.concat(['together', 'updates']); // the stamp book's pages: one per city, then TOGETHER, then what is new
 const SOON = [['kawaguchiko', 'MT FUJI'], ['kyoto', 'KYOTO'], ['osaka', 'OSAKA']].filter(c => !CITIES[c[0]]); // on the map, not built yet
-const JPOS = { tokyo: [214, 44, 214, 26, 0], kawaguchiko: [164, 46, 164, 8, 0], kyoto: [70, 38, 50, 22, 0], osaka: [46, 58, 38, 54, -1], nara: [74, 62, 82, 59, 1] }; // dot x,y then label x,y,align on the Japan map
+const JPOS = { tokyo: [211, 63, 224, 56, 1], kamakura: [205, 71, 216, 72, 1], kawaguchiko: [192, 65, 190, 81, 0], kyoto: [136, 65, 136, 44, 0], nara: [141, 74, 147, 80, 1], osaka: [129, 74, 122, 82, -1], hiroshima: [94, 73, 94, 50, 0], sapporo: [218, 11, 204, 6, -1], okinawa: [27, 96, 25, 73, 0] }; // dot x,y then label x,y,align on the Japan map
 function build(id) {
   const d = MAPS[id]; newMap(id, d.tw || 20, d.th || 12, !!d.indoor); M.def = d; M.night = d.night; M.hs = []; M.vs = [];
   if (d.lay) d.lay(); if (!d.indoor) { blockTer(WA); paintGround(); } d.deco(); RIDES.build(); markRoads(); settle();
@@ -87,7 +87,7 @@ function update(dt) {
     if (JOY.on) { dx = JOY.x; dy = JOY.y; const m = Math.hypot(dx, dy); if (m > 1) { dx /= m; dy /= m; } }
     pl.mv = !!(dx || dy);
     if (pl.emT > 0) { pl.emT -= dt; pl.act = pl.emT > 0 && !pl.mv ? pl.em : null; if (pl.mv) pl.emT = 0; } // a bow or a cheer from SAY SOMETHING, until you move
-    if (pl.mv) { if (JOY.on) { if (Math.abs(dx) > Math.abs(dy) * 1.15) pl.dir = dx < 0 ? 'l' : 'r'; else if (Math.abs(dy) > Math.abs(dx) * 1.15) pl.dir = dy < 0 ? 'u' : 'd'; } else { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27)) LIFE.foot(); } else pl.wt = 0;
+    if (pl.mv) { if (JOY.on) { if (Math.abs(dx) > Math.abs(dy) * 1.15) pl.dir = dx < 0 ? 'l' : 'r'; else if (Math.abs(dy) > Math.abs(dx) * 1.15) pl.dir = dy < 0 ? 'u' : 'd'; } else { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; else G.steps = (G.steps || 0) + Math.hypot(dx, dy) * 72 * dt / 7; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27)) LIFE.foot(); } else pl.wt = 0;
     if (M.def.zones) { const z = zoneAt(pl.x, pl.y); if (z && z !== G.zn) { G.zn = z; if (G.banner <= 0) G.zb = 2.6; } if (G.zb > 0) G.zb -= dt; }
     if (M.def.tick) M.def.tick(); // a map's own rule (walking out of a station's doors)
     if (M.indoor && pl.y > 188 && G.back) { const b = G.back; G.back = null; Snd.fx('page'); go(b.map, b.x, b.y, 'd'); G.banner = 0; }
@@ -100,9 +100,10 @@ function update(dt) {
     const ev = G.ev, sp = ev.sp, t0 = ev.t; ev.t += dt; const cross = s => t0 < s && ev.t >= s;
     if (sp.act === 'wash') { RIDES.washEvent(ev, dt); }
     else if (sp.act === 'bow') { pl.act = (ev.t > 0.7 && ev.t < 1.2) || (ev.t > 1.5 && ev.t < 2) ? 'bow' : 'back'; if (cross(0.15)) Snd.fx('coin'); if (cross(0.35)) Snd.fx('bell'); if (cross(2.2) || cross(2.45)) Snd.fx('clap'); }
+    else if (sp.act === 'pray') { pl.act = ev.t > 0.6 && ev.t < 2.3 ? 'bow' : 'back'; if (cross(0.5)) Snd.fx('bell'); } // a quiet prayer: no coin, no clapping
     else if (sp.act === 'snap') { pl.act = 'back'; if (cross(0.8)) { Snd.fx('shutter'); G.flash = 1; G.snapReq = sp; } }
     else { pl.act = ev.t > 0.3 ? 'cheer' : null; if (cross(0.4) || cross(1.1)) Snd.fx(sp.fx || 'munch'); }
-    if (sp.act !== 'wash' && ev.t > (sp.act === 'bow' ? 2.9 : sp.act === 'snap' ? 2.3 : 1.9)) { pl.act = null; dialog(G.stamps[sp.stamp] ? [sp.lines[1]] : sp.lines, () => award(sp.stamp)); }
+    if (sp.act !== 'wash' && ev.t > (sp.act === 'bow' || sp.act === 'pray' ? 2.9 : sp.act === 'snap' ? 2.3 : 1.9)) { pl.act = null; dialog(G.stamps[sp.stamp] ? [sp.lines[1]] : sp.lines, () => award(sp.stamp)); }
   } else if (st === 'dialog') {
     const d = G.dlg, L = d.lines[d.i]; d.t += dt; if (d.t * 42 < L.length && Math.floor(d.t * 14) !== Math.floor((d.t - dt) * 14)) Snd.fx('talk');
     if (KP.a || KP.x) { if (d.t * 42 < L.length) d.t = 99; else if (++d.i >= d.lines.length) { G.state = 'play'; G.dlg = null; if (d.then) d.then(); } else { d.t = 0; Snd.fx('ui'); } }
@@ -112,9 +113,10 @@ function update(dt) {
   else if (st === 'tog') NET.updTog();
   else if (st === 'say') NET.updSay();
   else if (st === 'mini') { G.mg.t += dt; const m = G.mg; MG[m.k].update(m, dt); if (G.mg === m && KP.x && m.k !== 'dress' && m.k !== 'vend') { G.mg = null; G.state = 'play'; } }
-  else if (st === 'line') { const STN = CITY.line, n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === M.id) G.state = 'play'; else { G.state = 'ride'; G.ride = { to: L.sel, t: 0 }; Snd.play(null); Snd.fx('train'); emit('ride', G.ride); } } }
-  else if (st === 'japan') { const n = CLIST.length, J = G.jp; if (KP.u || KP.l) { J.sel = (J.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d || KP.r) { J.sel = (J.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (CLIST[J.sel] === CITY) G.state = 'play'; else { G.state = 'ride'; G.ride = { city: CLIST[J.sel], t: 0, dur: 5.6 }; Snd.play(null); Snd.fx('train'); emit('ride', G.ride); } } }
-  else if (st === 'ride') { G.ride.t += dt; if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > (G.ride.dur || 3.4)) { const r = G.ride; G.state = 'play'; if (r.go) go(...r.go); else if (r.city) { if (r.city.concourse) { go(r.city.concourse, 320, 126, 'd'); Snd.fx('chime'); NET.say('FOLLOW THE YELLOW EXIT SIGNS DOWN TO THE CITY.', 4); } else { go(r.city.hub || r.city.start); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1]; camSnap(); } } } else go(CITY.line[r.to][0]); emit('arrived', r); } }
+  else if (st === 'line') { const STN = CITY.line, n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === M.id) G.state = 'play'; else { G.state = 'ride'; G.ride = { to: L.sel, t: 0 }; Snd.play(null); Snd.fx('train'); if (G.ic) Snd.fx('beep'); emit('ride', G.ride); } } }
+  else if (st === 'japan') { const n = CLIST.length, J = G.jp; if (KP.u || KP.l) { J.sel = (J.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d || KP.r) { J.sel = (J.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (CLIST[J.sel] === CITY) G.state = 'play'; else PLACES.travel(CLIST[J.sel]); } }
+  else if (st === 'scrap') AIR.scrapUpdate(dt);
+  else if (st === 'ride') { G.ride.t += dt; if (G.ride.plane) AIR.rideTick(G.ride, dt); else if (G.ride.ship) PLACES.shipTick(G.ride, dt); else if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > (G.ride.dur || 3.4)) { const r = G.ride; G.state = 'play'; if (r.go) go(...r.go); else if (r.city) { if (r.city.concourse) { go(r.city.concourse, 320, 126, 'd'); Snd.fx('chime'); NET.say('FOLLOW THE YELLOW EXIT SIGNS DOWN TO THE CITY.', 4); } else { go(r.city.hub || r.city.start); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1]; camSnap(); } } } else if (r.to != null) go(CITY.line[r.to][0]); if (!r.plane) emit('arrived', r); if (r.then) r.then(); } }
 
   if (st !== 'ride' && st !== 'line' && st !== 'japan' && st !== 'mini') {
     for (const n of M.ACT) {
@@ -165,6 +167,7 @@ function drawWorld() {
   LIFE.drawFx(cx, cy); RIDES.drawFx(cx, cy);
   // lights breathe a little, and some neon flickers now and then
   if (M.def.tint) { ctx.globalCompositeOperation = 'multiply'; R(ctx, 0, 0, W, H, M.def.tint); ctx.globalCompositeOperation = 'lighter'; for (const [x, y, r, c] of M.LIGHTS) { if (x - cx < -r || x - cx > W + r || y - cy < -r || y - cy > H + r) continue; const h = hsh(x, y), fl = h < 0.25 && (t * 0.6 + h * 7) % 1 < 0.035; ctx.globalAlpha = fl ? 0.25 : 0.88 + Math.sin(t * 2 + h * 9) * 0.12; ctx.drawImage(glowSpr(r, c), snap(x - cx - r), snap(y - cy - r)); } ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  if (M.def.over) M.def.over(cx, cy); // a map's own weather and overlays: snow, a lens on the sea
   if (!G.hidePl) LIFE.drawSky();
   if (M.def.petals) for (const p of PRT) { R(ctx, p.x, p.y, 1.5, 1, p.c); p1(ctx, p.x + (Math.sin(t * 4 + p.ph) > 0 ? 1.5 : -U), p.y + U, p.c); }
   for (const f of G.fx) { ctx.globalAlpha = Math.max(0, 1 - f.t); ctx.drawImage(ICON[f.icon], snap(f.x - cx - ICON[f.icon].lw / 2), snap(f.y - cy - 8 - f.t * 14)); ctx.globalAlpha = 1; }
@@ -243,14 +246,14 @@ function drawRide() { // the view from the window; on an upright phone the whole
   for (let x = ((Math.floor((W - W0) / 2) + 30) % 44) - 44; x < W; x += 44 * k) { const y = top + (24 + Math.sin(G.t * 3 + x)) * k; R(ctx, x, top + 6 * k, 1, 14 * k, '#c8c0d4'); disc(ctx, x + 0.5, y, 4 * k, '#f4f1e6'); disc(ctx, x + 0.5, y, 2.5 * k, '#2a2a3a'); }
   layout(304, () => {
     ctx.save(); ctx.beginPath(); ctx.rect(20, 34, 280, 84); ctx.clip();
-    const s = r.spr || (r.city ? SPR.ride2 : SPR.ride), o = (G.t * (r.speed || (r.city ? 46 : 150))) % 320; ctx.drawImage(s, o, 0, 320, 84, 20, 34, 320, 84); ctx.drawImage(s, o - 320, 0, 320, 84, 20, 34, 320, 84); for (let x = 300 - (G.t * (r.city ? 760 : 420)) % (r.city ? 150 : 90); x > 0; x -= r.city ? 150 : 90) R(ctx, x, 34, 3, 84, '#3a3a4e'); ctx.restore();
+    const s = r.spr || (r.city ? SPR.ride2 : SPR[CITY.rideSpr] || SPR.ride), o = (G.t * (r.speed || (r.city ? 46 : 150))) % 320; ctx.drawImage(s, o, 0, 320, 84, 20, 34, 320, 84); ctx.drawImage(s, o - 320, 0, 320, 84, 20, 34, 320, 84); for (let x = 300 - (G.t * (r.city ? 760 : 420)) % (r.city ? 150 : 90); x > 0; x -= r.city ? 150 : 90) R(ctx, x, 34, 3, 84, '#3a3a4e'); ctx.restore();
     for (const x of [20, 112, 206, 298]) R(ctx, x - 2, 30, 4, 92, '#c8c0d4'); R(ctx, 16, 30, 288, 4, '#c8c0d4'); R(ctx, 16, 118, 288, 4, '#c8c0d4');
     panel(70, 136, 180, 32); txtC(ctx, r.label || (r.city ? 'SHINKANSEN TO' : 'NEXT STOP'), 160, 142, '#8a7a6a'); txtC(ctx, r.name || (r.city ? r.city.name : CITY.line[r.to][1]), 160, 152, r.city || r.go ? '#3f7ab0' : '#3f9a5a', null, 2);
   }, top + 90 * k);
   const dur = r.dur || 3.4, a = t < 0.4 ? 1 - t / 0.4 : t > dur - 0.4 ? (t - dur + 0.4) / 0.4 : 0; if (a > 0) { ctx.globalAlpha = Math.min(1, a); R(ctx, 0, 0, W, H, '#100c1c'); ctx.globalAlpha = 1; }
 }
 // the train line as a list (narrow screens) and which row a tap hit; on wide screens a tap on a stop's name picks it
-const shinkHint = () => { const h = CLIST.length > 1 && CITY.line.find(s => s[0] === CITY.hub); return !h ? null : M.id === CITY.hub ? ['OTHER CITIES: SHINKANSEN', 'BLUE SIGN BY THIS STATION'] : ['OTHER CITIES: SHINKANSEN', 'FROM ' + h[1]]; };
+const shinkHint = () => { const h = CLIST.length > 1 && CITY.line.find(s => s[0] === CITY.hub), gt = CITY.gate || ['SHINKANSEN', 'THE BLUE SIGN HERE']; return !h ? null : M.id === CITY.hub ? ['OTHER CITIES: ' + gt[0], gt[1]] : ['OTHER CITIES: ' + gt[0], 'FROM ' + h[1]]; };
 function lineBox() { const STN = CITY.line, w = W < W0 ? W - 24 : 280, h = W < W0 ? 44 + STN.length * 24 + (shinkHint() ? 18 : 0) : 160, x = Math.floor((W - w) / 2), y = Math.max(4, Math.floor((H - h) / 2)); return { x, y, w, h, inside: p => p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h }; }
 function lineHit(p) {
   const b = lineBox(), n = CITY.line.length;
@@ -333,18 +336,18 @@ function drawUI() {
     });
   }
   if (st === 'japan') {
-    const J = G.jp, b = jpBox(), rows = jpRows(), sel = CLIST[J.sel], here = sel === CITY; R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(b.x, b.y, b.w, b.h); txtC(ctx, 'SHINKANSEN', W / 2, b.y + 7, '#3f7ab0', null, 2);
+    const J = G.jp, b = jpBox(), rows = jpRows(), sel = CLIST[J.sel], here = sel === CITY; R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(b.x, b.y, b.w, b.h); txtC(ctx, 'WHERE NEXT?', W / 2, b.y + 7, '#3f7ab0', null, 2);
     if (W < W0) {
       for (let k = 0; k < rows.length - 1; k++) R(ctx, b.x + 15, b.y + 36 + k * 24, 2, 24, k < CLIST.length - 1 ? '#3f7ab0' : '#c8c0d4');
       rows.forEach(([id, name, c], i) => { const y = b.y + 26 + i * 24, on = i === J.sel, hr = c === CITY; if (on) R(ctx, b.x + 4, y, b.w - 8, 20, '#dcecf8'); disc(ctx, b.x + 16, y + 10, on ? 5.5 : 4.5, c ? '#1d1626' : '#b8b0c0'); disc(ctx, b.x + 16, y + 10, on ? 4.5 : 3.5, hr ? '#f2c14e' : on ? '#e0452f' : '#fff8e8');
-        txt(ctx, name, b.x + 28, y + 5, !c ? '#b8a888' : on ? '#c8382e' : '#3a2e40'); txt(ctx, !c ? 'COMING SOON' : hr ? 'YOU ARE HERE' : got(c) + '/' + nst(c) + ' STAMPS', b.x + 28, y + 12, !c ? '#c8c0b0' : hr ? '#e08a1a' : got(c) === nst(c) ? '#3f9a5a' : '#b8a888'); });
+        txt(ctx, name, b.x + 28, y + 5, !c ? '#b8a888' : on ? '#c8382e' : '#3a2e40'); txt(ctx, !c ? 'COMING SOON' : hr ? 'YOU ARE HERE' : got(c) + '/' + nst(c) + ' STAMPS - ' + PLACES.label(c).replace(' TO', ''), b.x + 28, y + 12, !c ? '#c8c0b0' : hr ? '#e08a1a' : got(c) === nst(c) ? '#3f9a5a' : '#b8a888'); });
       txtC(ctx, here ? TOUCH ? 'TAP AGAIN TO STAY' : 'E TO STAY' : TOUCH ? 'TAP AGAIN TO RIDE' : 'E TO RIDE', W / 2, b.y + b.h - 12, '#8a7a6a');
     } else at(b.x + 8, b.y + 20, () => {
       ctx.drawImage(SPR.japan, 0, 0);
       rows.forEach(([id, name, c], i) => { const q = JPOS[id]; if (!q) return; const [x, y, lx, ly, al] = q, on = i === J.sel, hr = c === CITY, sub = !c ? 'SOON' : got(c) + '/' + nst(c), tx = s2 => al < 0 ? lx - tw(s2) : al > 0 ? lx : lx - tw(s2) / 2;
         if (on) { const r = 8 + Math.sin(t * 5) * 1.2; disc(ctx, x, y, r, 'rgba(255,255,255,0.45)'); } disc(ctx, x, y, on ? 5.5 : 4, c ? '#1d1626' : '#7a8a98'); disc(ctx, x, y, on ? 4.5 : 3, hr ? '#f2c14e' : on ? '#e0452f' : c ? '#fff8e8' : '#c8d4dc');
         txt(ctx, name, tx(name), ly, !c ? '#5a7a8a' : on ? '#c8382e' : '#2a2430', '#f8f4e8'); txt(ctx, sub, tx(sub), ly + 7, !c ? '#6a8a9a' : got(c) === nst(c) ? '#2a7a4a' : '#5a5068', '#f8f4e8'); });
-      txtC(ctx, here ? 'YOU ARE HERE' : 'TO ' + sel.name + ' - ' + sel.tagline, 132, 119, '#3a2e40'); txtC(ctx, '< >  CHOOSE     E  RIDE     ESC  BACK', 132, 129, '#8a7a6a');
+      txtC(ctx, here ? 'YOU ARE HERE' : PLACES.label(sel) + ' ' + sel.name + ' - ' + sel.tagline, 132, 119, '#3a2e40'); txtC(ctx, '< >  CHOOSE     E  RIDE     ESC  BACK', 132, 129, '#8a7a6a');
     });
   }
   if (st === 'line' && W < W0) {
@@ -367,18 +370,28 @@ function drawUI() {
 
 // ---------- boot ----------
 (function boot() {
-  buildIcons(); buildSprites(); for (const c of CLIST) { if (c.sprites) c.sprites(); Object.assign(MG, c.minis || {}); } RIDES.sprites(); MG.ema = RIDES.EMA; load();
+  buildIcons(); buildSprites(); PLACES.sprites(); for (const c of CLIST) { if (c.sprites) c.sprites(); Object.assign(MG, c.minis || {}); } RIDES.sprites(); AIR.sprites(); MG.ema = RIDES.EMA; Object.assign(MG, AIR.minis); load();
   SPR.ride = (() => { const c = mk(320, 84), g = c.g, r = RNG(12); dgrad(g, 0, 0, 320, 84, ['#7ab8e8', '#a8d4f0', '#e8f0f8']); skyline(g, 0, 320, 70, 8, 40, '#a8b8d0', r); skyline(g, 0, 320, 84, 10, 34, '#6a7a98', r); return c; })();
   // the countryside from the shinkansen window, and the map of central Japan you pick a city on
   SPR.ride2 = (() => { const c = mk(320, 84), g = c.g, r = RNG(31); dgrad(g, 0, 0, 320, 84, ['#8ac4f0', '#b8dcf4', '#f0f4f0']); for (const [x, y, w] of [[40, 14, 26], [250, 20, 34], [150, 8, 18]]) { ell(g, x, y, w, 4, '#ffffff'); ell(g, x + w * 0.3, y - 3, w * 0.5, 4, '#ffffff'); } mountain(g, 205, 62, 74, 50, '#7a8ac0', r, '#f8f4ee'); for (let x = -20; x < 340; x += 38) ell(g, x + r() * 20, 64, 34 + r() * 16, 10 + r() * 6, '#6a9a78'); for (let x = -10; x < 330; x += 26) ell(g, x + r() * 14, 68, 22, 7, '#5a8a5a'); R(g, 0, 64, 320, 20, '#8fc97a'); for (let y = 66; y < 84; y += 3) R(g, 0, y, 320, U, '#64b054'); for (let x = 0; x < 320; x += 40) { R(g, x + 12, 70, 14, 14, y2(x)); } function y2(x) { return x % 80 ? '#c8d85a' : '#74bf5e'; } for (const x of [60, 96, 232, 290]) { R(g, x, 58, 12, 8, '#f4eedc'); roof(g, x + 6, 53, 3, 9, 5, '#4a4660'); R(g, x + 4, 61, 3, 5, '#6a4638'); } for (let x = 8; x < 320; x += 64) { R(g, x, 46, 1, 20, '#6b6478'); R(g, x - 3, 48, 7, 1, '#6b6478'); } return c; })();
-  SPR.japan = (() => { const c = mk(264, 112), g = c.g, L = '#9ccf7e', D = '#5a9a5a', SEA = ['#6ab4e0', '#7ac0e8', '#8accf0'], land = [[52, 36, 46, 34], [68, 84, 26, 26], [132, 28, 60, 34], [216, 30, 44, 32], [240, 64, 12, 18], [172, 70, 7, 13]], seas = [[110, 66, 10, 12], [30, 70, 12, 12], [222, 60, 6, 10], [78, 22, 4, 8], [2, 78, 26, 16]];
+  SPR.japan = (() => { const c = mk(264, 112), g = c.g, L = '#9ccf7e', D = '#5a9a5a', SEA = ['#6ab4e0', '#7ac0e8', '#8accf0'];
+    // islands are filled a scanline at a time, so their coasts stay crisp; a dark copy one pixel out on each side is the shore
+    const poly = (pts, col, ox = 0, oy = 0) => { let y0 = 1e9, y1 = -1e9; for (const p of pts) { y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); } for (let y = Math.floor(y0); y < y1; y += U) { const yc = y + U / 2, xs = []; for (let k = 0; k < pts.length; k++) { const [ax, ay] = pts[k], [bx, by] = pts[(k + 1) % pts.length]; if ((ay <= yc) !== (by <= yc)) xs.push(ax + (yc - ay) / (by - ay) * (bx - ax)); } xs.sort((a, b) => a - b); for (let k = 0; k + 1 < xs.length; k += 2) R(g, snap(xs[k]) + ox, y + oy, snap(xs[k + 1]) - snap(xs[k]), U, col); } };
+    const isles = [[[198, 8], [204, 3], [212, 5], [218, 0.5], [228, 2], [236, 6], [246, 3], [258, 2], [256, 9], [246, 14], [240, 20], [232, 18], [226, 22], [218, 19], [212, 14], [204, 14], [200, 11]],
+      [[64, 72], [70, 66], [84, 63], [100, 60], [116, 58], [128, 56], [138, 54], [150, 52], [162, 48], [172, 44], [182, 40], [190, 34], [196, 28], [202, 22], [208, 18], [214, 18], [218, 24], [222, 32], [224, 42], [222, 52], [218, 58], [219, 64], [214, 70], [208, 70], [204, 76], [198, 72], [190, 75], [182, 73], [174, 75], [164, 78], [156, 82], [150, 88], [145, 82], [140, 79], [134, 77], [126, 77], [118, 78], [110, 77], [100, 77], [90, 76], [80, 75], [70, 76]],
+      [[102, 82], [112, 80], [126, 81], [138, 83], [142, 88], [134, 92], [122, 90], [112, 92], [104, 88]], [[56, 76], [64, 77], [70, 81], [72, 88], [70, 96], [66, 104], [58, 106], [52, 100], [48, 92], [50, 84], [52, 79]]];
     dgrad(g, 0, 0, 264, 112, SEA); for (let y = 4; y < 112; y += 7) for (let x = (y * 5) % 23; x < 264; x += 23) R(g, x, y, 4, U, '#b0e0f8');
-    R(g, 0, 0, 264, 24, D); for (const [x, y, a, b] of land) ell(g, x, y, a + 1.5, b + 1.5, D); R(g, 0, 0, 264, 22.5, L); for (const [x, y, a, b] of land) ell(g, x, y, a, b, L);
-    for (const [x, y, a, b] of seas) { ell(g, x, y, a + 1.5, b + 1.5, D); ell(g, x, y, a, b, SEA[1]); }
-    const r = RNG(9); for (let i = 0; i < 60; i++) { const x = 8 + r() * 250, y = 2 + r() * 60; if ((x > 96 && x < 196 && y < 44) || r() < 0.12) { R(g, x - 2, y + 2, 5, 1, '#6aa85a'); R(g, x - 1, y + 1, 3, 1, '#6aa85a'); R(g, x, y, 1, 1, '#7ab86a'); } }
-    for (let i = 0; i < 16; i++) { const w = i * 0.85; R(g, 164 - w, 22 + i, w * 2 + 1, 1, i < 5 ? '#f8f4ee' : '#7a8ac0'); } R(g, 160, 27, 2, 1, '#f8f4ee'); R(g, 166, 27, 2, 1, '#f8f4ee');
-    const way = (pts, col) => { for (let k = 1; k < pts.length; k++) { const [ax, ay] = pts[k - 1], [bx, by] = pts[k], n = Math.hypot(bx - ax, by - ay) / 3 | 0; for (let i = 0; i <= n; i++) { const x = ax + (bx - ax) * i / n, y = ay + (by - ay) * i / n; R(g, x - 0.5, y - 0.5, 1.5, 1.5, col); } } };
-    way([[214, 44], [198, 58], [170, 62], [140, 60], [112, 48], [70, 38], [46, 58]], '#3f5a9a'); way([[70, 38], [74, 62]], '#3f5a9a'); way([[170, 62], [164, 46]], '#3f5a9a'); return c; })();
+    for (const s of isles) for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) poly(s, D, ox, oy); for (const s of isles) poly(s, L);
+    for (const [x, y, a, b] of [[211.5, 70, 2.5, 3.5], [128.5, 79, 3, 4], [200, 75, 2, 2]]) ell(g, x, y, a, b, SEA[1]); // Tokyo Bay, Osaka Bay, Sagami Bay
+    for (const [x, y] of [[80, 69], [96, 66], [112, 64], [150, 60], [160, 56], [172, 52], [182, 50], [176, 60], [200, 46], [210, 40], [214, 50], [206, 56], [62, 90], [60, 98], [120, 85], [64, 84]]) { R(g, x - 2, y + 2, 5, 1, '#6aa85a'); R(g, x - 1, y + 1, 3, 1, '#6aa85a'); R(g, x, y, 1, 1, '#7ab86a'); }
+    for (const [x, y] of [[226, 8], [236, 6], [246, 6], [222, 14], [232, 13], [240, 11], [212, 9]]) { R(g, x - 1.5, y, 3, 1, '#f4f8fc'); p1(g, x, y - U, '#ffffff'); } // snow on Hokkaido
+    for (let i = 0; i < 12; i++) { const w = i * 0.75; R(g, 192 - w, 53 + i, w * 2 + 1, 1, i < 4 ? '#f8f4ee' : '#7a8ac0'); }
+    // Okinawa, far to the south, in its own box as on any map of Japan
+    R(g, 3, 70, 44, 40, '#3a5a7a'); dgrad(g, 4, 71, 42, 38, ['#5ab8e0', '#4aa8d8']); for (let y = 74; y < 108; y += 6) for (let x = 6 + (y % 12); x < 44; x += 12) R(g, x, y, 3, U, '#b0e0f8');
+    const oki = [[16, 104], [20, 98], [25, 93], [30, 88], [33, 86], [35, 88], [31, 94], [27, 99], [22, 105], [17, 107]]; for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) poly(oki, D, ox, oy); poly(oki, L); for (const [x, y] of [[10, 100], [38, 80], [40, 84], [12, 96]]) { disc(g, x, y, 1.2, D); p1(g, x, y, L); }
+    const way = (pts, col, gap = 3, len = 1.5) => { for (let k = 1; k < pts.length; k++) { const [ax, ay] = pts[k - 1], [bx, by] = pts[k], n = Math.max(1, Math.hypot(bx - ax, by - ay) / gap | 0); for (let i = 0; i <= n; i++) { const x = ax + (bx - ax) * i / n, y = ay + (by - ay) * i / n; R(g, x - 0.5, y - 0.5, len, 1.5, col); } } };
+    way([[128, 84], [116, 92], [96, 100], [72, 108], [48, 104], [36, 92]], '#e8f8ff', 5, 2); way([[211, 58], [214, 44], [217, 28], [218, 15]], '#ffffff', 5, 1); // the sea route south and the flight north
+    way([[94, 73], [110, 74], [129, 74], [136, 65], [156, 66], [176, 68], [192, 65], [204, 64], [211, 63]], '#3f5a9a'); way([[136, 65], [141, 74]], '#3f5a9a'); way([[211, 63], [205, 71]], '#5a7a4a', 3, 1); return c; })();
   for (let i = 0; i < 30; i++) PRT.push({ x: Math.random() * (W + 60), y: Math.random() * H, vx: -9 - Math.random() * 9, vy: 7 + Math.random() * 9, ph: Math.random() * 6.283, c: i % 2 ? '#f9a8c8' : '#ffe0ec' });
   pl.F = plLook(G.fit);
   const q = new URLSearchParams(location.search);
@@ -397,7 +410,7 @@ function drawUI() {
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
     // (the title scene covers the whole screen, so the world is not drawn under it)
     const t0 = performance.now();
-    try { if (!G.err) { update(dt); if (G.snapReq) { const sp = G.snapReq; G.snapReq = null; takePhoto(sp); } if (G.state === 'ride') drawRide(); else { if (!MENU.title()) drawWorld(); drawUI(); } } } catch (e) { console.error(e); G.err = String(e.stack || e); }
+    try { if (!G.err) { update(dt); if (G.snapReq) { const sp = G.snapReq; G.snapReq = null; takePhoto(sp); } if (G.state === 'ride') { if (G.ride.plane) AIR.drawFlight(G.ride); else if (G.ride.ship) PLACES.drawShip(G.ride); else drawRide(); } else if (G.state === 'scrap') AIR.scrapDraw(); else { if (!MENU.title()) drawWorld(); drawUI(); } } } catch (e) { console.error(e); G.err = String(e.stack || e); }
     const cost = performance.now() - t0; G.cost = (G.cost || cost) * 0.95 + cost * 0.05; if (!G.lowFx && G.cost > 9) G.lowFx = true; else if (G.lowFx && G.cost < 4) G.lowFx = false;
     if (G.err) { R(ctx, 0, 0, W, 60, '#400'); wrap(G.err.replace(/\s+/g, ' '), 300).slice(0, 7).forEach((l, i) => txt(ctx, l, 4, 4 + i * 7, '#fff')); }
     requestAnimationFrame(frame);

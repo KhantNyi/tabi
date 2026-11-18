@@ -2,7 +2,7 @@
 // ---------- Tokyo: eight districts on one train line, the rooms inside their buildings, and what there is to do ----------
 // A city registers itself with city(). Its districts and rooms go in the shared MAPS table, so their ids must not clash with other cities.
 (function () {
-  const LINE = [['shibuya', 'SHIBUYA'], ['harajuku', 'HARAJUKU'], ['shinjuku', 'SHINJUKU'], ['ueno', 'UENO'], ['asakusa', 'ASAKUSA'], ['akiba', 'AKIHABARA'], ['tokyo', 'TOKYO STATION'], ['tower', 'TOKYO TOWER']];
+  const LINE = [['shibuya', 'SHIBUYA'], ['harajuku', 'HARAJUKU'], ['shinjuku', 'SHINJUKU'], ['ueno', 'UENO'], ['asakusa', 'ASAKUSA'], ['akiba', 'AKIHABARA'], ['tokyo', 'TOKYO STATION'], ['tower', 'TOKYO TOWER'], ['haneda', 'HANEDA AIRPORT']];
   const STAMPS = {
     hachi: ['HACHIKO', 'dog', 'shibuya'], scramble: ['SCRAMBLE CROSSING', 'camera', 'shibuya'], ramen: ['SHOYU RAMEN', 'ramen', 'shibuya'],
     crepe: ['HARAJUKU CREPE', 'crepe', 'harajuku'], meiji: ['MEIJI SHRINE', 'torii', 'harajuku'], fit: ['NEW OUTFIT', 'shirt', 'harajuku'],
@@ -11,7 +11,8 @@
     kaminari: ['THUNDER GATE', 'lantern', 'asakusa'], omikuji: ['FORTUNE SLIP', 'omikuji', 'asakusa'], sky: ['SKYTREE', 'sky', 'asakusa'],
     crane: ['CRANE GAME PRIZE', 'claw', 'akiba'], fig: ['CAPSULE FIGURE', 'fig', 'akiba'], denki: ['ELECTRIC TOWN', 'gacha', 'akiba'],
     brick: ['RED BRICK STATION', 'train', 'tokyo'], sushi: ['CONVEYOR SUSHI', 'sushi', 'tokyo'], sweets: ['DEPACHIKA SWEETS', 'mochi', 'tokyo'],
-    tower: ['TOKYO TOWER', 'tower', 'tower'], rickshaw: ['RICKSHAW TOUR', 'rickshaw', 'asakusa'], swanboat: ['SWAN BOAT', 'swan', 'ueno'], zojo: ['ZOJOJI TEMPLE', 'buddha', 'tower']
+    tower: ['TOKYO TOWER', 'tower', 'tower'], rickshaw: ['RICKSHAW TOUR', 'rickshaw', 'asakusa'], swanboat: ['SWAN BOAT', 'swan', 'ueno'],
+    passport: ['WELCOME TO JAPAN', 'passport', 'haneda'], luggage: ['FOUND YOUR SUITCASE', 'suitcase', 'haneda'], skydeck: ['HANEDA SKY DECK', 'plane', 'haneda'], flight: ['A DOMESTIC FLIGHT', 'ticket', 'haneda'], zojo: ['ZOJOJI TEMPLE', 'buddha', 'tower']
   };
 
   // ---------- north up the avenues ----------
@@ -271,6 +272,8 @@
     npc('chef', 160, 78, { lines: ['WHATEVER PASSES, TAKE IT! FRESH THIS MORNING!'] }); M.SPOTS.push({ x: 190, y: 120, r: 12, label: 'SIT DOWN', mini: 'sushi', stamp: 'sushi' });
   } };
 
+  airport('haneda', { name: 'HANEDA AIRPORT', short: 'TOKYO', code: 'HND', sub: 'TOKYO INTERNATIONAL', gate: 12, music: 'tokyo', welcome: 'WELCOME TO JAPAN', other: 'osa_kansai', city: ['tokyo', 'TOKYO STATION'], deck: 'hnd_deck', passport: 'passport', bagStamp: 'luggage', view: 'bay',
+    tip: 'THE OBSERVATION DECK IS UP THE ESCALATOR. ON A CLEAR DAY YOU CAN SEE FUJI FROM IT.' });
   concourse('tk_shinkansen', { name: 'TOKYO STATION', hub: 'tokyo', music: 'tokyo', track: 14, dest: 'KYOTO', bento: ['MAKUNOUCHI', 'A LITTLE BOX OF EVERYTHING: GRILLED SALMON, RICE, A ROLLED OMELETTE, PICKLES.'] });
   city({
     id: 'tokyo', name: 'TOKYO', tagline: 'EIGHT DISTRICTS - ONE TRAIN LINE - NO HURRY',
