@@ -292,7 +292,7 @@ function bridge(x0, y0, x1, y1, col = '#c0442f', wd = '#b8905a') {
   R(g, x0, y1, w, 3, 'rgba(20,30,60,0.3)'); R(g, x0, y0, w, h, wd);
   if (hz) { for (let x = x0; x < x1; x += 4) R(g, x, y0, U, h, dark(wd, 0.3)); R(g, x0, y0, w, U, lite(wd, 0.4)); R(g, x0, y0 - 6, w, 1.5, col); R(g, x0, y0 - 6, w, U, l); R(g, x0, y0 - 3, w, 1, d); for (let x = x0; x <= x1 - 2; x += Math.max(8, w / Math.round(w / 12))) { R(g, x, y0 - 8, 2, 8, col); R(g, x, y0 - 8, U, 8, l); R(g, x, y0 - 8, 2, U, '#1d1626'); } }
   else { for (let y = y0; y < y1; y += 4) R(g, x0, y, w, U, dark(wd, 0.3)); for (const x of [x0 - 2, x1]) { R(g, x, y0 - 6, 2, h + 6, col); R(g, x, y0 - 6, U, h + 6, l); for (let y = y0; y <= y1; y += 12) { R(g, x - U, y - 8, 3, 3, d); R(g, x - U, y - 8, 3, U, l); } } }
-  block(x0, y0, x1, y1, 0); if (!hz) { block(x0 - 2, y0 + 6, x0, y1 - 6); block(x1, y0 + 6, x1 + 2, y1 - 6); } // you cannot step off the side
+  (M.BR = M.BR || []).push([x0, y0, x1, y1]); block(x0, y0, x1, y1, 0); if (!hz) { block(x0 - 2, y0 + 6, x0, y1 - 6); block(x1, y0 + 6, x1 + 2, y1 - 6); } // you cannot step off the side
   if (hz) { const c = mk(w, 9), q = c.g; R(q, 0, 2, w, 1.5, col); R(q, 0, 2, w, U, l); R(q, 0, 5, w, 1, d); for (let x = 0; x <= w - 2; x += Math.max(8, w / Math.round(w / 12))) { R(q, x, 0, 2, 9, col); R(q, x, 0, U, 9, l); R(q, x, 0, 2, U, '#1d1626'); } put(c, x0 + w / 2, y1 + 3, w / 2, 8); }
 }
 // walls: wallH runs left to right, wallV runs top to bottom. Leave gaps between calls for gates.

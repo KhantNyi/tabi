@@ -8,7 +8,7 @@
     ky_tower: ['KYOTO TOWER', 'ktower', 'kyo_station'],
     ky_fox: ['INARI FOXES', 'fox', 'kyo_inari'], ky_senbon: ['A THOUSAND GATES', 'torii', 'kyo_inari'], ky_udon: ['KITSUNE UDON', 'udon', 'kyo_inari'], ky_yotsu: ['MOUNTAIN LOOKOUT', 'sun', 'kyo_inari'],
     ky_hanami: ['HANAMIKOJI AT DUSK', 'lantern', 'kyo_gion'], ky_pagoda: ['YASAKA PAGODA', 'pagoda', 'kyo_gion'], ky_kiyomizu: ['KIYOMIZU STAGE', 'camera', 'kyo_gion'], ky_otowa: ['OTOWA WATERFALL', 'water', 'kyo_gion'], ky_tea: ['TEA CEREMONY', 'tea', 'kyo_gion'], ky_kimono: ['KIMONO STROLL', 'kimono', 'kyo_gion'],
-    ky_bamboo: ['BAMBOO GROVE', 'bamboo', 'kyo_arashi'], ky_bridge: ['MOON CROSSING BRIDGE', 'fan', 'kyo_arashi'], ky_tenryu: ['TENRYU-JI GARDEN', 'buddha', 'kyo_arashi'], ky_monkey: ['MONKEY MOUNTAIN', 'monkey', 'kyo_arashi'],
+    ky_bamboo: ['BAMBOO GROVE', 'bamboo', 'kyo_arashi'], ky_bridge: ['MOON CROSSING BRIDGE', 'fan', 'kyo_arashi'], ky_tenryu: ['TENRYU-JI GARDEN', 'buddha', 'kyo_arashi'], ky_monkey: ['MONKEY MOUNTAIN', 'monkey', 'kyo_arashi'], ky_rick: ['BAMBOO RICKSHAW', 'rickshaw', 'kyo_arashi'], ky_row: ['ROWING ON THE RIVER', 'oar', 'kyo_arashi'],
     ky_gold: ['GOLDEN PAVILION', 'gold', 'kyo_kinkaku'], ky_rock: ['ROCK GARDEN', 'rock', 'kyo_kinkaku'], ky_wish: ['LUCKY COIN', 'coin', 'kyo_kinkaku']
   };
   const path = (pts, w, t) => tRoad(t == null ? DT : t, pts, w || 0.7); // paths cut through whatever is there, forest included

@@ -11,7 +11,7 @@
     kaminari: ['THUNDER GATE', 'lantern', 'asakusa'], omikuji: ['FORTUNE SLIP', 'omikuji', 'asakusa'], sky: ['SKYTREE', 'sky', 'asakusa'],
     crane: ['CRANE GAME PRIZE', 'claw', 'akiba'], fig: ['CAPSULE FIGURE', 'fig', 'akiba'], denki: ['ELECTRIC TOWN', 'gacha', 'akiba'],
     brick: ['RED BRICK STATION', 'train', 'tokyo'], sushi: ['CONVEYOR SUSHI', 'sushi', 'tokyo'], sweets: ['DEPACHIKA SWEETS', 'mochi', 'tokyo'],
-    tower: ['TOKYO TOWER', 'tower', 'tower'], zojo: ['ZOJOJI TEMPLE', 'buddha', 'tower']
+    tower: ['TOKYO TOWER', 'tower', 'tower'], rickshaw: ['RICKSHAW TOUR', 'rickshaw', 'asakusa'], swanboat: ['SWAN BOAT', 'swan', 'ueno'], zojo: ['ZOJOJI TEMPLE', 'buddha', 'tower']
   };
 
   // ---------- north up the avenues ----------
@@ -153,7 +153,7 @@
       for (const [x, y] of [[226, 330], [300, 336], [400, 300], [470, 300]]) prop('bench', x, y, 9); for (const [x, y] of [[360, 266], [520, 270]]) prop('lantern', x, y, 4);
       station(70, 384, 'UENO'); house(180, 384, 60, 28, { sign: 'BENTO', noren: '#e0563f', rh: 14 }); tower(290, 384, 70, 44, { c: '#c8b8a0', sign: 'AMEYOKO MARKET', sc: '#e0563f' }); tower(400, 384, 60, 48, {}); tower(480, 384, 70, 44, { sign: 'KISSATEN', sc: '#8a5a3a' }); tower(570, 384, 60, 48, {});
       sideTowers(410); prop('vend', 112, 400, 6); wild(['green', 'green2', 'pine', 'sakura', 'green']);
-      M.SPOTS.push({ x: 250, y: 308, r: 12, label: 'READ', lines: ['A BRONZE SAMURAI OUT WALKING HIS DOG.', 'PEOPLE HAVE MET UNDER THIS STATUE FOR A HUNDRED YEARS.'] }); M.SPOTS.push({ x: 448, y: 300, r: 30, label: 'WATCH', lines: ['SWAN BOATS PEDAL IN LAZY CIRCLES AMONG THE LOTUS LEAVES.'] });
+      M.SPOTS.push({ x: 250, y: 308, r: 12, label: 'READ', lines: ['A BRONZE SAMURAI OUT WALKING HIS DOG.', 'PEOPLE HAVE MET UNDER THIS STATUE FOR A HUNDRED YEARS.'] });
       cars(438, -1, 2); cars(446, 1, 2); crowd(5, 40, 394, 600, 394, 5); crowd(5, 150, 322, 330, 322, 6); crowd(3, 146, 190, 146, 310, 6); crowd(3, 328, 150, 328, 310, 6);
       npc('kid', 180, 186, { lines: ['PANDAS! PANDAS! PANDAS!', 'DAD SAYS WE CAN SEE THE PANDAS AGAIN AFTER LUNCH.'] }); npc('granny', 420, 310, { rad: 24, lines: ['THE LOTUS FLOWERS OPEN EARLY IN THE MORNING.', 'I FEED THE DUCKS. THE SIGN SAYS NOT TO. I DO ANYWAY.'] }); M.ACT.push({ cat: true, x: 276, y: 306, k: 2 });
     } };

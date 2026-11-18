@@ -6,7 +6,7 @@
 (function () {
   const LINE = [['osa_namba', 'NAMBA'], ['osa_kuromon', 'KUROMON'], ['osa_shinsekai', 'SHINSEKAI'], ['osa_castle', 'OSAKA CASTLE']];
   const STAMPS = {
-    osa_runman: ['THE RUNNING MAN', 'runner', 'osa_namba'], osa_crab: ['GIANT CRAB', 'crab', 'osa_namba'], osa_tako: ['TAKOYAKI', 'tako', 'osa_namba'], osa_okono: ['OKONOMIYAKI', 'okono', 'osa_namba'], osa_hozen: ['HOZEN-JI', 'lantern', 'osa_namba'],
+    osa_runman: ['THE RUNNING MAN', 'runner', 'osa_namba'], osa_crab: ['GIANT CRAB', 'crab', 'osa_namba'], osa_tako: ['TAKOYAKI', 'tako', 'osa_namba'], osa_okono: ['OKONOMIYAKI', 'okono', 'osa_namba'], osa_hozen: ['HOZEN-JI', 'lantern', 'osa_namba'], osa_cruise: ['TOMBORI CRUISE', 'boat', 'osa_namba'],
     osa_market: ['KUROMON TASTING', 'fish', 'osa_kuromon'],
     osa_tower: ['TSUTENKAKU', 'tsuten', 'osa_shinsekai'], osa_billiken: ['BILLIKEN\'S FEET', 'billiken', 'osa_shinsekai'], osa_kushi: ['KUSHIKATSU', 'kushi', 'osa_shinsekai'],
     osa_castle: ['OSAKA CASTLE', 'castle', 'osa_castle'], osa_keep: ['VIEW FROM THE KEEP', 'sun', 'osa_castle'], osa_plum: ['PLUM GROVE', 'plum', 'osa_castle']

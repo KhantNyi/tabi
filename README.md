@@ -2,7 +2,7 @@
 
 A slow, no-fail, top-down pixel-art walk through Japan. Ride the train between districts, step inside shops and temples, talk to people, collect stamps and play a few small games along the way.
 
-There are five places to visit, joined by the shinkansen: **Tokyo**, **Kawaguchiko** (Mount Fuji), **Kyoto**, **Nara** and **Osaka**. Each has its own stamp book page, 70 stamps in all.
+There are five places to visit, joined by the shinkansen: **Tokyo**, **Kawaguchiko** (Mount Fuji), **Kyoto**, **Nara** and **Osaka**. Each has its own stamp book page, 76 stamps in all.
 
 Everything is drawn in code and the music is synthesized in the browser, so there are no image or audio files and no build step.
 
@@ -137,6 +137,27 @@ None of this is a goal; it is there so the places feel lived in. It all lives in
   - birds crossing the sky;
   - street lights that breathe and neon that flickers at night.
 
+## Rides and small things to do
+
+All of these are in `src/world/rides.js`.
+
+- **Rickshaw tours (Asakusa, Arashiyama):** talk to the puller and climb in. They jog a loop past the sights, talking as they go: the Thunder Gate, Nakamise, Senso-ji and the pagoda in Asakusa; the bamboo grove and Tenryu-ji's side gate in Arashiyama.
+  - The cart is drawn from four sides: it turns with the route, the spokes spin, it bobs with the puller's stride, and it kicks up dust on gravel.
+  - Press ✕ to hop off at any point; the puller takes the cart back alone.
+  - Finishing the loop earns a stamp.
+- **The Dotonbori canal cruise:** board at the canal walk. The boat slides under the bridges while the guide tells jokes.
+- **Boats you steer:**
+  - swan boats on Ueno's pond and on Lake Kawaguchi;
+  - a rowing boat on the river at Arashiyama, with oars that sweep and splash.
+
+  Steer with the arrows or the stick. Boats drift, bump the banks and leave a wake. Press E at the dock to return the boat, or ✕ to go straight back. Stay out a while and you earn a stamp.
+- **Benches:** sit on any bench with room in front of it. A cat nearby may wander over to join you; move to stand up.
+- **Bowing:** bow from SAY SOMETHING, and people near you bow back (so do the deer).
+- **Shrines** have a water basin to wash your hands at, and a rack where you can hang a wish plaque (pick from six wishes) or draw a fortune and tie it on. Your plaque and your knots stay on the rack.
+- **Koi** swim in the ponds at Kinkaku-ji, Tenryu-ji and Sarusawa (and among the swan boats at Ueno). Feed them from the shore and they rush to the food.
+
+On slow phones the game notices when frames get expensive and thins out the extra effects (water sparkle, wakes, steam, falling leaves) until there is room again.
+
 ## Photos
 
 Every TAKE A PHOTO spot gives you an instant-photo card. The camera frames the landmark the spot points at, not just whatever is on screen. It draws the scene again without you in it, and steps back for tall landmarks such as Kyoto Tower or Tsutenkaku. A spot can name its own frame (`frame: [x, y, w, h]`), and a few views are painted as postcards instead (Mirror Fuji, Chureito and the Skytree).
@@ -194,6 +215,7 @@ src/
     sprites.js          reusable art: people, trees, roofs, temples, shops, towers, icons
   world/
     station.js          the shinkansen concourses at the big stations: the train, gates, crowds and departure board
+    rides.js            rickshaw tours, the canal cruise, boats to steer, benches, bowing, shrine basins and racks, koi
     life.js             life in the streets: reactions, passing scenes, birds and butterflies, ambient sound, steam and leaves
     world.js            building a map: terrain, ground painter, roads, buildings, rooms,
                         furniture, NPCs, cars, forests, ledges, steps, bridges and walls,

@@ -219,8 +219,8 @@ const LIFE = (function () {
       }
     }
     // steam, smoke and falling leaves near the view
-    if (M.emit) for (const e of M.emit) if (inView(e.x, e.y, 40) && rnd() < dt * (e.k === 'incense' ? 3 : 5)) puff(e);
-    leafT -= dt; if (leafT <= 0 && outdoors()) { leafT = 0.35; const trees = M.OBJ.filter(o => o.kind && o.kind !== 'pine' && o.kind !== 'bamboo' && inView(o.x, o.y - 40, 0)); if (trees.length) { const o = pick(trees), c = { maple: '#d9602c', ginkgo: '#f2c14e', sakura: '#f9a8c8', plum: '#f4d8e4' }[o.kind]; if (c || rnd() < 0.3) fx.push({ k: 'leaf', x: o.x + (rnd() - 0.5) * 30, y: o.y - 34 - rnd() * 16, vx: 4 + rnd() * 6, vy: 9 + rnd() * 5, t: 0, life: 3.6, c: c || '#6aa85a', ph: rnd() * 6, fall: 1 }); } }
+    if (M.emit) for (const e of M.emit) if (inView(e.x, e.y, 40) && rnd() < dt * (e.k === 'incense' ? 3 : 5) * (G.lowFx ? 0.4 : 1)) puff(e);
+    leafT -= dt; if (leafT <= 0 && outdoors()) { leafT = G.lowFx ? 0.9 : 0.35; const trees = M.OBJ.filter(o => o.kind && o.kind !== 'pine' && o.kind !== 'bamboo' && inView(o.x, o.y - 40, 0)); if (trees.length) { const o = pick(trees), c = { maple: '#d9602c', ginkgo: '#f2c14e', sakura: '#f9a8c8', plum: '#f4d8e4' }[o.kind]; if (c || rnd() < 0.3) fx.push({ k: 'leaf', x: o.x + (rnd() - 0.5) * 30, y: o.y - 34 - rnd() * 16, vx: 4 + rnd() * 6, vy: 9 + rnd() * 5, t: 0, life: 3.6, c: c || '#6aa85a', ph: rnd() * 6, fall: 1 }); } }
     for (const p of fx) { p.t += dt; p.x += (p.vx + (p.k === 'leaf' ? Math.sin(G.t * 3 + p.ph) * (p.fall ? 8 : 20) : 0)) * dt; p.y += (p.vy + (p.k === 'leaf' && !p.fall ? Math.cos(G.t * 2.6 + p.ph) * 14 : 0)) * dt; }
     fx = fx.filter(p => p.t < p.life); if (fx.length > 160) fx.splice(0, fx.length - 160);
     // birds crossing the sky
@@ -232,7 +232,7 @@ const LIFE = (function () {
 
   // ---------- drawing ----------
   function drawFx(cx, cy) {
-    if (!M.indoor && M.TY) { const t = G.t; for (let y = Math.floor(cy / 10) * 10; y < cy + H; y += 10) for (let x = Math.floor(cx / 10) * 10; x < cx + W; x += 10) { const h = hsh(x, y); if (Math.sin(t * (1.5 + h) + h * 40) > 0.94 && terr(x + 5, y + 5) === WA) R(ctx, x + 5 - cx + h * 4, y + 5 - cy, h < 0.5 ? 2 : 1.5, U, '#e8f8ff'); } }
+    if (!M.indoor && M.TY && !G.lowFx) { const t = G.t; for (let y = Math.floor(cy / 10) * 10; y < cy + H; y += 10) for (let x = Math.floor(cx / 10) * 10; x < cx + W; x += 10) { const h = hsh(x, y); if (Math.sin(t * (1.5 + h) + h * 40) > 0.94 && terr(x + 5, y + 5) === WA) R(ctx, x + 5 - cx + h * 4, y + 5 - cy, h < 0.5 ? 2 : 1.5, U, '#e8f8ff'); } }
     for (const p of fx) { const x = p.x - cx, y = p.y - cy, a = 1 - p.t / p.life; if (x < -10 || x > W + 10 || y < -10 || y > H + 10) continue;
       if (p.k === 'leaf') { ctx.globalAlpha = Math.min(1, a * 2); R(ctx, x, y, 1.5, 1, p.c); p1(ctx, x + (Math.sin(G.t * 6 + p.ph) > 0 ? 1.5 : -U), y + U, p.c); }
       else if (p.k === 'note') { ctx.globalAlpha = a; R(ctx, x, y, 1, 4, '#fff8e8'); R(ctx, x - 1.5, y + 3, 2, 1.5, '#fff8e8'); R(ctx, x + 1, y, 2, 1, '#fff8e8'); }

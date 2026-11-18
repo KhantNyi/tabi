@@ -4,7 +4,7 @@
 // and the HUD says which it is, so the player learns to wait for it.
 (function () {
   const STAMPS = {
-    kw_mirror: ['MIRROR FUJI', 'fuji', 'kw_lake'],
+    kw_mirror: ['MIRROR FUJI', 'fuji', 'kw_lake'], kw_swan: ['SWAN BOAT ON THE LAKE', 'swan', 'kw_lake'],
     kw_chureito: ['CHUREITO PAGODA', 'pagoda', 'kw_hill'],
     kw_flowers: ['OISHI PARK FLOWERS', 'flower', 'kw_park'],
     kw_onsen: ['LAKESIDE ONSEN', 'onsen', 'kw_town'], kw_hoto: ['HOTO NOODLES', 'pot', 'kw_town'],
