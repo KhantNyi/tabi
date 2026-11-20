@@ -81,6 +81,15 @@ const TRACKS = {
       'B5/2 A5/2 G5/4 D6/4 B5/4', 'A5/4 F#5/4 D5/8', 'G5/4 B5/4 E6/4 D6/4', 'D6/4 B5/4 F#5/8',
       'C6/4 E6/4 G6/4 E6/4', 'D6/4 C6/2 A5/2 F#5/8', 'G5/4 B5/4 D6/4 B5/4', 'G5/16']
   },
+  // Bangkok: a ranat (a wooden xylophone) in the five-note scale, over the ching and chap of little cymbals
+  bangkok: {
+    bpm: 98, lead: 'ranat', arp: [0, 1, 2, 1, 3, 1, 2, 1], drums: 'ching', bass: 'walk',
+    chords: 'C_ C_ F C_ G_ G_ C_ C_ F F C_ Am Dm G_ C_ C_',
+    mel: ['E5/2 G5/2 A5/2 G5/2 E5/4 D5/4', 'C5/2 D5/2 E5/2 G5/2 A5/8', 'A5/2 C6/2 A5/2 G5/2 F5/4 A5/4', 'G5/4 E5/2 D5/2 C5/8',
+      'D5/2 E5/2 G5/2 A5/2 G5/4 D5/4', 'G5/2 A5/2 G5/2 E5/2 D5/8', 'E5/2 G5/2 C6/4 A5/2 G5/2 E5/4', 'G5/12 -/4',
+      'A5/2 C6/2 D6/2 C6/2 A5/4 G5/4', 'F5/2 A5/2 C6/4 A5/8', 'C6/2 A5/2 G5/2 E5/2 G5/4 E5/4', 'D5/2 E5/2 C5/4 A4/8',
+      'D5/2 F5/2 A5/2 D6/2 C6/4 A5/4', 'G5/2 A5/2 G5/2 D5/2 G5/8', 'E5/2 D5/2 C5/2 D5/2 E5/2 G5/2 A5/4', 'C6/12 -/4']
+  },
   // Okinawa: the island scale (C E F G B), a three-stringed sanshin, and the kachashi rhythm everyone dances to
   okinawa: {
     bpm: 116, lead: 'sanshin', arp: [0, 2, 1, 2, 0, 2, 3, 2], drums: 'kachashi', bass: 'octave',
@@ -157,6 +166,7 @@ const Snd = {
       if (T.lead === 'soft') this.tone('square', n[1], t, d * 0.92, 0.075, { lp: 1800, vib: d > 0.5, echo: 1 });
       else if (T.lead === 'flute') { this.tone('sine', n[1], t, d * 0.95, 0.16, { at: 0.07, vib: 1, echo: 1, rel: 0.15 }); this.tone('triangle', n[1] * 2, t, d * 0.9, 0.018, { at: 0.09 }); }
       else if (T.lead === 'bright') { this.tone('square', n[1], t, Math.min(d * 0.8, 0.32), 0.07, { lp: 3200, echo: 1 }); }
+      else if (T.lead === 'ranat') { this.tone('triangle', n[1] * 2, t, 0.22, 0.12, { pluck: 1, echo: 1 }); this.tone('sine', n[1] * 8, t, 0.05, 0.03, { pluck: 1 }); if (d > 0.4) this.tone('triangle', n[1] * 2, t + 0.09, 0.18, 0.06, { pluck: 1 }); }
       else if (T.lead === 'sanshin') { this.tone('triangle', n[1], t, Math.min(0.5, d), 0.13, { pluck: 1, echo: 1 }); this.tone('sawtooth', n[1] * 2, t, 0.14, 0.03, { pluck: 1, lp: 3200 }); this.tone('square', n[1] * 0.995, t, 0.05, 0.03, { pluck: 1, lp: 1800 }); }
       else { this.tone('sine', n[1] * 2, t, Math.max(0.9, d), 0.13, { pluck: 1, echo: 1 }); this.tone('sine', n[1] * 4, t, 0.4, 0.03, { pluck: 1 }); }
     }
@@ -184,6 +194,7 @@ const Snd = {
     } else if (T.drums === 'kachashi') { // a skipping beat, the castanet clack of the sanba and a drum on the off-beat
       if (s % 4 === 0) this.tone('sine', 110, t, 0.14, 0.26, { slide: 45, pluck: 1 }); if (s === 6 || s === 14) this.tone('sine', 180, t, 0.12, 0.16, { slide: 80, pluck: 1 });
       if (s % 4 === 3 || s === 10) this.tone('square', 2100, t, 0.025, 0.018, { pluck: 1, lp: 4000 }); if (s % 2 === 0) this.noise(t, 0.03, 0.022, 5000, 9000);
+    } else if (T.drums === 'ching') { if (s % 4 === 0) { this.tone('triangle', 3150, t, 0.4, 0.016, { pluck: 1 }); this.noise(t, 0.25, 0.02, 6000, 11000); } if (s % 4 === 2) this.noise(t, 0.05, 0.03, 3000, 7000); if (s === 0 || s === 10) this.tone('sine', 140, t, 0.2, 0.18, { slide: 60, pluck: 1 }); if (s === 6) this.tone('sine', 220, t, 0.12, 0.1, { slide: 120, pluck: 1 });
     } else if (T.drums === 'surf') { if (s === 0 || s === 6 || s === 10) this.tone('sine', 115, t, 0.14, 0.24, { slide: 45, pluck: 1 }); if (s === 4 || s === 12) this.noise(t, 0.05, 0.05, 1600, 4000); this.noise(t, 0.025, s % 2 ? 0.012 : 0.02, 5000, 10000);
     } else if (T.drums === 'bells') { if (s === 0) this.tone('sine', 100, t, 0.3, 0.12, { slide: 50, pluck: 1 }); if (s % 2 === 0) { this.noise(t, 0.06, s % 4 === 0 ? 0.03 : 0.018, 6000, 11000); this.tone('sine', 3520 + (s % 8) * 40, t, 0.08, 0.008, { pluck: 1 }); }
     } else if (T.drums === 'taiko') {

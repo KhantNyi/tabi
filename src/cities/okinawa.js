@@ -68,9 +68,9 @@
     deco() {
       const g = M.ground.g; roofs(0, 0, 768, 112);
       tower(70, 150, 110, 90, { c: '#f2e0c0', sign: 'MAKISHI MARKET', sc: '#c8382e', to: 'o_market', lab: 'INTO THE MARKET', lit: 0.4 });
-      const SH = [[180, 'ANDAGI', '#e08a3a'], [250, 'SOBA', '#c8382e', 'o_soba'], [320, 'AWAMORI', '#3d5a80'], [460, 'SHIRTS', '#5ad8f0'], [530, 'GLASS', '#5aa85a'], [600, 'SHISA', '#c8382e'], [690, 'ICE', '#8a6aff']];
+      const SH = [[180, 'ANDAGI', '#e08a3a'], [250, 'SOBA', '#c8382e', 'o_soba'], [320, 'AWAMORI', '#3d5a80'], [530, 'GLASS', '#5aa85a'], [690, 'ICE', '#8a6aff']];
       for (const [x, s, c, to] of SH) { house(x, 150, 62, 28, { sign: s, noren: c, rh: 14, roofCol: ROOF, wall: '#e8d8b8', beam: '#8a6448', to }); shisaOn(x + 18, 150, 50); }
-      const an = npc('granny', 180, 166, { tint: '#e08a3a', lines: ['SATA ANDAGI! SUGAR DOUGHNUTS, FRESH FROM THE OIL!'] }); an.spot = { label: 'BUY SATA ANDAGI', stamp: 'oki_andagi', act: 'hold', fx: 'munch', lines: ['A ROUND, CRACKED, GOLDEN DOUGHNUT, CRISP OUTSIDE AND CAKE INSIDE. IT IS SHAPED LIKE A SMILE THAT HAS BURST.', 'THE NAME MEANS SUGAR, OIL, FRIED. IN OKINAWAN THEY SAY EXACTLY WHAT THEY MEAN.'] };
+      DAY.konbini(456, 150, 'okinawa'); DAY.hotel(610, 150, 'okinawa', 60); const an = npc('granny', 180, 166, { tint: '#e08a3a', lines: ['SATA ANDAGI! SUGAR DOUGHNUTS, FRESH FROM THE OIL!'] }); an.spot = { label: 'BUY SATA ANDAGI', stamp: 'oki_andagi', act: 'hold', fx: 'munch', lines: ['A ROUND, CRACKED, GOLDEN DOUGHNUT, CRISP OUTSIDE AND CAKE INSIDE. IT IS SHAPED LIKE A SMILE THAT HAS BURST.', 'THE NAME MEANS SUGAR, OIL, FRIED. IN OKINAWAN THEY SAY EXACTLY WHAT THEY MEAN.'] };
       for (let x = 30; x < 768; x += 92) palm(x, 196);
       // the eisa: drummers dancing in the middle of the road, and a gap in the line for you
       for (let i = 0; i < 4; i++) dancer(320 + i * 34, 252 + (i % 2) * 6, i); M.LIGHTS = [];

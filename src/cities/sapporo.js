@@ -30,8 +30,8 @@
     deco() {
       const g = M.ground.g, r = RNG(7); roofs(0, 0, 896, 40);
       // the north side: the clock tower among the office blocks, the airport sign and the subway
-      for (let x = 30; x < 896;) { const w = 44 + (r() * 4 | 0) * 8; if (Math.abs(x - 220) > 60) tower(x, 96, w, 50 + (r() * 4 | 0) * 9, { top: true, c: ['#8a8aa8', '#a89a94', '#7a8a9a', '#b0a8a0'][r() * 4 | 0] }); x += w + 6; }
-      put(SPR.tokeidai, 220, 96, 34, 71); block(186, 82, 254, 96);
+      for (let x = 30; x < 896;) { const w = 44 + (r() * 4 | 0) * 8; if (Math.abs(x - 220) > 60 && Math.abs(x - 380) > 62 && Math.abs(x - 660) > 56) tower(x, 96, w, 50 + (r() * 4 | 0) * 9, { top: true, c: ['#8a8aa8', '#a89a94', '#7a8a9a', '#b0a8a0'][r() * 4 | 0] }); x += w + 6; }
+      DAY.konbini(380, 96, 'sapporo'); DAY.hotel(660, 96, 'sapporo', 60); put(SPR.tokeidai, 220, 96, 34, 71); block(186, 82, 254, 96);
       stampSpot('sap_clock', 220, 112, 'TAKE A PHOTO', 'snap', ['A WHITE WOODEN HALL WITH A RED STAR AND A CLOCK, SMALL AMONG THE OFFICE BLOCKS.', 'IT WAS BUILT IN 1878 FOR AN AGRICULTURAL COLLEGE, AND ITS CLOCK HAS STRUCK THE HOURS EVER SINCE.'], 14, { frame: [170, 10, 100, 100] });
       gateway(80, 104, 'FLIGHTS TO OTHER CITIES', 'airsign'); M.SPOTS.push({ x: 520, y: 111, r: 14, label: 'SUBWAY', train: 1 }); prop('subway', 540, 104, 3); M.st = [520, 116];
       for (let x = 6; x < 896; x += 14) { R(g, x, 139.5, 7, 1, '#e8e4f0'); R(g, x, 435.5, 7, 1, '#e8e4f0'); } for (const x of [160, 448, 736]) { zebra(g, x - 18, 121, 36, 38); zebra(g, x - 18, 417, 36, 38); }

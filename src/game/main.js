@@ -26,8 +26,9 @@ function lookParts(l) {
 }
 const plLook = (i, l = G.look) => { const k = 'pl' + i + ':' + lookKey(l); return LOOKS[k] || (LOOKS[k] = makeLook(Object.assign({}, PLAYER_LOOK, lookParts(l), i >= KIMONO ? { robe: FITS[i], obi: OBI[i - KIMONO], shirt: FITS[i], pants: FITS[i], shoes: '#f4f1e6', pack: null, skirt: false } : { shirt: FITS[i] }))); };
 // one save for the whole trip (older saves were kept per city under 'tabi-tokyo')
-function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, look: lookKey(G.look), cats: G.cats, cans: G.cans, ema: G.ema, knots: G.knots, steps: Math.round(G.steps || 0), ic: G.ic, arrived: G.arrived, name: G.name, seen: G.seen, mute: !Snd.on, dist: G.dist })); } catch (e) { } }
-function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.look = lookOf(s.look); G.cats = s.cats || {}; G.cans = s.cans || {}; G.ema = s.ema || {}; G.knots = s.knots || {}; G.steps = s.steps || 0; G.ic = s.ic || 0; G.arrived = s.arrived == null ? 1 : s.arrived; if (NAMES.includes(s.name)) G.name = s.name; G.seen = s.seen || ''; if (s.mute && Snd.on) Snd.toggle(); if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
+function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, look: lookKey(G.look), cats: G.cats, cans: G.cans, ema: G.ema, knots: G.knots, steps: Math.round(G.steps || 0), ic: G.ic, arrived: G.arrived, umbrella: G.umbrella || 0, inn: G.inn || {}, dayOff: G.dayOff || 0, tix: G.tix || {}, seats: G.seats || 0, name: G.name, seen: G.seen, mute: !Snd.on, dist: G.dist })); } catch (e) { } }
+function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.look = lookOf(s.look); G.cats = s.cats || {}; G.cans = s.cans || {}; G.ema = s.ema || {}; G.knots = s.knots || {}; G.steps = s.steps || 0; G.ic = s.ic || 0; G.arrived = s.arrived == null ? 1 : s.arrived; G.umbrella = s.umbrella || 0; G.inn = s.inn || {}; G.dayOff = s.dayOff || 0; G.tix = s.tix || {}; G.seats = s.seats || 0; if (NAMES.includes(s.name)) G.name = s.name; G.seen = s.seen || ''; if (s.mute && Snd.on) Snd.toggle(); if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
+const JCL = CLIST.filter(c => !c.prologue); // the cities on the map of Japan (Bangkok, where a trip can begin, is not one of them)
 const count = o => Object.keys(o).length, STAMPS = {}, SCITY = {}; for (const c of CLIST) for (const k in c.stamps) { STAMPS[k] = c.stamps[k]; SCITY[k] = c; }
 const nst = c => count(c.stamps), got = c => Object.keys(c.stamps).filter(k => G.stamps[k]).length, catsIn = c => Object.keys(G.cats).filter(k => (MAPS[k.split(':')[0]] || {}).city === c.id).length;
 const areas = c => c.areas || c.line; // the sections of a city's page in the stamp book
@@ -37,7 +38,7 @@ const SOON = [['kawaguchiko', 'MT FUJI'], ['kyoto', 'KYOTO'], ['osaka', 'OSAKA']
 const JPOS = { tokyo: [211, 63, 224, 56, 1], kamakura: [205, 71, 216, 72, 1], kawaguchiko: [192, 65, 190, 81, 0], kyoto: [136, 65, 136, 44, 0], nara: [141, 74, 147, 80, 1], osaka: [129, 74, 122, 82, -1], hiroshima: [94, 73, 94, 50, 0], sapporo: [218, 11, 204, 6, -1], okinawa: [27, 96, 25, 73, 0] }; // dot x,y then label x,y,align on the Japan map
 function build(id) {
   const d = MAPS[id]; newMap(id, d.tw || 20, d.th || 12, !!d.indoor); M.def = d; M.night = d.night; M.hs = []; M.vs = [];
-  if (d.lay) d.lay(); if (!d.indoor) { blockTer(WA); paintGround(); } d.deco(); RIDES.build(); markRoads(); settle();
+  if (d.lay) d.lay(); if (!d.indoor) { blockTer(WA); paintGround(); } d.deco(); RIDES.build(); DAY.build(); markRoads(); settle();
   M.OBJ.sort((a, b) => a.y - b.y); for (const [x, y, rx, ry] of M.SHD) ell(M.ground.g, x, y, rx, ry, d.indoor ? 'rgba(20,10,30,0.22)' : 'rgba(22,30,50,0.26)');
   return BUILT[id] = M;
 }
@@ -47,9 +48,13 @@ const lookUp = () => { const L = M.def.lookUp; if (!L) return 0; const k = Math.
 const camX = () => M.w <= W ? (M.w - W) / 2 : Math.max(0, Math.min(M.w - W, pl.x - W / 2)), camY = () => M.h <= H ? (M.h - H) / 2 : Math.max(0, Math.min(M.h - H, pl.y - 12 - H / 2 - lookUp()));
 const zoneAt = (x, y) => (M.def.zones || []).find(z => x >= z[0] && x < z[2] && y >= z[1] && y < z[3]) || null;
 function camSnap() { G.cx = camX(); G.cy = camY(); }
+// Every map is a big painted canvas, so only the last few visited are kept; the rest are let go and built again on return.
+// (On a phone, keeping all seventy would run out of memory on a long trip.)
+const RECENT = [];
+function keep(id) { const i = RECENT.indexOf(id); if (i >= 0) RECENT.splice(i, 1); RECENT.push(id); while (RECENT.length > 6) { const old = RECENT.shift(), B = BUILT[old]; if (!B || B === M) continue; delete BUILT[old]; if (B.ground) B.ground.width = B.ground.height = 0; B.TY = B.SOL = B.TER = null; } }
 function go(id, x, y, dir) {
-  M = BUILT[id] || build(id); CITY = CITIES[M.def.city] || CITY; const st = M.st || [160, 182]; pl.x = x != null ? x : st[0]; pl.y = y != null ? y : st[1]; pl.dir = dir || 'd'; pl.mv = false; pl.act = null; G.fade = 1; G.tgt = null; G.fx = []; G.zn = zoneAt(pl.x, pl.y); G.zb = 0; camSnap(); LIFE.enter();
-  if (!M.indoor) { G.dist = id; G.banner = 3.5; save(); } else G.banner = 2.5; Snd.play(M.def.music || 'tokyo');
+  M = BUILT[id] || build(id); keep(id); CITY = CITIES[M.def.city] || CITY; const st = M.st || [160, 182]; pl.x = x != null ? x : st[0]; pl.y = y != null ? y : st[1]; pl.dir = dir || 'd'; pl.mv = false; pl.act = null; G.fade = 1; G.tgt = null; G.fx = []; G.zn = zoneAt(pl.x, pl.y); G.zb = 0; camSnap(); LIFE.enter();
+  if (!M.indoor) { G.dist = id; G.banner = 3.5; save(); } else G.banner = 2.5; Snd.play(M.def.music || 'tokyo'); if (M.def.enter) M.def.enter();
 }
 function step(e, dx, dy) { let m = false; if (dx && !hit(e.x + dx, e.y)) { e.x += dx; m = true; } if (dy && !hit(e.x, e.y + dy)) { e.y += dy; m = true; } return m; }
 function say(e, s) { e.say = s; e.sayT = 1.6 + s.length * 0.05; Snd.fx('talk'); }
@@ -60,10 +65,10 @@ function interact() {
   if (t.act) { t.act.use(t.act); return; }
   if (t.cat) { t.cat.purr = 1.2; G.fx.push({ x: t.cat.x, y: t.cat.y - 10, t: 0, icon: 'heart' }); Snd.fx('heart'); G.cats[t.cat.id ? M.id + ':' + t.cat.id : M.id] = 1; save(); return; }
   const sp = t.spot; if (!sp) { const n = t.npc; say(n, n.lines[n.li++ % n.lines.length]); return; }
-  if (sp.door) { G.back = { map: M.id, x: pl.x, y: pl.y }; Snd.fx('page'); go(sp.door, 160, 182, 'u'); }
+  if (sp.door) { if (!M.indoor) G.bstack = []; else (G.bstack = G.bstack || []).push(G.back); G.back = { map: M.id, x: pl.x, y: pl.y }; Snd.fx('page'); go(sp.door, sp.dx || 160, sp.dy || 182, 'u'); }
   else if (sp.train) { G.state = 'line'; G.line = { sel: (CITY.line.findIndex(s => s[0] === M.id) + 1) % CITY.line.length }; Snd.fx('page'); }
   else if (sp.shink && CITY.concourse && M.id !== CITY.concourse) { Snd.fx('chime'); G.back = null; go(CITY.concourse, 320, 548, 'u'); } // a big station: in through the concourse
-  else if (sp.shink) { G.state = 'japan'; G.jp = { sel: (CLIST.indexOf(CITY) + 1) % CLIST.length }; Snd.fx('page'); }
+  else if (sp.shink) { G.state = 'japan'; G.jp = { sel: (JCL.indexOf(CITY) + 1) % JCL.length }; Snd.fx('page'); }
   else if (sp.fn) sp.fn(sp);
   else if (sp.mini) { G.state = 'mini'; G.mg = { k: sp.mini, sp, t: 0 }; MG[sp.mini].init(G.mg); Snd.fx('ui'); }
   else if (sp.act) { G.state = 'event'; G.ev = { sp, t: 0 }; pl.mv = false; pl.dir = sp.act === 'hold' ? 'd' : 'u'; emit('act', sp); }
@@ -71,6 +76,8 @@ function interact() {
 }
 function endMini(win, lines) { const sp = G.mg.sp; G.mg = null; G.state = 'play'; dialog(lines, win && sp.stamp ? () => award(sp.stamp) : null); }
 
+// ride the local line to stop sel; sometimes someone older gets on, and you can give them your seat
+function rideLine(sel) { G.state = 'ride'; G.ride = { to: sel, t: 0, seat: Math.random() < 0.45 ? 1 : 0 }; Snd.play(null); Snd.fx('train'); if (G.ic) Snd.fx('beep'); emit('ride', G.ride); }
 function update(dt) {
   G.t += dt; NET.update(dt); if (G.fade > 0) G.fade = Math.max(0, G.fade - dt * 2); if (G.flash > 0) G.flash -= dt * 2; if (G.banner > 0) G.banner -= dt;
   if (KP.m) Snd.toggle();
@@ -90,7 +97,7 @@ function update(dt) {
     if (pl.mv) { if (JOY.on) { if (Math.abs(dx) > Math.abs(dy) * 1.15) pl.dir = dx < 0 ? 'l' : 'r'; else if (Math.abs(dy) > Math.abs(dx) * 1.15) pl.dir = dy < 0 ? 'u' : 'd'; } else { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; else G.steps = (G.steps || 0) + Math.hypot(dx, dy) * 72 * dt / 7; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27)) LIFE.foot(); } else pl.wt = 0;
     if (M.def.zones) { const z = zoneAt(pl.x, pl.y); if (z && z !== G.zn) { G.zn = z; if (G.banner <= 0) G.zb = 2.6; } if (G.zb > 0) G.zb -= dt; }
     if (M.def.tick) M.def.tick(); // a map's own rule (walking out of a station's doors)
-    if (M.indoor && pl.y > 188 && G.back) { const b = G.back; G.back = null; Snd.fx('page'); go(b.map, b.x, b.y, 'd'); G.banner = 0; }
+    if (M.indoor && pl.y > 188 && G.back) { const b = G.back; G.back = (G.bstack || []).pop() || null; /* rooms inside rooms (a hotel lobby, then your room) step back one at a time */ Snd.fx('page'); go(b.map, b.x, b.y, 'd'); G.banner = 0; }
     let best = null, bd = 1e9; const tryT = (x, y, r, o) => { const d = Math.hypot(x - pl.x, (y - pl.y) * 1.3); if (d < r && d < bd) { bd = d; best = o; } };
     for (const s of M.SPOTS) tryT(s.x, s.y, s.r, { spot: s, label: s.label });
     for (const n of M.ACT) { if (n.hide) continue; if (n.cat) tryT(n.x, n.y, 15, { cat: n, x: n.x, y: n.y + 12, label: 'PET' }); else if (n.use) tryT(n.x, n.y + 2, 17, { act: n, x: n.x, y: n.y + 10, label: n.label(n) }); else if (n.spot) tryT(n.x, n.y + 16, 22, { spot: n.spot, label: n.spot.label }); else if (n.lines) tryT(n.x, n.y, 20, { npc: n, x: n.x, y: n.y, label: 'TALK' }); }
@@ -113,10 +120,10 @@ function update(dt) {
   else if (st === 'tog') NET.updTog();
   else if (st === 'say') NET.updSay();
   else if (st === 'mini') { G.mg.t += dt; const m = G.mg; MG[m.k].update(m, dt); if (G.mg === m && KP.x && m.k !== 'dress' && m.k !== 'vend') { G.mg = null; G.state = 'play'; } }
-  else if (st === 'line') { const STN = CITY.line, n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === M.id) G.state = 'play'; else { G.state = 'ride'; G.ride = { to: L.sel, t: 0 }; Snd.play(null); Snd.fx('train'); if (G.ic) Snd.fx('beep'); emit('ride', G.ride); } } }
-  else if (st === 'japan') { const n = CLIST.length, J = G.jp; if (KP.u || KP.l) { J.sel = (J.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d || KP.r) { J.sel = (J.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (CLIST[J.sel] === CITY) G.state = 'play'; else PLACES.travel(CLIST[J.sel]); } }
+  else if (st === 'line') { const STN = CITY.line, n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === (M.from || M.id)) G.state = 'play'; else if (!G.ic && !(G.tix || {})[CITY.id]) { G.state = 'mini'; G.mg = { k: 'ticket', sp: { to: L.sel }, t: 0 }; MG.ticket.init(G.mg); Snd.fx('ui'); } else rideLine(L.sel); } }
+  else if (st === 'japan') { const n = JCL.length, J = G.jp; if (KP.u || KP.l) { J.sel = (J.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d || KP.r) { J.sel = (J.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (JCL[J.sel] === CITY) G.state = 'play'; else PLACES.travel(JCL[J.sel]); } }
   else if (st === 'scrap') AIR.scrapUpdate(dt);
-  else if (st === 'ride') { G.ride.t += dt; if (G.ride.plane) AIR.rideTick(G.ride, dt); else if (G.ride.ship) PLACES.shipTick(G.ride, dt); else if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > (G.ride.dur || 3.4)) { const r = G.ride; G.state = 'play'; if (r.go) go(...r.go); else if (r.city) { if (r.city.concourse) { go(r.city.concourse, 320, 126, 'd'); Snd.fx('chime'); NET.say('FOLLOW THE YELLOW EXIT SIGNS DOWN TO THE CITY.', 4); } else { go(r.city.hub || r.city.start); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1]; camSnap(); } } } else if (r.to != null) go(CITY.line[r.to][0]); if (!r.plane) emit('arrived', r); if (r.then) r.then(); } }
+  else if (st === 'ride') { G.ride.t += dt; if (G.ride.upd) G.ride.upd(G.ride, dt); if (G.ride.seat === 1 && TAP) { TAP = null; KP.a = 1; } if (G.ride.seat === 1 && G.ride.t > 0.9 && G.ride.t < 2.9 && KP.a) { G.ride.seat = 2; G.seats = (G.seats || 0) + 1; Snd.fx('heart'); save(); } if (G.ride.plane) AIR.rideTick(G.ride, dt); else if (G.ride.ship) PLACES.shipTick(G.ride, dt); else if (G.ride.sleep) { /* quiet */ } else if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > (G.ride.dur || 3.4)) { const r = G.ride; G.state = 'play'; if (r.go) go(...r.go); else if (r.city) { if (r.city.concourse) { go(r.city.concourse, 320, 126, 'd'); Snd.fx('chime'); NET.say('FOLLOW THE YELLOW EXIT SIGNS DOWN TO THE CITY.', 4); } else { go(r.city.hub || r.city.start); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1]; camSnap(); } } } else if (r.to != null) go(CITY.line[r.to][0]); if (!r.plane && !r.sleep) emit('arrived', r); if (r.then) r.then(); } }
 
   if (st !== 'ride' && st !== 'line' && st !== 'japan' && st !== 'mini') {
     for (const n of M.ACT) {
@@ -130,7 +137,7 @@ function update(dt) {
       if (d < 2 || n.tt < 0 || !step(n, tx / d * 20 * dt, ty / d * 20 * dt)) { n.mv = false; n.wait = 1 + n.rnd() * 3.5; continue; }
       n.mv = true; n.wt += dt; n.dir = Math.abs(tx) > Math.abs(ty) ? (tx < 0 ? 'l' : 'r') : (ty < 0 ? 'u' : 'd');
     }
-    LIFE.update(dt, st); RIDES.tick(dt, st);
+    LIFE.update(dt, st); RIDES.tick(dt, st); DAY.tick(dt);
     for (const c of M.CARS) { const ahead = (pl.x - c.x) * Math.sign(c.v); if (!(Math.abs(pl.y - 4 - c.y) < 13 && ahead > 0 && ahead < 40)) c.x += c.v * dt; if (c.x > M.w + 40) c.x = -40; if (c.x < -40) c.x = M.w + 40; }
     for (const p of PRT) { p.x += (p.vx + Math.sin(G.t * 1.3 + p.ph) * 6) * dt; p.y += p.vy * dt; if (p.y > H + 4) { p.y = -4; p.x = Math.random() * (W + 60); } if (p.x < -6) p.x = W + 4; }
     for (const f of G.fx) f.t += dt; G.fx = G.fx.filter(f => f.t < 1.1);
@@ -144,7 +151,7 @@ function drawActor(e, cx, cy) {
   const x = e.x - cx, y = e.y - cy; if (e.draw) { e.draw(e, x, y); return; }
   if (e === pl && pl.sit) { ell(ctx, x, y, 6, 2, 'rgba(22,30,50,0.2)'); RIDES.drawSit(x, y); return; }
   if (e.cat) { ell(ctx, x, y, 4.5, 1.5, 'rgba(22,40,44,0.3)'); ctx.drawImage(SPR.cat[e.k], snap(x - 7), snap(y - 12)); return; }
-  ell(ctx, x, y, 6, 2, 'rgba(22,30,50,0.32)'); ctx.drawImage(frameOf(e), snap(x - 10), snap(y - 27));
+  ell(ctx, x, y, 6, 2, 'rgba(22,30,50,0.32)'); ctx.drawImage(frameOf(e), snap(x - 10), snap(y - 27)); DAY.umb(e, x, y);
 }
 function drawWorld() {
   const cx = snap(G.cx), cy = snap(G.cy), t = G.t;
@@ -167,7 +174,9 @@ function drawWorld() {
   LIFE.drawFx(cx, cy); RIDES.drawFx(cx, cy);
   // lights breathe a little, and some neon flickers now and then
   if (M.def.tint) { ctx.globalCompositeOperation = 'multiply'; R(ctx, 0, 0, W, H, M.def.tint); ctx.globalCompositeOperation = 'lighter'; for (const [x, y, r, c] of M.LIGHTS) { if (x - cx < -r || x - cx > W + r || y - cy < -r || y - cy > H + r) continue; const h = hsh(x, y), fl = h < 0.25 && (t * 0.6 + h * 7) % 1 < 0.035; ctx.globalAlpha = fl ? 0.25 : 0.88 + Math.sin(t * 2 + h * 9) * 0.12; ctx.drawImage(glowSpr(r, c), snap(x - cx - r), snap(y - cy - r)); } ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  if (!M.def.tint && DAY.cycles()) DAY.light(cx, cy, t); // the time of day and the rain
   if (M.def.over) M.def.over(cx, cy); // a map's own weather and overlays: snow, a lens on the sea
+  DAY.weather(cx, cy);
   if (!G.hidePl) LIFE.drawSky();
   if (M.def.petals) for (const p of PRT) { R(ctx, p.x, p.y, 1.5, 1, p.c); p1(ctx, p.x + (Math.sin(t * 4 + p.ph) > 0 ? 1.5 : -U), p.y + U, p.c); }
   for (const f of G.fx) { ctx.globalAlpha = Math.max(0, 1 - f.t); ctx.drawImage(ICON[f.icon], snap(f.x - cx - ICON[f.icon].lw / 2), snap(f.y - cy - 8 - f.t * 14)); ctx.globalAlpha = 1; }
@@ -177,7 +186,11 @@ function drawWorld() {
     if (x < -10 || x > W + 10 || y < -10 || y > H) continue; R(ctx, x - 2.5, y - 5, 5, 5, '#1d1626'); R(ctx, x - 3.5, y, 7, 1.5, '#1d1626'); R(ctx, x - 2.5, y + 1.5, 5, 1, '#1d1626'); R(ctx, x - 1.5, y + 2.5, 3, 1, '#1d1626'); R(ctx, x - 0.5, y + 3.5, 1, 1, '#1d1626'); R(ctx, x - 1.5, y - 4, 3, 5, c); R(ctx, x - 2.5, y + 0.5, 5, 1, c); R(ctx, x - 1.5, y + 1.5, 3, 1, c); R(ctx, x - 0.5, y + 2.5, 1, 1, c);
   }
   if (!G.hidePl) NET.tags(cx, cy);
-  if (!G.hidePl) for (const n of M.ACT.concat(OTHERS.filter(o => o.map === M.id), pl)) if (n.sayT > 0) { const ls = wrap(n.say, 110), w = Math.max(...ls.map(l => tw(l))) + 8, h = ls.length * 7 + 6, x = Math.max(2, Math.min(W - w - 2, n.x - cx - w / 2)), y = Math.max(2, n.y - cy - 32 - h); panel(x, y, w, h); ls.forEach((l, i) => txt(ctx, l, x + 4, y + 4 + i * 7, '#3a2e40')); }
+  G.bub = []; /* where the speech bubbles are, so the E prompt can keep clear of them */
+  // yours first, so it stays put; anyone else's that would cover one already placed moves up above it
+  if (!G.hidePl) for (const n of [pl].concat(M.ACT, OTHERS.filter(o => o.map === M.id))) if (n.sayT > 0) { const ls = wrap(n.say, 110), w = Math.max(...ls.map(l => tw(l))) + 8, h = ls.length * 7 + 6, x = Math.max(2, Math.min(W - w - 2, n.x - cx - w / 2)); let y = Math.max(2, n.y - cy - 32 - h);
+    for (let k = 0, o; k < 6 && (o = G.bub.find(([bx, by, bw, bh]) => x < bx + bw + 1 && x + w > bx - 1 && y < by + bh + 1 && y + h > by - 1)); k++) y = o[1] - h - 2;
+    G.bub.push([x, y, w, h]); panel(x, y, w, h); ls.forEach((l, i) => txt(ctx, l, x + 4, y + 4 + i * 7, '#3a2e40')); }
 }
 // ---------- photos ----------
 // A photo frames what its spot points at, not just the screen. The subject is the spot's own frame ([x, y, w, h] in the
@@ -250,6 +263,7 @@ function drawRide() { // the view from the window; on an upright phone the whole
     for (const x of [20, 112, 206, 298]) R(ctx, x - 2, 30, 4, 92, '#c8c0d4'); R(ctx, 16, 30, 288, 4, '#c8c0d4'); R(ctx, 16, 118, 288, 4, '#c8c0d4');
     panel(70, 136, 180, 32); txtC(ctx, r.label || (r.city ? 'SHINKANSEN TO' : 'NEXT STOP'), 160, 142, '#8a7a6a'); txtC(ctx, r.name || (r.city ? r.city.name : CITY.line[r.to][1]), 160, 152, r.city || r.go ? '#3f7ab0' : '#3f9a5a', null, 2);
   }, top + 90 * k);
+  if (r.seat && t > 0.9) { const s = r.seat === 2 ? 'HE BOWS AND SITS DOWN. "ARIGATOU."' : t < 2.9 ? 'AN OLD MAN GETS ON. GIVE HIM YOUR SEAT? (E)' : ''; if (s) { const w = Math.min(W - 8, tw(s) + 12); panel((W - w) / 2, 6, w, 14); txtC(ctx, s, W / 2, 10.5, '#3a2e40'); } }
   const dur = r.dur || 3.4, a = t < 0.4 ? 1 - t / 0.4 : t > dur - 0.4 ? (t - dur + 0.4) / 0.4 : 0; if (a > 0) { ctx.globalAlpha = Math.min(1, a); R(ctx, 0, 0, W, H, '#100c1c'); ctx.globalAlpha = 1; }
 }
 // the train line as a list (narrow screens) and which row a tap hit; on wide screens a tap on a stop's name picks it
@@ -263,12 +277,12 @@ function lineHit(p) {
   return best;
 }
 // the map of Japan you pick a city from: a list on narrow screens, a map otherwise
-const jpRows = () => CLIST.map(c => [c.id, c.name, c]).concat(SOON);
+const jpRows = () => JCL.map(c => [c.id, c.name, c]).concat(SOON);
 function jpBox() { const w = W < W0 ? W - 24 : 280, h = W < W0 ? 44 + jpRows().length * 24 : 160, x = Math.floor((W - w) / 2), y = Math.max(4, Math.floor((H - h) / 2)); return { x, y, w, h, inside: p => p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h }; }
 function jpHit(p) {
-  const b = jpBox(), n = CLIST.length;
+  const b = jpBox(), n = JCL.length;
   if (W < W0) { const i = Math.floor((p.y - b.y - 26) / 24); return p.x >= b.x && p.x <= b.x + b.w && i >= 0 && i < n ? i : -1; }
-  let best = -1, bd = 24; CLIST.forEach((c, i) => { const q = JPOS[c.id], d = Math.hypot(p.x - (b.x + 8 + q[0]), p.y - (b.y + 20 + q[1])); if (d < bd) { bd = d; best = i; } }); return best;
+  let best = -1, bd = 24; JCL.forEach((c, i) => { const q = JPOS[c.id], d = Math.hypot(p.x - (b.x + 8 + q[0]), p.y - (b.y + 20 + q[1])); if (d < bd) { bd = d; best = i; } }); return best;
 }
 // ---------- the last two pages of the stamp book ----------
 function bookFrame(title, nh) { // the page and its header and footer; a tall single column on narrow screens
@@ -305,12 +319,16 @@ function drawUI() {
   const st = G.state, t = G.t, ox = Math.floor((W - W0) / 2), oy = Math.floor((H - H0) / 2);
   if (G.photo) drawPhoto();
   if (G.flash > 0) { ctx.globalAlpha = Math.min(1, G.flash); R(ctx, 0, 0, W, H, '#ffffff'); ctx.globalAlpha = 1; }
-  if (st === 'play') { panel(4, 4, 44, 15); ctx.drawImage(stampOf('torii'), 6, 4.5); txt(ctx, got(CITY) + '/' + nst(CITY), 21, 9, '#c8382e'); const hd = CITY.hud && CITY.hud(); if (hd) { const w = 18 + tw(hd[1]); panel(51, 4, w, 15); ctx.drawImage(ICON[hd[0]], 53, 4.5); txt(ctx, hd[1], 67, 9, '#3a2e40'); } if (!M.indoor) { const nm = G.zn ? G.zn[4] : M.def.name; if (TOUCH) txt(ctx, nm, 5, 22, '#fff8e8', '#1d1626'); else txt(ctx, nm, W - 5 - tw(nm), 7, '#fff8e8', '#1d1626'); } }
+  if (st === 'play') { panel(4, 4, 44, 15); ctx.drawImage(stampOf('torii'), 6, 4.5); txt(ctx, got(CITY) + '/' + nst(CITY), 21, 9, '#c8382e'); const hd = CITY.hud && CITY.hud(); let nx = 51; if (hd) { const w = 18 + tw(hd[1]); panel(51, 4, w, 15); ctx.drawImage(ICON[hd[0]], 53, 4.5); txt(ctx, hd[1], 67, 9, '#3a2e40'); nx += w + 3; } if (!M.indoor && !M.def.station) { const s = DAY.label(), w = 18 + tw(s), low = TOUCH && W < 300, cxk = low ? 4 : nx, cyk = low ? 31 : 4; panel(cxk, cyk, w, 15); ctx.drawImage(ICON[DAY.icon()], cxk + 2, cyk + 0.5); txt(ctx, s, cxk + 16, cyk + 5, '#3a2e40'); } if (!M.indoor) { const nm = G.zn ? G.zn[4] : M.def.name; if (TOUCH) txt(ctx, nm, 5, 22, '#fff8e8', '#1d1626'); else txt(ctx, nm, W - 5 - tw(nm), 7, '#fff8e8', '#1d1626'); } }
   if (st === 'play' && G.zb > 0 && G.zn) { const z = G.zn, a = Math.max(0, Math.min(1, G.zb, (2.6 - G.zb) * 3)), w = Math.max(tw(z[4], 2), tw(z[5])) + 20, x = Math.floor((W - w) / 2), y = TOUCH ? 34 : 26; ctx.globalAlpha = a; panel(x, y, w, 26); txtC(ctx, z[4], W / 2, y + 5, '#c8382e', null, 2); txtC(ctx, z[5], W / 2, y + 17, '#8a7a6a'); ctx.globalAlpha = 1; }
   if (st === 'tour' && G.ridee && G.ridee.tour.kind === 'rick') txtO(ctx, TOUCH ? 'TAP X TO HOP OFF' : 'X OR ESC TO HOP OFF', W / 2, H - (TOUCH && H > W ? 118 : 12), '#fff8e8', '#1d1626');
   if (st === 'sit') txtO(ctx, 'MOVE TO STAND UP', W / 2, H - (TOUCH && H > W ? 118 : 12), '#fff8e8', '#1d1626');
   if (st === 'boat' && !G.tgt) txtO(ctx, TOUCH ? 'X TO ROW BACK TO THE DOCK' : 'X OR ESC TO RETURN TO THE DOCK', W / 2, H - (TOUCH && H > W ? 118 : 12), '#fff8e8', '#1d1626');
-  if ((st === 'play' || st === 'boat') && G.tgt) { const g = G.tgt, w = tw('E') + 9 + tw(g.label), ax = g.x != null ? g.x : pl.x, ay = g.x != null ? g.y : pl.y, x = Math.max(3, Math.min(W - w - 3, ax - snap(G.cx) - w / 2)), y = Math.max(TOUCH ? 32 : 22, ay - snap(G.cy) - 43); const kw = keycap(x, y, 'E'); txt(ctx, g.label, x + kw + 3, y + 2, '#fff8e8', '#1d1626'); }
+  if ((st === 'play' || st === 'boat') && G.tgt) { const g = G.tgt, w = tw('E') + 9 + tw(g.label), ax = g.x != null ? g.x : pl.x, ay = g.x != null ? g.y : pl.y, x = Math.max(3, Math.min(W - w - 3, ax - snap(G.cx) - w / 2)), top = TOUCH ? 32 : 22;
+    // above the head, unless a speech bubble is there: then under the feet, or failing that above the bubbles
+    const hits = yy => (G.bub || []).filter(([bx, by, bw, bh]) => x < bx + bw + 2 && x + w > bx - 2 && yy < by + bh + 2 && yy + 10 > by - 2);
+    let y = Math.max(top, ay - snap(G.cy) - 43); if (hits(y).length) { const under = Math.min(H - 12, pl.y - snap(G.cy) + 6); if (!hits(under).length) y = under; else y = Math.max(top, Math.min(...hits(y).map(b => b[1])) - 13); }
+    R(ctx, x - 2, y - 1, w + 4, 12, 'rgba(29,22,38,0.72)'); const kw = keycap(x, y, 'E'); txt(ctx, g.label, x + kw + 3, y + 2, '#fff8e8', '#1d1626'); }
   if (st === 'play' && M.def.hud) { const s = M.def.hud(), w = tw(s) + 12, y = NET.on && !TOUCH ? 16 : TOUCH ? 40 : 4; panel(Math.floor((W - w) / 2), y, w, 13); txtC(ctx, s, W / 2, y + 4, '#3f7ab0'); } // a map's own note (the next train)
   if (st === 'play') NET.hud();
   if (st === 'tog') NET.drawTog(); if (st === 'say') NET.drawSay();
@@ -336,9 +354,9 @@ function drawUI() {
     });
   }
   if (st === 'japan') {
-    const J = G.jp, b = jpBox(), rows = jpRows(), sel = CLIST[J.sel], here = sel === CITY; R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(b.x, b.y, b.w, b.h); txtC(ctx, 'WHERE NEXT?', W / 2, b.y + 7, '#3f7ab0', null, 2);
+    const J = G.jp, b = jpBox(), rows = jpRows(), sel = JCL[J.sel], here = sel === CITY; R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(b.x, b.y, b.w, b.h); txtC(ctx, 'WHERE NEXT?', W / 2, b.y + 7, '#3f7ab0', null, 2);
     if (W < W0) {
-      for (let k = 0; k < rows.length - 1; k++) R(ctx, b.x + 15, b.y + 36 + k * 24, 2, 24, k < CLIST.length - 1 ? '#3f7ab0' : '#c8c0d4');
+      for (let k = 0; k < rows.length - 1; k++) R(ctx, b.x + 15, b.y + 36 + k * 24, 2, 24, k < JCL.length - 1 ? '#3f7ab0' : '#c8c0d4');
       rows.forEach(([id, name, c], i) => { const y = b.y + 26 + i * 24, on = i === J.sel, hr = c === CITY; if (on) R(ctx, b.x + 4, y, b.w - 8, 20, '#dcecf8'); disc(ctx, b.x + 16, y + 10, on ? 5.5 : 4.5, c ? '#1d1626' : '#b8b0c0'); disc(ctx, b.x + 16, y + 10, on ? 4.5 : 3.5, hr ? '#f2c14e' : on ? '#e0452f' : '#fff8e8');
         txt(ctx, name, b.x + 28, y + 5, !c ? '#b8a888' : on ? '#c8382e' : '#3a2e40'); txt(ctx, !c ? 'COMING SOON' : hr ? 'YOU ARE HERE' : got(c) + '/' + nst(c) + ' STAMPS - ' + PLACES.label(c).replace(' TO', ''), b.x + 28, y + 12, !c ? '#c8c0b0' : hr ? '#e08a1a' : got(c) === nst(c) ? '#3f9a5a' : '#b8a888'); });
       txtC(ctx, here ? TOUCH ? 'TAP AGAIN TO STAY' : 'E TO STAY' : TOUCH ? 'TAP AGAIN TO RIDE' : 'E TO RIDE', W / 2, b.y + b.h - 12, '#8a7a6a');
@@ -353,15 +371,15 @@ function drawUI() {
   if (st === 'line' && W < W0) {
     const L = G.line, b = lineBox(), STN = CITY.line; R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(b.x, b.y, b.w, b.h); txtC(ctx, 'WHERE TO?', W / 2, b.y + 7, '#3f9a5a', null, 2);
     for (let k = 0; k < STN.length - 1; k++) R(ctx, b.x + 15, b.y + 36 + k * 24, 2, 24, '#5aa85a');
-    STN.forEach(([id, name], i) => { const y = b.y + 26 + i * 24, on = i === L.sel, here = id === M.id, got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length;
+    STN.forEach(([id, name], i) => { const y = b.y + 26 + i * 24, on = i === L.sel, here = id === (M.from || M.id), got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length;
       if (on) R(ctx, b.x + 4, y, b.w - 8, 20, '#f2e2c0'); disc(ctx, b.x + 16, y + 10, on ? 5.5 : 4.5, '#1d1626'); disc(ctx, b.x + 16, y + 10, on ? 4.5 : 3.5, here ? '#f2c14e' : on ? '#e0452f' : '#fff8e8');
       txt(ctx, name, b.x + 28, y + 5, on ? '#c8382e' : '#3a2e40'); txt(ctx, here ? 'YOU ARE HERE' : have + '/' + got.length + ' STAMPS', b.x + 28, y + 12, here ? '#e08a1a' : have === got.length ? '#3f9a5a' : '#b8a888'); });
-    txtC(ctx, STN[L.sel][0] === M.id ? TOUCH ? 'TAP AGAIN TO STAY' : 'E TO STAY' : TOUCH ? 'TAP AGAIN TO RIDE' : 'E TO RIDE', W / 2, b.y + b.h - 12, '#8a7a6a'); const sh = shinkHint(); if (sh) { txtC(ctx, sh[0], W / 2, b.y + b.h - 30, '#3f7ab0'); txtC(ctx, sh[1], W / 2, b.y + b.h - 23, '#3f7ab0'); }
+    txtC(ctx, STN[L.sel][0] === (M.from || M.id) ? TOUCH ? 'TAP AGAIN TO STAY' : 'E TO STAY' : TOUCH ? 'TAP AGAIN TO RIDE' : 'E TO RIDE', W / 2, b.y + b.h - 12, '#8a7a6a'); const sh = shinkHint(); if (sh) { txtC(ctx, sh[0], W / 2, b.y + b.h - 30, '#3f7ab0'); txtC(ctx, sh[1], W / 2, b.y + b.h - 23, '#3f7ab0'); }
   } else if (st === 'line') {
     R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); ctx.save(); ctx.translate(ox, oy); panel(20, 10, 280, 160); txtC(ctx, 'WHERE TO?', 160, 17, '#3f9a5a', null, 2); const L = G.line, STN = CITY.line, n = STN.length, P = i => { const a = -1.5708 + i / n * 6.2832; return [160 + Math.cos(a) * 86, 92 + Math.sin(a) * 40]; };
     for (let k = 0; k < 120; k++) { const a = k / 120 * 6.2832; R(ctx, 160 + Math.cos(a) * 86 - 1, 92 + Math.sin(a) * 40 - 1, 3, 3, '#5aa85a'); }
-    STN.forEach(([id, name], i) => { const [x, y] = P(i), on = i === L.sel, here = id === M.id, got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length; disc(ctx, x, y, on ? 6 : 4.5, '#1d1626'); disc(ctx, x, y, on ? 5 : 3.5, here ? '#f2c14e' : on ? '#e0452f' : '#fff8e8'); const ty = y + (Math.sin(-1.5708 + i / n * 6.2832) < -0.2 ? -19 : 8), txx = Math.max(26 + tw(name) / 2, Math.min(294 - tw(name) / 2, x + Math.cos(-1.5708 + i / n * 6.2832) * 22)); txtC(ctx, name, txx, ty, on ? '#c8382e' : '#3a2e40'); txtC(ctx, have + '/' + got.length, txx, ty + 7, have === got.length ? '#3f9a5a' : '#b8a888'); });
-    ctx.drawImage(ICON.train, 153, 80); txtC(ctx, STN[L.sel][0] === M.id ? 'YOU ARE HERE' : 'TO ' + STN[L.sel][1], 160, 98, '#3a2e40'); const sh = shinkHint(); if (sh) { txtC(ctx, sh[0], 160, 109, '#3f7ab0'); txtC(ctx, sh[1], 160, 116, '#3f7ab0'); } txtC(ctx, '< >  CHOOSE     E  RIDE     ESC  BACK', 160, 160, '#8a7a6a'); ctx.restore();
+    STN.forEach(([id, name], i) => { const [x, y] = P(i), on = i === L.sel, here = id === (M.from || M.id), got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length; disc(ctx, x, y, on ? 6 : 4.5, '#1d1626'); disc(ctx, x, y, on ? 5 : 3.5, here ? '#f2c14e' : on ? '#e0452f' : '#fff8e8'); const ty = y + (Math.sin(-1.5708 + i / n * 6.2832) < -0.2 ? -19 : 8), txx = Math.max(26 + tw(name) / 2, Math.min(294 - tw(name) / 2, x + Math.cos(-1.5708 + i / n * 6.2832) * 22)); txtC(ctx, name, txx, ty, on ? '#c8382e' : '#3a2e40'); txtC(ctx, have + '/' + got.length, txx, ty + 7, have === got.length ? '#3f9a5a' : '#b8a888'); });
+    ctx.drawImage(ICON.train, 153, 80); txtC(ctx, STN[L.sel][0] === (M.from || M.id) ? 'YOU ARE HERE' : 'TO ' + STN[L.sel][1], 160, 98, '#3a2e40'); const sh = shinkHint(); if (sh) { txtC(ctx, sh[0], 160, 109, '#3f7ab0'); txtC(ctx, sh[1], 160, 116, '#3f7ab0'); } txtC(ctx, '< >  CHOOSE     E  RIDE     ESC  BACK', 160, 160, '#8a7a6a'); ctx.restore();
   }
   if (st === 'menu') MENU.draw();
   MENU.sync(); document.body.classList.toggle('menuing', st === 'menu' || st === 'tog' || st === 'say' || st === 'ride'); // menus hide the joystick and buttons
@@ -370,7 +388,7 @@ function drawUI() {
 
 // ---------- boot ----------
 (function boot() {
-  buildIcons(); buildSprites(); PLACES.sprites(); for (const c of CLIST) { if (c.sprites) c.sprites(); Object.assign(MG, c.minis || {}); } RIDES.sprites(); AIR.sprites(); MG.ema = RIDES.EMA; Object.assign(MG, AIR.minis); load();
+  buildIcons(); buildSprites(); PLACES.sprites(); for (const c of CLIST) { if (c.sprites) c.sprites(); Object.assign(MG, c.minis || {}); } RIDES.sprites(); AIR.sprites(); DAY.sprites(); MG.ema = RIDES.EMA; Object.assign(MG, AIR.minis, DAY.minis); load();
   SPR.ride = (() => { const c = mk(320, 84), g = c.g, r = RNG(12); dgrad(g, 0, 0, 320, 84, ['#7ab8e8', '#a8d4f0', '#e8f0f8']); skyline(g, 0, 320, 70, 8, 40, '#a8b8d0', r); skyline(g, 0, 320, 84, 10, 34, '#6a7a98', r); return c; })();
   // the countryside from the shinkansen window, and the map of central Japan you pick a city on
   SPR.ride2 = (() => { const c = mk(320, 84), g = c.g, r = RNG(31); dgrad(g, 0, 0, 320, 84, ['#8ac4f0', '#b8dcf4', '#f0f4f0']); for (const [x, y, w] of [[40, 14, 26], [250, 20, 34], [150, 8, 18]]) { ell(g, x, y, w, 4, '#ffffff'); ell(g, x + w * 0.3, y - 3, w * 0.5, 4, '#ffffff'); } mountain(g, 205, 62, 74, 50, '#7a8ac0', r, '#f8f4ee'); for (let x = -20; x < 340; x += 38) ell(g, x + r() * 20, 64, 34 + r() * 16, 10 + r() * 6, '#6a9a78'); for (let x = -10; x < 330; x += 26) ell(g, x + r() * 14, 68, 22, 7, '#5a8a5a'); R(g, 0, 64, 320, 20, '#8fc97a'); for (let y = 66; y < 84; y += 3) R(g, 0, y, 320, U, '#64b054'); for (let x = 0; x < 320; x += 40) { R(g, x + 12, 70, 14, 14, y2(x)); } function y2(x) { return x % 80 ? '#c8d85a' : '#74bf5e'; } for (const x of [60, 96, 232, 290]) { R(g, x, 58, 12, 8, '#f4eedc'); roof(g, x + 6, 53, 3, 9, 5, '#4a4660'); R(g, x + 4, 61, 3, 5, '#6a4638'); } for (let x = 8; x < 320; x += 64) { R(g, x, 46, 1, 20, '#6b6478'); R(g, x - 3, 48, 7, 1, '#6b6478'); } return c; })();
@@ -410,7 +428,7 @@ function drawUI() {
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
     // (the title scene covers the whole screen, so the world is not drawn under it)
     const t0 = performance.now();
-    try { if (!G.err) { update(dt); if (G.snapReq) { const sp = G.snapReq; G.snapReq = null; takePhoto(sp); } if (G.state === 'ride') { if (G.ride.plane) AIR.drawFlight(G.ride); else if (G.ride.ship) PLACES.drawShip(G.ride); else drawRide(); } else if (G.state === 'scrap') AIR.scrapDraw(); else { if (!MENU.title()) drawWorld(); drawUI(); } } } catch (e) { console.error(e); G.err = String(e.stack || e); }
+    try { if (!G.err) { update(dt); if (G.snapReq) { const sp = G.snapReq; G.snapReq = null; takePhoto(sp); } if (G.state === 'ride') { if (G.ride.plane) { AIR.drawFlight(G.ride); if (G.ride.over) G.ride.over(G.ride); } else if (G.ride.ship) PLACES.drawShip(G.ride); else if (G.ride.sleep) DAY.drawSleep(G.ride); else drawRide(); } else if (G.state === 'scrap') AIR.scrapDraw(); else { if (!MENU.title()) drawWorld(); drawUI(); } } } catch (e) { console.error(e); G.err = String(e.stack || e); }
     const cost = performance.now() - t0; G.cost = (G.cost || cost) * 0.95 + cost * 0.05; if (!G.lowFx && G.cost > 9) G.lowFx = true; else if (G.lowFx && G.cost < 4) G.lowFx = false;
     if (G.err) { R(ctx, 0, 0, W, 60, '#400'); wrap(G.err.replace(/\s+/g, ' '), 300).slice(0, 7).forEach((l, i) => txt(ctx, l, 4, 4 + i * 7, '#fff')); }
     requestAnimationFrame(frame);

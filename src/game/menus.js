@@ -17,10 +17,10 @@ const MENU = (function () {
   function back() { const st = G.mstack || []; if (!st.length) return false; const prev = st.pop(); if (prev === 'tog') NET.open(); else { G.state = 'menu'; G.menu = { kind: prev, sel: 0, t: 0 }; G.mstack = st; } return true; }
   function start() {
     G.begun = true; G.state = 'play'; G.banner = 3.5; G.fade = 1; Snd.play(M.def.music); Snd.fx('ui'); if (TOUCH) fullscreen(true);
-    if (!G.hasSave && !G.arrived && Object.keys(AIR.PORTS).length) AIR.intro();
+    if (!G.hasSave && !G.arrived) { if ((G.beginAt === 'bkk' || G.beginAt === 'bkx') && window.BKK) { BKK.begin(); if (G.beginAt === 'bkx') BKK.express(); } else AIR.intro(); }
     if (G.seen !== GAME.version) { if (G.hasSave) NET.say('UPDATED TO VERSION ' + GAME.version + '. SEE WHAT IS NEW IN THE MAIN MENU.', 6); G.seen = GAME.version; save(); }
   }
-  function reset() { G.stamps = {}; G.figs = {}; G.cats = {}; G.cans = {}; G.ema = {}; G.knots = {}; G.steps = 0; G.ic = 0; G.arrived = 0; G.fit = 0; G.hasSave = false; G.begun = false; pl.F = plLook(0); go(CLIST[0].start); G.banner = 0; save(); open('main'); Snd.fx('page'); }
+  function reset() { G.stamps = {}; G.figs = {}; G.cats = {}; G.cans = {}; G.ema = {}; G.knots = {}; G.steps = 0; G.ic = 0; G.arrived = 0; G.umbrella = 0; G.inn = {}; G.dayOff = 0; G.tix = {}; G.seats = 0; G.fit = 0; G.hasSave = false; G.begun = false; pl.F = plLook(0); go(CLIST[0].start); G.banner = 0; save(); open('main'); Snd.fx('page'); }
   const news = () => { G.state = 'book'; G.bk = BOOKP().length - 1; G.cl = 0; G.seen = GAME.version; save(); };
   const where = () => (G.zn && !M.indoor ? G.zn[4] : M.def.name.split(' - ')[0]);
   const togSub = () => NET.on ? 'ROOM ' + NET.code + ' - ' + (OTHERS.length ? OTHERS.length + 1 + ' OF YOU' : 'WAITING FOR FRIENDS') : 'EXPLORE WITH FRIENDS';
@@ -38,7 +38,7 @@ const MENU = (function () {
       { t: 'PLAY TOGETHER', s: togSub(), go: sub(NET.open) },
       { t: 'WHAT IS NEW', s: 'VERSION ' + GAME.version + ': ' + CHANGELOG[0][2], badge: G.seen !== GAME.version, go: sub(news) },
       { t: 'SETTINGS', s: 'SOUND, SCREEN, YOUR NAME, CONTROLS', go: () => open('settings', 'main') },
-      (G.hasSave || G.begun) && { t: 'NEW TRIP', s: 'START AGAIN, LANDING AT HANEDA', go: () => open('confirm', 'main') }
+      (G.hasSave || G.begun) && { t: 'NEW TRIP', s: 'START AGAIN FROM THE BEGINNING', go: () => open('confirm', 'main') }
     ],
     pause: () => [
       { t: 'BACK TO THE WALK', go: () => { G.state = 'play'; Snd.fx('page'); } },
@@ -61,7 +61,7 @@ const MENU = (function () {
         { t: L.bot ? 'SKIRT COLOUR' : 'TROUSER COLOUR', v: nm('bc'), sw: sw('bc'), lr: d => ch('bc', d) },
         { t: 'BAG', v: nm('bag'), sw: sw('bag'), s: 'A CAP TAKES THE COLOUR OF THE BAG', lr: d => ch('bag', d) },
         { t: 'SURPRISE ME', go: () => { for (const k of LOOK_KEYS) L[k] = Math.random() * LOOKOPT[k].length | 0; G.fit = Math.random() * KIMONO | 0; dress(); Snd.fx('yay'); } },
-        G.menu.first ? { t: "LET'S GO", s: 'BOARDING NOW. YOU CAN CHANGE ALL THIS LATER.', hi: true, go: start } : { t: 'DONE', go: back }
+        G.menu.first ? { t: "LET'S GO", s: 'YOU CAN CHANGE ALL THIS LATER.', hi: true, go: () => open('begin', 'look', { first: true }) } : { t: 'DONE', go: back }
       ];
     },
     settings: () => [
@@ -72,13 +72,17 @@ const MENU = (function () {
       { t: 'BACK', go: back }
     ],
     help: () => [{ t: 'BACK', go: back }],
-    flight: () => { const P = AIR.PORTS, me = G.menu.port; return Object.keys(P).filter(k => k !== me).map(k => ({ t: 'TO ' + P[k].name, s: 'ABOUT AN HOUR. A WINDOW SEAT, OF COURSE.', go: () => AIR.fly(k) })).concat([{ t: 'FLY HOME', s: 'END YOUR TRIP WITH A SCRAPBOOK. YOU CAN KEEP WANDERING AFTER.', go: AIR.home }, { t: 'NOT YET', go: () => { G.state = 'play'; Snd.fx('page'); } }]); },
+    begin: () => [{ t: 'FROM BANGKOK', s: 'CHECK IN AT SUVARNABHUMI AIRPORT AND FLY TO TOKYO. ABOUT TEN MINUTES.', hi: true, go: () => { G.beginAt = 'bkk'; start(); } }, { t: 'FROM BANGKOK, EXPRESS', s: 'SKIP CHECK-IN, PASSPORTS AND SECURITY: STRAIGHT ONTO THE PLANE.', go: () => { G.beginAt = 'bkx'; start(); } }, { t: 'STRAIGHT TO TOKYO', s: 'BEGIN WITH THE LANDING AT HANEDA.', go: () => { G.beginAt = 'hnd'; start(); } }],
+    flight: () => { const P = AIR.PORTS, me = G.menu.port; return Object.keys(P).filter(k => k !== me).map(k => ({ t: 'TO ' + P[k].name, s: P[k].intl ? 'ABOUT SIX HOURS, OVER THE SEA.' : 'ABOUT AN HOUR. A WINDOW SEAT, OF COURSE.', go: () => (G.menu.express ? AIR.express : AIR.checkin)(k) })).concat([{ t: 'FLY HOME', s: 'END YOUR TRIP WITH A SCRAPBOOK. YOU CAN KEEP WANDERING AFTER.', go: AIR.home }, { t: 'NOT YET', go: () => { G.state = 'play'; Snd.fx('page'); } }]); },
+    express: () => [{ t: 'YES, STRAIGHT TO MY SEAT', s: 'NO STAMPS FOR THE STEPS YOU SKIP.', hi: true, go: () => G.menu.yes() }, { t: 'NO, THE WHOLE AIRPORT', go: () => { G.state = 'play'; Snd.fx('page'); } }],
     confirm: () => [{ t: 'KEEP MY TRIP', go: back }, { t: 'START OVER', s: 'THIS CANNOT BE UNDONE', red: true, go: reset }],
     join: () => [{ t: 'JOIN', s: code().length >= 4 ? 'ROOM ' + code() : 'TYPE THE CODE FIRST', off: code().length < 4, go: join }, { t: 'BACK', go: back }]
   };
   const HEAD = {
-    flight: () => [(AIR.PORTS[G.menu.port] || {}).name || 'GATE', 'WHERE ARE YOU FLYING TODAY?'],
+    begin: () => ['WHERE DOES YOUR TRIP BEGIN?', 'YOU CAN FLY BACK TO BANGKOK FROM ANY AIRPORT LATER.'],
+    flight: () => [(AIR.PORTS[G.menu.port] || {}).name || 'GATE', G.menu.express ? 'EXPRESS: NO QUEUES, STRAIGHT TO YOUR SEAT. WHERE TO?' : 'WHERE ARE YOU FLYING TODAY?'],
     pause: () => [where(), CITY.name], look: () => [G.menu.first ? 'WHO IS TRAVELLING?' : 'YOUR TRAVELLER'], settings: () => ['SETTINGS'], help: () => ['HOW TO PLAY', ...HELP],
+    express: () => ['EXPRESS LANE', 'SKIP CHECK-IN, PASSPORT CONTROL AND SECURITY?'],
     confirm: () => ['START A NEW TRIP?', 'YOUR STAMPS, FIGURES, CATS AND DRINKS WILL ALL BE GONE.'],
     join: () => ['JOIN A ROOM', 'TYPE THE CODE YOUR FRIEND SENT YOU, OR PASTE THEIR INVITE LINK.']
   };
@@ -91,12 +95,12 @@ const MENU = (function () {
     const it = L[m.sel];
     if ((KP.l || KP.r) && it.lr) { it.lr(KP.l ? -1 : 1); Snd.fx('ui'); }
     else if (KP.a && m.t > 0.15) use(it);
-    else if (KP.x || KP.p || KP.b) { if (m.kind === 'pause' || m.kind === 'flight') { G.state = 'play'; Snd.fx('page'); } else if (back()) Snd.fx('page'); }
+    else if (KP.x || KP.p || KP.b) { if (m.kind === 'pause' || m.kind === 'flight' || m.kind === 'express') { G.state = 'play'; Snd.fx('page'); } else if (back()) Snd.fx('page'); }
   }
   function use(it, d) { if (it.off) { Snd.fx('land'); return; } if (it.lr) { it.lr(d || 1); Snd.fx('ui'); } else it.go(); }
   function tap(p) {
     const h = hits.find(b => p.x >= b[0] && p.x <= b[0] + b[2] && p.y >= b[1] && p.y <= b[1] + b[3]);
-    if (!h) { if (G.menu.kind === 'pause' || G.menu.kind === 'flight') G.state = 'play'; else back(); return; }
+    if (!h) { if (G.menu.kind === 'pause' || G.menu.kind === 'flight' || G.menu.kind === 'express') G.state = 'play'; else back(); return; }
     G.menu.sel = h[4]; use(items()[h[4]], h[5] != null && Math.abs(p.x - h[5]) < 12 ? -1 : 1); // on a value, a tap on the left arrow steps back
   }
 

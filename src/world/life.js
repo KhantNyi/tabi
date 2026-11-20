@@ -53,10 +53,10 @@ const LIFE = (function () {
 
   // ---------- words ----------
   const GREET = { osaka: ['MOUKARIMAKKA!', 'HOW ARE YOU DOING?'], kyoto: ['OIDEYASU!', 'WELCOME TO KYOTO.'] };
-  const SHOP = { osaka: 'MAIDO! COME ON IN!', kyoto: 'OIDEYASU! TAKE A LOOK!' };
-  const greeting = n => { if (G.fit >= KIMONO && rnd() < 0.35) return pick(['WHAT A BEAUTIFUL KIMONO!', 'YOU LOOK LIKE A PAINTING IN THAT KIMONO.', 'KIMONO SUITS YOU!']);
+  const SHOP = { osaka: 'MAIDO! COME ON IN!', kyoto: 'OIDEYASU! TAKE A LOOK!', bangkok: 'SAWASDEE KHA! COME IN!' };
+  const greeting = n => { if (CITY.id === 'bangkok') return pick(['SAWASDEE KHA!', 'SAWASDEE KRAP!', 'HAVE A GOOD FLIGHT!', 'HELLO! WHERE ARE YOU FLYING?']); if (G.fit >= KIMONO && rnd() < 0.35) return pick(['WHAT A BEAUTIFUL KIMONO!', 'YOU LOOK LIKE A PAINTING IN THAT KIMONO.', 'KIMONO SUITS YOU!']);
     if (n.spot || n.F === LOOKS.chef) return CITY.id === 'osaka' ? 'MAIDO!' : 'IRASSHAIMASE!';
-    return pick((M.night ? ['KONBANWA!', 'GOOD EVENING.', 'NICE NIGHT FOR A WALK.'] : ['KONNICHIWA!', 'HELLO!', 'NICE DAY FOR A WALK.']).concat(GREET[CITY.id] || [])); };
+    return pick((M.night || DAY.dark() > 0.5 ? ['KONBANWA!', 'GOOD EVENING.', 'NICE NIGHT FOR A WALK.'] : ['KONNICHIWA!', 'HELLO!', 'NICE DAY FOR A WALK.']).concat(GREET[CITY.id] || [])); };
   const CHATS = [
     ['DID YOU EAT YET?', 'NOT YET. RAMEN?', 'IT IS ALWAYS RAMEN WITH YOU.'], ['MY BOSS CALLED AGAIN.', 'ON A SUNDAY?', 'HE SAYS SUNDAY IS A STATE OF MIND.'],
     ['I THINK WE ARE LOST.', 'WE ARE NOT LOST. WE ARE EXPLORING.', 'EXPLORING IS LOST WITH A SMILE.'], ['LOOK, A CAT!', 'WHERE?', '...IT LEFT. CATS DO THAT.'],

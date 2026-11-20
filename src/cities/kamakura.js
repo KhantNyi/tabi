@@ -42,8 +42,8 @@
       for (let y = 412; y < 600; y += 30) { plant('sakura', 522, y, 1); plant('sakura', 598, y + 14, 1); }
       put(SPR.bigtorii, 560, 620, 48, 79); block(522, 614, 532, 620); block(588, 614, 598, 620);
       // Komachi-dori
-      const SH = [[40, 'CREPES', '#f06a8c'], [104, 'DOVES', '#f2c14e'], [168, 'SENBEI', '#c89a6a'], [232, 'MATCHA', '#5a8a5a'], [296, 'SHIRASU', '#3f7ab0'], [360, 'CHOPSTICKS', '#8a5a3a'], [424, 'SWEETS', '#e0563f']];
-      for (const [x, s, c] of SH) house(x, 470, 58, 28, { sign: s, noren: c, rh: 14, lantern: x % 128 === 40 ? true : null });
+      const SH = [[40, 'CREPES', '#f06a8c'], [104, 'DOVES', '#f2c14e'], [168, 'SENBEI', '#c89a6a'], [232, 'MATCHA', '#5a8a5a'], [296, 'SHIRASU', '#3f7ab0']];
+      for (const [x, s, c] of SH) house(x, 470, 58, 28, { sign: s, noren: c, rh: 14, lantern: x % 128 === 40 ? true : null }); DAY.konbini(364, 470, 'kamakura'); DAY.hotel(431, 470, 'kamakura', 46);
       const d = npc('granny', 104, 486, { tint: '#f2c14e', lines: ['DOVE BISCUITS! THE DOVE IS THE SHRINE\'S MESSENGER!'] }); d.spot = { label: 'BUY A DOVE BISCUIT', stamp: 'kam_dove', act: 'hold', fx: 'munch', lines: ['A BUTTERY BISCUIT SHAPED LIKE A DOVE, IN A YELLOW TIN.', 'YOU EAT THE HEAD FIRST. EVERYONE DOES. NOBODY KNOWS WHY.'] };
       npc('chef', 296, 486, { lines: ['SHIRASU: TINY WHITEBAIT, CAUGHT THIS MORNING OFF THE BEACH.', 'ON RICE, ON TOAST, IN ICE CREAM. YES, ICE CREAM.'] }); npc('teen', 40, 492, { tint: '#f06a8c', lines: ['THIS STREET IS JUST SNACKS FROM THE STATION TO THE SHRINE.', 'I HAVE EATEN MY WAY UP. NOW I MUST EAT MY WAY DOWN.'] });
       npc('yukata', 452, 556, { tint: '#2a3a5a', lines: ['RICKSHAW? UP TO THE TORII AND BACK. I KNOW EVERY STONE.'] });
@@ -146,7 +146,7 @@
       block(0, 404, 384, 428); block(424, 404, 800, 428);
       ENO = PLACES.passer({ y: 416, cars: [SPR.enoden, SPR.enoden], period: 20, speed: 72, dir: 0, cross: [404] });
       R(g, 600, 432, 170, 14, '#c8c0b4'); R(g, 600, 432, 170, 1.5, '#f2c14e'); R(g, 600, 445, 170, 1, '#8a8496'); put(SPR.shelter, 690, 446, 24, 30); block(668, 438, 712, 446);
-      M.SPOTS.push({ x: 640, y: 452, r: 16, label: 'TRAINS', train: 1 }); M.st = [640, 466];
+      M.SPOTS.push({ x: 640, y: 452, r: 16, label: 'TRAINS', train: 1 }); /* an open-air halt: straight onto the line */ M.st = [640, 466];
       stampSpot('kam_crossing', 404, 474, 'TAKE A PHOTO', 'snap', ['THE BELLS RING, THE BARS COME DOWN, AND THE GREEN TRAIN RATTLES ACROSS WITH THE SEA RIGHT BEHIND IT.', 'PEOPLE COME FROM ALL OVER THE WORLD FOR THIS ONE CROSSING. NOW YOU KNOW WHY.'], 15, { frame: [300, 230, 210, 230], need: 'train' });
       // the town up the slope
       for (const [x, s, c] of [[90, 'CAFE', '#8a5a3a'], [200, 'SURF SHOP', '#2a6a8a'], [300, 'BAKERY', '#e08a3a']]) house(x, 500, 64, 28, { sign: s, noren: c, rh: 14 });

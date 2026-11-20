@@ -2,7 +2,7 @@
 
 A slow, no-fail, top-down pixel-art walk through Japan. Ride the train between districts, step inside shops and temples, talk to people, collect stamps and play a few small games along the way.
 
-There are nine places to visit: **Tokyo**, **Kamakura**, **Kawaguchiko** (Mount Fuji), **Kyoto**, **Nara**, **Osaka**, **Hiroshima** (with Miyajima), **Sapporo** and **Okinawa**. Most are joined by the shinkansen; Sapporo is a flight and Okinawa is a cruise. Each place has its own stamp book page, 132 stamps in all.
+A trip can begin in Bangkok, checking in at Suvarnabhumi Airport and flying to Tokyo, or straight at Haneda. There are nine places to visit in Japan: **Tokyo**, **Kamakura**, **Kawaguchiko** (Mount Fuji), **Kyoto**, **Nara**, **Osaka**, **Hiroshima** (with Miyajima), **Sapporo** and **Okinawa**. Most are joined by the shinkansen; Sapporo is a flight and Okinawa is a cruise. Each place has its own stamp book page, and so does Bangkok: 148 stamps in all.
 
 Everything is drawn in code and the music is synthesized in the browser, so there are no image or audio files and no build step.
 
@@ -154,6 +154,59 @@ The shinkansen sign (or a city's own gateway: Kamakura's JR sign, Sapporo's airp
 - **a flight** to or from Sapporo, landing at the city's airport. When the city has no airport, an airport train takes you the rest of the way.
 - **a cruise** to or from Okinawa. Arriving anywhere else, a train takes you on from the port.
 
+## Bangkok: where a trip can begin
+
+When you start a new trip you choose **FROM BANGKOK** or **STRAIGHT TO TOKYO**. From Bangkok, it all happens at Suvarnabhumi Airport, and takes about ten minutes. Along the way:
+- The note at the top of the screen always says what comes next.
+- A yellow arrow at the edge of the screen points to it.
+- Nothing is ever missed or late.
+
+1. **The kerb:** a taxi pulls away and leaves you at the departures doors, which slide open as you come near. A spirit house with its garlands and red soda stands by the door. Make a wai there.
+2. **The check-in hall:** the big board lists your flight, TA 641 to Tokyo, checking in at row M. Each row has its airline's letter hanging above it. Around the hall:
+   - SIM cards, money exchange, information, a mini mart, a phone charging tower;
+   - a machine that wraps your suitcase in plastic, and jasmine garlands.
+3. **Check-in** (a minigame) has four steps:
+   - hand over your passport;
+   - hold E to lift your suitcase onto the scale;
+   - choose a window or an aisle seat;
+   - your boarding pass prints with gate D3, group 3.
+4. **Passport control** gives you the departure stamp, but only once you have a boarding pass.
+5. **Security** is a minigame: each thing goes in a tray, stays in your bag, or goes in the bin (the big bottle of water). Then walk through the arch.
+6. **Airside:**
+   - the Churning of the Milk Ocean, with gods and demons hauling the great serpent;
+   - two giant yaksha guarding the way to the gates;
+   - duty free, Thai silk, dried mango and elephant trousers;
+   - a food court (boat noodles, mango sticky rice, Thai tea) and massage chairs.
+7. **Concourse D:** moving walkways, eight gates and planes at their stands. Your gate changes from D3 to D7, with an announcement, and the boards and signs update.
+8. **Boarding:** groups are called in turn, and the people waiting around you get up and board with theirs. At group 3 your pass is scanned and you walk down the jet bridge.
+9. **On board:** walk the aisle and find seat 27A or 27C by the row numbers on the floor. Then take off and fly through the night with a map of the route. Choose chicken or fish when the trolley comes, then land at Haneda's arrivals.
+
+Any Japanese airport gate can fly you back to Bangkok later. The prologue lives in src/cities/bangkok.js. Bangkok is in the stamp book but not on the map of Japan (prologue: 1 on its city).
+
+## Time of day and weather
+
+- **The clock:** a day lasts 24 real minutes, one game hour a minute, on the clock everyone shares. The time shows next to your stamps. Streets go golden in the late afternoon, pink at dusk and blue at night.
+- **After dark:** street lamps, stone lanterns, vending machines, shop doors, station entrances and windows light up, and crickets sing in the parks. People say good evening instead of hello. Districts that are always night (Dotonbori, Gion, Susukino, Shinsekai, Otaru, Tokyo Tower) stay that way.
+- **Rain** comes in spells on the same shared clock, more often in some cities than others; Sapporo has snow instead.
+  - The light goes grey, rain streaks down, drops splash, and once in a while there is thunder.
+  - Most people put up umbrellas. Buy a clear plastic one at a konbini and you will too.
+  - Indoors, you still hear the rain, quieter.
+- **Sleeping** at a hotel or ryokan moves your own clock on to 7 in the morning, with breakfast. When playing together, the shared clock wins, so you can't sleep while friends are out.
+
+## Everyday Japan
+
+- **A konbini in every city** (the chime plays as you walk in, and the clerk says irasshaimase):
+  - **Onigiri:** pick one, then pay at the till (a beep with your IC card, coins without one) and say whether you want a bag. Open it in three pulls in the order on the wrapper; get the order wrong and the seaweed tears.
+  - **The rest of the shop:** a fridge of drinks (the vending machine game), fresh coffee from the machine, hot snacks from the counter, a magazine rack and the cash machine.
+  - **An umbrella stand:** buy a clear plastic umbrella for the rain.
+  - **Something you can only get in that city**, with its own stamp. For example, the tamago sando in Tokyo, the pork tamago onigiri in Okinawa and the milk pudding in Sapporo.
+- **A hotel or ryokan in every city.** You come in to the lobby and check in at the desk; the lift (or the stairs) won't take you up until you have a key. Your room is upstairs, and walking out of it takes you back down to the lobby.
+  - A ryokan has shoe lockers at the entrance (shoes off), a tatami room with a futon, a pot of tea and a yukata, and a bath down the corridor. Wash at the taps first, then soak; get in unwashed and the old man in the bath will tell you.
+  - A business hotel has sofas and lifts downstairs, and upstairs a neat bed, a kettle and a tiny bathroom.
+  - Either way, the window shows the time and the weather outside, and you can sleep until morning.
+- **Ticket machines:** in a station, or the first time you ride a line from a halt without an IC card, you buy a ticket. Find your stop on the fare map above the machine and press the matching fare. After that the city remembers; with an IC card the gate just beeps.
+- **Train manners:** sometimes an older passenger gets on during a ride. Press E (or tap) to give them your seat. The scrapbook at the end of a trip counts how many seats you gave up.
+
 ## Everywhere
 
 - **Photos:** whenever you take a photo, an instant-photo card drops in and develops from a cream haze. It shows the view in front of you (with you out of the shot), a caption, and an orange date print. A few Fuji views are painted as postcards instead.
@@ -202,8 +255,13 @@ A new trip starts in the air: the plane lands at **Haneda**, and you step off at
   - money exchange, information, shops, and travellers wheeling suitcases;
   - announcements with the two-note chime;
   - trains, and a bus straight to the city centre.
-- **Departures:** check in (your suitcase is heavier for every city you've visited), walk through security (the arches beep), and sit in the gate lounge.
-- **The gate desk** is where you choose a flight: to the other airport, or **FLY HOME**. Flights are a window-seat view of take-off, the cloud layer (Fuji pokes through between Tokyo and Osaka) and the landing. Your first domestic flight earns a stamp.
+- **Departures** are a journey, with a note at the top of the screen and an arrow at its edge for the next step:
+  - **Check in** at the counter: choose where to fly (another airport, or **FLY HOME**), lift your suitcase onto the scale and get a flight number and a seat.
+  - **Security** is shut until you put your things in the right trays (liquids, laptop, coins and keys). Then walk through the arches.
+  - **At the gate** the groups are called one by one and the other passengers file down the jet bridge. Board when it's your group.
+  - **On the plane**, find your row and sit down. Take-off, then the trolley: green tea or apple juice inside Japan, chicken or fish from abroad.
+- **Arrivals from inside Japan** skip passport control: straight to baggage claim and out.
+- **The express lane** (the desk under the gold EXPRESS board, next to check-in, at every airport including Bangkok) skips all of it: choose where to fly and you're straight into your seat and taking off. On landing there's no passport queue or carousel either. The start menu also offers FROM BANGKOK, EXPRESS. You miss the stamps for the steps you skip. Flights are a window-seat view of take-off, the cloud layer (Fuji pokes through between Tokyo and Osaka) and the landing. Your first domestic flight earns a stamp.
 - **Flying home** ends the trip with a scrapbook: the cities you saw, your stamps, cats, drinks, figures, wishes and how many steps you walked. You never have to fly home. Afterwards you can keep wandering, or start a new trip.
 - **Haneda's observation deck** (up the escalator): planes take off and land in front of the bay, with Fuji on the horizon.
 - **Kansai** stands on an island in the sea; look out of the gate lounge window for its stamp.
@@ -234,6 +292,17 @@ On slow phones the game notices when frames get expensive and thins out the extr
 ## Photos
 
 Every TAKE A PHOTO spot gives you an instant-photo card. The camera frames the landmark the spot points at, not just whatever is on screen. It draws the scene again without you in it, and steps back for tall landmarks such as Kyoto Tower or Tsutenkaku. A spot can name its own frame (`frame: [x, y, w, h]`), and a few views are painted as postcards instead (Mirror Fuji, Chureito and the Skytree).
+
+## Local stations
+
+Every city with a train line (Tokyo, Kamakura, Kyoto, Osaka, Hiroshima, Sapporo and Okinawa) has station buildings you walk into. The TRAINS door leads inside.
+
+- **The concourse:** ticket machines under a fare map (find your fare and press it), an IC card machine, a kiosk, coin lockers and the staff window.
+- **The ticket gates:** tap an IC card or feed in your ticket and the flaps open. With neither, they snap shut with a pin-pon. On the way out they always let you go.
+- **The platform**, up the stairs: a name board with the stops either side, an LED board counting down, queue marks on the floor and people waiting at them.
+- **The train** runs on a 32-second clock shared by everyone. It pulls in, the doors open with a chime, people get off, the city's departure tune plays and the doors close. Board while they're open to choose your stop. Miss it and another comes.
+
+Open-air halts, like the Enoden stop by the sea at Kamakura, still put you straight on the train. It lives in `src/world/stations.js`: one station map per city, which knows which street you came in from.
 
 ## Big stations
 
@@ -289,6 +358,8 @@ src/
   world/
     station.js          the shinkansen concourses at the big stations: the train, gates, crowds and departure board
     airport.js          the airports: arrivals, departures, the observation deck, flights and the scrapbook ending
+    daily.js            the time of day, the weather, konbinis, hotels and sleeping, the ticket machine
+    stations.js         local stations: concourse, ticket machines, gates, platform and the train
     places.js           shared by the far cities: travel by plane and ship, the cruise scene, passing trains and crossings, snow, waves
     rides.js            rickshaw tours, the canal cruise, boats to steer, benches, bowing, shrine basins and racks, koi
     life.js             life in the streets: reactions, passing scenes, birds and butterflies, ambient sound, steam and leaves
@@ -304,6 +375,7 @@ src/
     kyoto.js            Kyoto's five districts, the tea ceremony, kimono rental, monkeys
     nara.js             Nara's map, rooms, deer, the mochi minigame and landmark art
     osaka.js            Osaka's four districts, the takoyaki minigame and landmark art
+    bangkok.js          Bangkok: Suvarnabhumi Airport, check-in, passport control, security, the gates, boarding and the flight
     kamakura.js         Kamakura: the shrine, the Great Buddha, the Enoden crossing, the beach and the surfing minigame
     hiroshima.js        Hiroshima and Miyajima: streetcars, the Peace Park, the tide, paper cranes, okonomiyaki and maple cakes
     sapporo.js          Sapporo in the snow: Odori, Susukino, Otaru, New Chitose, and the snowball, ramen and glass minigames

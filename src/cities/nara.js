@@ -84,8 +84,8 @@
       put(SPR.ukimido, 612, 806, 30, 55); block(596, 796, 628, 806); { const c = mk(56, 9), q = c.g; R(q, 0, 2, 56, 1.5, '#c0442f'); R(q, 0, 2, 56, U, '#e88a6a'); R(q, 0, 5, 56, 1, '#7a2a20'); for (let x = 0; x <= 54; x += 9) { R(q, x, 0, 2, 9, '#c0442f'); R(q, x, 0, U, 9, '#e88a6a'); } put(c, 612, 829, 28, 8); }
       // ---- town
       tower(72, 544, 92, 44, { c: '#e8e0d0', sign: 'NARA STATION', sc: '#3f7ab0', wc: '#bfe8ff', gx: 7, ww: 4 }); shinkansen(72, 544); M.st = [72, 562];
-      house(170, 544, 56, 28, { sign: 'SOUVENIRS', noren: '#5a8a5a', rh: 14, lantern: true }); house(236, 544, 56, 28, { sign: 'MOCHI', noren: '#5aa85a', rh: 14, lantern: '#f2c14e', to: 'n_mochi' });
-      house(54, 646, 50, 26, { sign: 'SAKE', noren: '#3d5a80', rh: 14 }); house(54, 722, 50, 26, { noren: '#8a2a24', rh: 14, lantern: true }); block(24, 600, 84, 646); block(24, 676, 84, 722);
+      DAY.konbini(170, 544, 'nara'); house(236, 544, 56, 28, { sign: 'MOCHI', noren: '#5aa85a', rh: 14, lantern: '#f2c14e', to: 'n_mochi' });
+      DAY.hotel(54, 646, 'nara', 50); house(54, 722, 50, 26, { noren: '#8a2a24', rh: 14, lantern: true }); block(24, 600, 84, 646); block(24, 676, 84, 722);
       house(156, 736, 46, 26, { sign: 'INK', noren: '#3a3a4e', rh: 14 }); house(212, 736, 46, 26, { sign: 'PICKLES', noren: '#c8a04a', rh: 14, lantern: true }); block(128, 698, 240, 736);
       wallH(128, 240, 603); wallV(132, 603, 634); wallV(132, 664, 698); wallV(236, 603, 698);
       plant('maple', 214, 636, 1); plant('bush', 150, 618, 1); plant('bush', 222, 686, 1); prop('lantern', 154, 684, 4); prop('bench', 196, 690, 9); M.LIGHTS.push([154, 668, 18, '#ffd98a']);

@@ -63,7 +63,7 @@ const PLACES = (function () {
   }
 
   // ---------- snow ----------
-  const FROSTED = new Map();
+  const FROSTED = new WeakMap(); // let go of a map's frosted sprites along with the map
   function frostCanvas(c) {
     if (FROSTED.has(c)) return FROSTED.get(c);
     const o = mk(c.lw, c.lh); o.g.drawImage(c, 0, 0); const w = o.width, h = o.height, im = o.g.getImageData(0, 0, w, h), d = im.data, al = new Uint8Array(w * h);

@@ -32,8 +32,8 @@
       house(180, 152, 58, 28, { sign: 'LEMON', noren: '#f2c14e', rh: 14, roof: 'awning', roofCol: '#f2c14e' });
       house(250, 152, 58, 28, { sign: 'MOMIJI', noren: '#e0563f', rh: 14, lantern: true });
       tower(334, 152, 76, 70, { c: '#c8382e', sign: 'BASEBALL', sc: '#f4f1e6', st: '#c8382e', vs: 4, vc: '#f4f1e6' });
-      house(420, 152, 60, 28, { sign: 'BAKERY', noren: '#c89a6a', rh: 14 }); house(492, 152, 56, 28, { sign: 'BOOKS', noren: '#3d5a80', rh: 14 });
-      tower(580, 152, 80, 76, { c: '#5a7a9a', sign: 'DEPARTMENT STORE', sc: '#3f7ab0', lit: 0.5 }); house(672, 152, 60, 28, { sign: 'COFFEE', noren: '#6a4a38', rh: 14 });
+      house(420, 152, 60, 28, { sign: 'BAKERY', noren: '#c89a6a', rh: 14 }); DAY.konbini(492, 152, 'hiroshima');
+      tower(580, 152, 80, 76, { c: '#5a7a9a', sign: 'DEPARTMENT STORE', sc: '#3f7ab0', lit: 0.5 }); DAY.hotel(672, 152, 'hiroshima', 60);
       const lem = npc('teen', 180, 168, { tint: '#f2c14e', lines: ['LEMONS FROM THE ISLANDS IN THE INLAND SEA! THE SUN GROWS THEM SWEET!'] }); lem.spot = { label: 'BUY A LEMONADE', stamp: 'hir_lemon', act: 'hold', fx: 'slurp', lines: ['A TALL GLASS OF LEMONADE FROM THE SETO ISLANDS, SO SOUR YOUR EARS FOLD BACK.', 'THEN SWEET. THEN SOUR AGAIN. THE MAN SAYS THAT IS HOW YOU KNOW IT IS REAL.'] };
       npc('salary', 334, 172, { tint: '#c8382e', lines: ['THE BASEBALL TEAM IS RED, THE FANS ARE RED, THE CITY GOES RED IN SUMMER.', 'WE HAVE NOT WON SINCE... DO NOT ASK WHEN WE LAST WON.'] }); npc('granny', 250, 168, { lines: ['THE MAPLE CAKES COME FROM MIYAJIMA. TAKE THE FERRY AND EAT THEM HOT.'] });
       for (let x = 24; x < 736; x += 64) prop('lamp', x, 236, 2);

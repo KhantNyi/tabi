@@ -27,9 +27,9 @@
       station(64, 160, 'NAMBA'); shinkansen(140, 160);
       house(196, 160, 52, 28, { sign: 'TAKOYAKI', noren: '#e0563f', rh: 14, lantern: true, to: 'o_tako' });
       tower(300, 160, 110, 100, { c: '#4a4a6a', art: (q, x, t) => { const bx = x + 6, bw = 98, by = t + 6; R(q, bx - 2, by - 2, bw + 4, 54, '#1d1626'); dgrad(q, bx, by, bw, 50, ['#3a7ad8', '#6ab0f0', '#a8d8f8']); for (let k = 0; k < 3; k++) R(q, bx, by + 38 + k * 4, bw, 1, '#f4f1e6'); const cx = bx + bw / 2; R(q, cx - 3, by + 14, 6, 13, '#f4f1e6'); disc(q, cx, by + 10, 4, '#f6cfa6'); line(q, cx - 3, by + 15, cx - 12, by + 4, '#f6cfa6'); line(q, cx + 3, by + 15, cx + 12, by + 4, '#f6cfa6'); line(q, cx - 2, by + 27, cx - 9, by + 36, '#3a5aa8'); line(q, cx + 2, by + 27, cx + 6, by + 37, '#3a5aa8'); R(q, cx - 3, by + 25, 6, 3, '#3a5aa8'); for (let k = 0; k < bw + 4; k += 4) { R(q, bx - 2 + k, by - 2, 2, 2, NEON[(k / 4) % 5]); R(q, bx - 2 + k, by + 50, 2, 2, NEON[(k / 4 + 2) % 5]); } } });
-      house(404, 160, 56, 28, { sign: 'RAMEN', noren: '#c8382e', rh: 14, lantern: true }); house(484, 160, 72, 30, { sign: 'CRAB', noren: '#c8382e', rh: 14, lantern: true }); put(SPR.crab, 484, 161, 46, 82);
+      DAY.konbini(404, 160, 'osaka'); house(484, 160, 72, 30, { sign: 'CRAB', noren: '#c8382e', rh: 14, lantern: true }); put(SPR.crab, 484, 161, 46, 82);
       house(554, 160, 52, 28, { sign: 'OKONOMIYAKI', noren: '#e08a3a', rh: 14, lantern: '#f2c14e', to: 'o_okono' });
-      tower(650, 160, 64, 80, { c: '#5a4a9a', sign: 'KARAOKE', sc: '#f06a8c', vs: 5, vc: '#5ad8f0' }); tower(730, 160, 64, 90, { c: '#3a3a5a', vs: 6, vc: '#ffd84a' });
+      tower(650, 160, 64, 80, { c: '#5a4a9a', sign: 'KARAOKE', sc: '#f06a8c', vs: 5, vc: '#5ad8f0' }); DAY.hotel(730, 160, 'osaka', 64);
       stampSpot('osa_runman', 384, 292, 'TAKE A PHOTO', 'snap', ['THE RUNNING MAN ON HIS BLUE TRACK, ARMS UP, FINISHING A RACE THAT NEVER ENDS.', 'EVERYONE ON THE BRIDGE IS DOING HIS POSE FOR THEIR PHOTO. SO ARE YOU.'], 14);
       stampSpot('osa_crab', 484, 176, 'TAKE A PHOTO', 'snap', ['A CRAB AS BIG AS A CAR, WAVING ITS CLAWS AND LEGS OVER THE DOOR.', 'IT HAS BEEN WAVING SINCE 1960. IT HAS NEVER ONCE BEEN TIRED.']);
       // Hozen-ji, behind the shops

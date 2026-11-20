@@ -18,9 +18,9 @@
     lay() { tRect(PV, 0, 0, 40, 26); tRect(PL, 2, 9, 38, 15); roads([[15, 3]], [[30, 3]]); },
     deco() {
       tower(250, 144, 260, 74, { c: '#a8b4c4', sign: 'KYOTO STATION', sc: '#3f7ab0', wc: '#bfe8ff', gx: 6, ww: 4, gy: 7, top: false }); M.SPOTS.push({ x: 200, y: 151, r: 14, label: 'BUSES', train: 1 }); M.st = [200, 160]; shinkansen(350, 144);
-      tower(440, 144, 60, 60, { c: '#c8b8a0', sign: 'PORTA', sc: '#c8382e' }); tower(600, 144, 70, 50, { c: '#8a94b0', sign: 'HOTEL', sc: '#5a6a9a' });
+      tower(440, 144, 60, 60, { c: '#c8b8a0', sign: 'PORTA', sc: '#c8382e' }); DAY.hotel(600, 144, 'kyoto', 70);
       put(SPR.kytower, 400, 352, 26, 190); block(376, 338, 424, 352); stampSpot('ky_tower', 456, 362, 'TAKE A PHOTO', 'snap', ['A WHITE TOWER LIKE A CANDLE, LIT TO WATCH OVER A CITY OF TEMPLES.', 'IT WAS BUILT IN 1964. NOT EVERYONE WAS PLEASED. NOW EVERYONE IS.']);
-      for (const [x, c, s] of [[110, '#e8d8c0', 'BENTO'], [180, '#d8c8b0', 'BOOKS'], [560, '#c8b8a0', 'SWEETS']]) tower(x, 352, 56, 40, { c, sign: s, sc: '#8a5a3a' });
+      for (const [x, c, s] of [[110, '#e8d8c0', 'BENTO'], [560, '#c8b8a0', 'SWEETS']]) tower(x, 352, 56, 40, { c, sign: s, sc: '#8a5a3a' }); DAY.konbini(184, 352, 'kyoto');
       cityEdge(1, 110); for (const x of [60, 150, 590]) plant('ginkgo', x, 220, 1); for (const x of [100, 400]) prop('bench', x, 232, 9); prop('vend', 460, 230, 6); prop('busstop', 240, 230, 2); prop('busstop', 290, 230, 2);
       cars(260, -1, 3); cars(276, 1, 3); crowd(6, 40, 200, 600, 200, 10); crowd(5, 600, 226, 40, 226, 6); crowd(3, 480, 300, 480, 380, 6);
       npc('office', 140, 196, { tint: '#3f7ab0', lines: ['WELCOME TO KYOTO! THE CITY BUS GOES EVERYWHERE. ONE DAY PASS, ALL THE TEMPLES YOU CAN STAND.', 'FUSHIMI INARI IS FIRST ON THE LINE. GO EARLY, BEFORE THE CROWDS.'] });

@@ -65,7 +65,7 @@
       tower(206, 142, 132, 78, { c: '#7a7a98', scr: [14, 10, 104, 40], scrc: ['#f06a8c', '#f2c14e', '#5ad8f0'] });
       prop('hachi', 206, 178, 7); plant('ginkgo', 142, 172, 1); plant('ginkgo', 268, 172, 1); prop('bench', 168, 190, 9); prop('bench', 244, 190, 9);
       tower(390, 192, 64, 116, { c: '#d0d0e0', sign: 'MODE 109', sc: '#f06a8c', to: 'mode', vs: 6, vsx: 50, gx: 6 });
-      tower(474, 192, 76, 92, { c: '#6a7a94', scr: [8, 8, 60, 34], sign: 'BOOKS', sc: '#3f7ab0' });
+      DAY.konbini(474, 192, 'tokyo');
       house(570, 192, 64, 30, { sign: 'RAMEN', noren: '#c8382e', roofCol: '#3d3852', rh: 16, lantern: true, to: 'ramen' });
       cityEdge(0, 70); prop('vend', 430, 190, 6); prop('vend2', 612, 190, 6);
       for (const [x, y] of [[90, 300], [200, 310], [420, 300], [540, 312], [600, 290]]) plant('ginkgo', x, y, 1); plaza(392); prop('bench', 140, 300, 9); prop('bench', 480, 296, 9); prop('vend3', 250, 290, 6);
@@ -176,9 +176,9 @@
   MAPS.tokyo = north({ zones: [[0, 0, 672, ND - 4, 'MARUNOUCHI', 'THE PALACE MOAT AND ITS STONE WALLS'], [0, ND - 4, 672, 640, 'TOKYO STATION', 'RED BRICK, GINZA GLASS']], name: 'TOKYO STATION', sub: 'RED BRICK, GINZA GLASS', tw: 42, th: 28, music: 'tokyo',
     lay() { tRect(PV, 0, 0, 42, 28); tRect(PL, 2, 16, 23, 17); roads([[17, 3]], [[24, 3]]); },
     deco() {
-      put(SPR.brick, 196, 256, 150, 95); block(52, 238, 340, 256); M.SPOTS.push({ x: 150, y: 263, r: 14, label: 'TRAINS', train: 1 }); M.st = [150, 268]; shinkansen(246, 256);
+      put(SPR.brick, 196, 256, 150, 95); block(52, 238, 340, 256); M.SPOTS.push(trainSpot(150, 263, 14, 'TOKYO')); M.st = [150, 268]; shinkansen(246, 256);
       house(470, 256, 60, 28, { sign: 'SUSHI', noren: '#3d5a80', rh: 14, lantern: true, to: 'sushi' }); put(SPR.clock, 580, 256, 35, 118); block(551, 240, 609, 256); door(580, 256, 'mall', 'ENTER STORE');
-      tower(644, 256, 40, 96, { c: '#b8c8d8' }); cityEdge();
+      DAY.hotel(644, 256, 'tokyo', 40); cityEdge();
       for (const [x, y] of [[80, 366], [180, 372], [300, 362], [470, 370], [580, 364]]) plant('ginkgo', x, y, 1); prop('bench', 130, 360, 9); prop('bench', 240, 360, 9); prop('vend', 520, 254, 6); lamps(270);
       for (const [x, c, s] of [[110, '#6a7a94', 'BANK'], [260, '#8a94b0', 'HOTEL'], [520, '#a8a0b8', 'GINZA SIX']]) tower(x, 400, 80, 40, { c, sign: s, sc: '#3a3a5a' });
       stampSpot('brick', 110, 268, 'TAKE A PHOTO', 'snap', ['THREE DOMES AND A MILLION RED BRICKS, BUILT IN 1914.', 'BULLET TRAINS LEAVE FROM BEHIND IT EVERY FEW MINUTES.']);

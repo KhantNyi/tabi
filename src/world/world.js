@@ -111,8 +111,9 @@ function tower(x, y, w, h, o = {}) {
   if (o.art) o.art(g, 10, b - h, b);
   put(c, x, y, 10 + w / 2, b); block(x - w / 2, y - 14, x + w / 2, y); M.SHD.push([x, y + 1, w / 2 + 3, 3]);
   if (o.to) door(x, y, o.to, o.lab); if (M.night && shop) M.LIGHTS.push([x, y - 10, 30, o.sc || '#ffd98a']);
+  (M.NLx = M.NLx || []).push([x, y - h * 0.55, Math.min(44, w / 2 + 8), '#ffe0a0', 0.3]); // its windows, after dark (see DAY)
 }
-function house(x, y, w, h, o) { const c = mk(w + 24, GY + 2); shopArt(c.g, 12, w, h, o, RNG(x + w)); put(c, x, y, 12 + w / 2, GY); block(x - w / 2, y - 13, x + w / 2, y); M.SHD.push([x, y + 1, w / 2 + 5, 3]); if (o.to) door(x, y, o.to, o.lab); if (M.night) M.LIGHTS.push([x, y - 10, 28, '#ffd98a']); }
+function house(x, y, w, h, o) { const c = mk(w + 24, GY + 2); shopArt(c.g, 12, w, h, o, RNG(x + w)); put(c, x, y, 12 + w / 2, GY); block(x - w / 2, y - 13, x + w / 2, y); M.SHD.push([x, y + 1, w / 2 + 5, 3]); if (o.to) door(x, y, o.to, o.lab); if (M.night) M.LIGHTS.push([x, y - 10, 28, '#ffd98a']); (M.NLx = M.NLx || []).push([x, y - 12, 26, '#ffd98a', 0.7]); }
 // rows of anonymous buildings around a city map, so the edge never shows
 function cityEdge(skipTop, depth = 34) {
   const rnd = RNG(M.w * 3 + M.id.length * 7);
@@ -138,7 +139,7 @@ function north(def, n, more) {
     for (const o of M.OBJ.slice(first[0])) o.y += dy;
     for (const a of M.ACT.slice(first[1])) { a.y += dy; for (const q of ['hy', 'ty']) if (a[q] != null) a[q] += dy; if (a.pa) { a.pa = [a.pa[0], a.pa[1] + dy]; a.pb = [a.pb[0], a.pb[1] + dy]; } }
     for (const s of M.SPOTS.slice(first[2])) { s.y += dy; if (s.frame) s.frame = [s.frame[0], s.frame[1] + dy, s.frame[2], s.frame[3]]; }
-    for (const q of M.SHD) q[1] += dy; for (const q of M.LIGHTS) q[1] += dy; for (const c of M.CARS) c.y += dy;
+    for (const q of M.SHD) q[1] += dy; for (const q of M.LIGHTS) q[1] += dy; for (const q of M.NLx || []) q[1] += dy; for (const c of M.CARS) c.y += dy;
     if (M.st) M.st = [M.st[0], M.st[1] + dy]; if (M.sk) M.sk = [M.sk[0], M.sk[1] + dy];
     for (const [x, w] of M.vs) block(x * T, 0, (x + w) * T, M.hs[0][0] * T, 0); // the avenues now run on north
     more.deco();
@@ -176,7 +177,9 @@ function settle() {
   if (drop.length) M.ACT = M.ACT.filter(n => !drop.includes(n));
 }
 function stampSpot(id, x, y, verb, act, lines, r, o) { M.SPOTS.push(Object.assign({ x, y, r: r || 15, label: verb, stamp: id, act, lines }, o)); } // o.frame: what a photo shows
-function station(x, y, name) { tower(x, y, 92, 44, { c: '#e8e0d0', sign: name + ' STATION', sc: '#3f9a5a', wc: '#bfe8ff', gx: 7, ww: 4 }); M.SPOTS.push({ x, y: y + 7, r: 14, label: 'TRAINS', train: 1 }); M.st = [x, y + 12]; }
+// the way in to a city's trains: through the station building (stations.js) where the city has one, else straight to the line
+const trainSpot = (x, y, r, sn) => Object.assign({ x, y, r: r || 14, label: 'TRAINS', train: 1, sn }, typeof STATIONS !== 'undefined' && STATIONS.has(M.def.city) ? { door: 'stn_' + M.def.city, dx: 240, dy: 296 } : {});
+function station(x, y, name) { tower(x, y, 92, 44, { c: '#e8e0d0', sign: name + ' STATION', sc: '#3f9a5a', wc: '#bfe8ff', gx: 7, ww: 4 }); M.SPOTS.push(trainSpot(x, y + 7, 14, name)); M.st = [x, y + 12]; }
 
 // ---------- rooms ----------
 function room(o) {

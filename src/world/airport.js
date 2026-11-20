@@ -57,7 +57,7 @@ const AIR = (function () {
       draw(e, x, y) { const s = e.vx > 0 ? 1 : -1, cx = x - s * 9; ell(ctx, x, y, 6, 2, 'rgba(22,30,50,0.32)'); ell(ctx, cx, y, 4, 1.4, 'rgba(22,30,50,0.25)'); R(ctx, cx - 3.5, y - 12, 7, 10, e.cc); R(ctx, cx - 3.5, y - 12, 7, 1, lite(e.cc, 0.35)); R(ctx, cx - 3.5, y - 7, 7, U, dark(e.cc, 0.3)); line1(ctx, cx + s * 2, y - 12, x - s * 3, y - 15, '#6b6478'); disc(ctx, cx - 2, y - 1, 1, '#1d1626'); disc(ctx, cx + 2, y - 1, 1, '#1d1626'); ctx.drawImage(frameOf(e), snap(x - 10), snap(y - 27)); } }); }
 
   // ---------- the departure board ----------
-  const CITIESX = ['OSAKA', 'SAPPORO', 'NAHA', 'FUKUOKA', 'SEOUL', 'TAIPEI', 'LONDON', 'HONOLULU', 'SINGAPORE', 'PARIS', 'SYDNEY', 'NEW YORK'];
+  const CITIESX = ['OSAKA', 'SAPPORO', 'NAHA', 'BANGKOK', 'FUKUOKA', 'SEOUL', 'TAIPEI', 'LONDON', 'HONOLULU', 'SINGAPORE', 'PARIS', 'SYDNEY', 'NEW YORK'];
   function boardRows(code, other) { const base = Math.floor(worldTime() / 40), out = []; for (let k = 0; k < 5; k++) { const n = base + k, c = k === 0 && other ? other : CITIESX[(n * 7) % CITIESX.length], hhmm = new Date(Date.now() + (k * 40 + 40 - worldTime() % 40) * 1000); out.push(['TA ' + String((n * 37) % 900 + 100), c === 'OSAKA' && code === 'KIX' ? 'TOKYO' : c, String(hhmm.getHours()).padStart(2, '0') + ':' + String(hhmm.getMinutes()).padStart(2, '0'), k === 0 ? 'BOARDING' : k === 1 ? 'GATE OPEN' : 'ON TIME']); } return out; }
   const FLAPS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   function drawBoard(e, x, y, code, other) {
@@ -71,11 +71,17 @@ const AIR = (function () {
   function airport(id, o) {
     PORTS[id] = { name: o.name, short: o.short, code: o.code, passport: o.passport };
     const X2 = 768, gate = o.gate, arrive = [580, 184];
-    MAPS[id] = { station: 1, airport: 1, name: o.name, sub: o.sub, tw: 48, th: 44, music: o.music,
-      hud: () => 'GATE ' + gate + ' - ' + (boardRows(o.code, PORTS[o.other] && PORTS[o.other].short)[0][3]),
+    MAPS[id] = { station: 1, airport: 1, gate, name: o.name, sub: o.sub, tw: 48, th: 44, music: o.music,
+      hud: () => { const n = next(); return n ? 'NEXT: ' + n[2] : 'GATE ' + gate + ' - ' + (boardRows(o.code, PORTS[o.other] && PORTS[o.other].short)[0][3]); },
+      over(cx, cy) { arrow(cx, cy, next()); },
       zones: [[0, 150, 372, 320, 'DEPARTURES', 'GATE ' + gate], [396, 150, X2, 336, 'ARRIVALS', o.welcome], [0, 320, 372, 456, 'SECURITY AND CHECK-IN', 'TICKETS AND PASSPORTS READY'], [396, 336, X2, 456, 'BAGGAGE CLAIM', 'CAROUSEL 3'], [0, 456, X2, 704, o.name, 'TRAINS, BUSES, SHOPS']],
       lay() { tRect(PL, 0, 0, 48, 44); },
       tick() { // the moving walkway carries you, and the arches beep as you walk through
+        const open = J.secured || pl.y < 316; /* shut to anyone without a pass, always open to anyone coming back out */ for (const [a, b] of [[76, 104], [172, 200], [268, 296]]) block(a, 316, b, 324, open ? 0 : 1);
+        if (J.secured && J.dest && !J.bstart && Math.hypot(pl.x - 186, pl.y - 200) < 120) J.bstart = G.t;
+        if (J.bstart) { const e = G.t - J.bstart, ng = e > 18 ? 3 : e > 11 ? 2 : e > 4 ? 1 : 0; if (ng > J.group) { J.group = ng; SND.pinpon(); NET.say(J.no + ' TO ' + PORTS[J.dest].short + ': NOW BOARDING GROUP ' + ng + (ng === 3 ? '. THAT IS YOU!' : '.'), 5); for (const a of M.ACT) if (a.pax === ng) a.go = 1; } }
+        for (const a of M.ACT) if (a.go && !a.hide) { if (a.y > 168) { a.y -= 24 / 60; a.x += (186 - a.x) / 30; a.mv = true; a.wt += 1 / 60; a.dir = 'u'; } else a.hide = 1; }
+        if (J.landed && J.bag && pl.y > 650) J.landed = 0;
         if (G.state !== 'play') return; if (pl.x > 708 && pl.x < 732 && pl.y > 178 && pl.y < 286) step(pl, 0, 40 / 60);
         const lane = [90, 186, 282].find(x => Math.abs(pl.x - x) < 12), on = lane && pl.y > 322 && pl.y < 342; if (on && !M.inArch) { M.inArch = 1; SND.beep(); const gd = M.ACT.find(n => n.guard === lane); if (gd) say(gd, pick(['PLEASE PROCEED.', 'THANK YOU. ENJOY YOUR FLIGHT.', 'ALL CLEAR.'])); } else if (!on) M.inArch = 0;
         if ((M.annT = (M.annT || 18) - 1 / 60) <= 0) { M.annT = 32 + rnd() * 10; SND.pinpon(); NET.say(pick(['FLIGHT TA ' + (100 + (worldTime() | 0) % 800) + ' TO ' + (PORTS[o.other] ? PORTS[o.other].short : 'OSAKA') + ' IS NOW BOARDING AT GATE ' + gate + '.', 'PLEASE DO NOT LEAVE YOUR BAGGAGE UNATTENDED.', 'THE MONORAIL TO THE CITY LEAVES FROM THE LOWER LEVEL.', 'WELCOME TO ' + o.name + '. WE HOPE YOU HAD A PLEASANT FLIGHT.']), 4); }
@@ -98,18 +104,22 @@ const AIR = (function () {
         R(g, 372, 158, 24, 298, '#c8d8e4'); R(g, 372, 158, 2, 298, '#ffffff'); R(g, 394, 158, 2, 298, '#8a9aaa'); for (let y = 170; y < 456; y += 28) R(g, 372, y, 24, 1, '#a8b8c4'); block(372, 158, 396, 456);
         // ---- departures: the gate lounge
         put(SPR.desk, 186, 190, 31, 21); block(156, 182, 216, 190); npc('office', 176, 176, { tint: '#2f5ab0', lines: ['GATE ' + gate + '. WHERE WOULD YOU LIKE TO FLY TODAY?'] }); npc('office', 200, 176, { tint: '#2f5ab0', dir: 'd', lines: ['WE BOW TO EVERY PLANE AS IT PUSHES BACK. IT IS ONLY POLITE.'] });
-        M.SPOTS.push({ x: 186, y: 198, r: 15, label: 'BOARD AT GATE ' + gate, fn: () => MENU.open('flight', null, { port: id }) });
+        M.SPOTS.push({ x: 186, y: 198, r: 15, label: 'BOARD AT GATE ' + gate, fn: board });
+        M.ACT.push({ x: 186, y: 190.5, sayT: 0, always: 1, draw(e, sx, sy) { if (!J.dest) return; const s = J.no + ' ' + PORTS[J.dest].short, w = tw(s) + 8; R(ctx, sx - w / 2, sy - 34, w, 9, '#1d1626'); txtC(ctx, s, sx, sy - 32, J.group >= 3 ? (G.t % 1 < 0.6 ? '#5ad88a' : '#2a6a4a') : '#f2c14e'); } });
+        [[150, 216, 1], [222, 216, 1], [96, 222, 2], [276, 222, 2], [150, 262, 2], [222, 262, 1]].forEach(([x, y, gp], i) => { const n = npc(['salary', 'office', 'granny', 'teen', 'tourist', 'kid'][i], x, y, { dir: 'u', lines: [gp === 1 ? 'GROUP ONE. WE ALWAYS BOARD FIRST, THEN SIT ON THE PLANE FOR HALF AN HOUR.' : 'GROUP TWO. THE MIDDLE OF EVERYTHING, AS USUAL.'] }); Object.assign(n, { pax: gp, x0: x, y0: y }); });
         txtC(g, 'GATE ' + gate, 186, 162, '#2f5ab0');
         for (const y of [240, 282]) for (const x of [52, 120, 252, 320]) { prop('seats', x, y, 26); M.SPOTS.push({ x, y: y + 7, r: 10, label: 'SIT DOWN', fn: () => RIDES.sitAt({ x, y }) }); }
         npc('tourist', 120, 226, { dir: 'd', lines: ['MY FLIGHT IS DELAYED. I HAVE EATEN FOUR SANDWICHES.'] }); npc('salary', 290, 268, { dir: 'd', lines: ['I FLY TO OSAKA AND BACK TWICE A WEEK. I KNOW EVERY CLOUD.'] }); npc('kid', 340, 214, { rad: 20, lines: ['THAT PLANE IS AS BIG AS A HOUSE!', 'TWO HOUSES!'] });
-        if (o.window) M.SPOTS.push({ x: 86, y: 168, r: 16, label: 'LOOK OUT', stamp: o.window[0], act: 'snap', lines: o.window[1] });
+        if (o.window) M.SPOTS.push({ x: 470, y: 172, r: 16, label: 'LOOK OUT', stamp: o.window[0], act: 'snap', lines: o.window[1] });
         // security: three lanes, each with an arch, an x-ray belt and a guard
         R(g, 0, 318, 372, 6, '#8a8496'); R(g, 0, 318, 372, 1, '#c8c0d4'); for (const [a, b] of [[0, 76], [104, 172], [200, 268], [296, 372]]) block(a, 316, b, 324);
         for (const x of [90, 186, 282]) { put(SPR.arch, x, 340, 17, 39); block(x - 17, 334, x - 12, 340); block(x + 12, 334, x + 17, 340); prop('xray', x + 40, 340, 22); M.ACT.push(Object.assign(npc('office', x - 30, 346, { tint: '#3a3a4e', dir: 'r', lines: ['NO LIQUIDS OVER A HUNDRED MILLILITRES, PLEASE.'] }), { guard: x })); }
-        txtC(g, 'SECURITY', 186, 306, '#8a8496');
+        txtC(g, 'SECURITY', 186, 306, '#8a8496'); M.SPOTS.push({ x: 186, y: 362, r: 14, label: 'PUT YOUR THINGS IN THE TRAYS', fn: () => { if (!J.checked) { Snd.fx('talk'); dialog(['"BOARDING PASS, PLEASE." YOU HAVE NOT CHECKED IN YET.', 'THE TABI AIR COUNTERS ARE JUST BEHIND YOU. CHOOSE WHERE TO FLY THERE.']); return; } if (J.secured) { dialog(['YOU ARE THROUGH ALREADY. YOUR GATE IS UPSTAIRS: GATE ' + gate + '.']); return; } G.state = 'mini'; G.mg = { k: 'atray', sp: {}, t: 0 }; MG.atray.init(G.mg); Snd.fx('ui'); } });
         // check-in counters, with an aisle to security
-        for (const x of [60, 140, 220]) { put(SPR.desk, x, 420, 31, 21); block(x - 30, 412, x + 30, 420); npc('office', x, 404, { tint: '#3f9a5a', dir: 'd', lines: ['CHECK-IN IS OPEN. HAVE A NICE FLIGHT.'] }); M.SPOTS.push({ x, y: 430, r: 14, label: 'CHECK IN', fn: checkIn }); }
+        for (const x of [60, 140, 220]) { put(SPR.desk, x, 420, 31, 21); block(x - 30, 412, x + 30, 420); npc('office', x, 404, { tint: '#3f9a5a', dir: 'd', lines: ['CHECK-IN IS OPEN. HAVE A NICE FLIGHT.'] }); M.SPOTS.push({ x, y: 430, r: 14, label: 'CHECK IN', fn: () => MENU.open('flight', null, { port: id }) }); }
         for (let x = 30; x < 250; x += 10) { R(g, x, 380, 1, 8, '#8a8496'); } R(g, 30, 381, 220, 1, '#c8382e');
+        put(SPR.desk, 316, 420, 31, 21); block(286, 412, 346, 420); M.ACT.push({ x: 316, y: 420.5, sayT: 0, always: 1, draw(e, sx, sy) { const by = sy - 58; R(ctx, sx - 1, by + 12, 2, 10, '#6b6478'); R(ctx, sx - 27, by - 1, 54, 14, '#1d1626'); R(ctx, sx - 26, by, 52, 12, '#c8a040'); R(ctx, sx - 26, by, 52, U, '#f2d880'); txtC(ctx, 'EXPRESS', sx, by + 3.5, '#1d1626'); } }); npc('office', 316, 404, { tint: '#c8a040', dir: 'd', lines: ['EXPRESS LANE. TELL ME WHERE, AND I WILL HAVE YOU IN YOUR SEAT IN A MINUTE.'] });
+        M.SPOTS.push({ x: 316, y: 430, r: 14, label: 'EXPRESS: STRAIGHT TO YOUR SEAT', fn: () => MENU.open('flight', null, { port: id, express: 1 }) });
         // ---- arrivals: the door from the plane, a moving walkway, immigration
         R(g, 556, 158, 48, 4, '#3f9a5a'); txtC(g, 'ARRIVALS', 580, 164, '#3f9a5a');
         M.ACT.push({ x: 720, y: 290, sayT: 0, always: 1, draw(e, x, y) { const top = y - 112; R(ctx, x - 12, top, 24, 112, '#3a3a4e'); R(ctx, x - 12, top, 2, 112, '#8a8496'); R(ctx, x + 10, top, 2, 112, '#8a8496'); const o2 = (G.t * 20) % 10; for (let k = -1; k < 12; k++) { const yy = top + k * 10 + o2; if (yy > top && yy < y - 3) { R(ctx, x - 4, yy, 8, 1, '#f2c14e'); R(ctx, x - 2, yy + 1, 4, 1, '#f2c14e'); } } } });
@@ -165,15 +175,15 @@ const AIR = (function () {
   }
 
   // ---------- things to do in the terminal ----------
-  function passport() { const st = PORTS[M.id] && PORTS[M.id].passport; Snd.fx('stamp');
+  function passport() { const st = PORTS[M.id] && PORTS[M.id].passport; if (J.landed && !J.intl) { Snd.fx('talk'); dialog(['THESE BOOTHS ARE FOR INTERNATIONAL ARRIVALS. YOU FLEW IN FROM INSIDE JAPAN.', 'STRAIGHT ON TO BAGGAGE CLAIM, THEN.']); return; } J.pp = 1; Snd.fx('stamp');
     dialog(['THE OFFICER LOOKS AT YOUR PASSPORT, THEN AT YOU, THEN AT YOUR PASSPORT.', 'THUNK. A NEAT STAMP WITH TODAY\'S DATE. "WELCOME TO JAPAN."'], st && STAMPS[st] ? () => award(st) : null); }
   function checkIn() { const n = CLIST.filter(c => Object.keys(c.stamps).some(k => G.stamps[k])).length; Snd.fx('page');
     dialog(['YOUR SUITCASE GOES ON THE SCALE: ' + (12 + n * 3) + ' KILOS. ' + (n > 1 ? 'IT WAS 12 WHEN YOU ARRIVED. SOUVENIRS ARE HEAVY.' : 'NICE AND LIGHT. FOR NOW.'), 'IT GLIDES AWAY ON THE BELT. SEE YOU AT THE OTHER END.']); }
   function icCard() { Snd.fx('coin'); setTimeout(() => SND.beep(), 400); if (G.ic) { dialog(['YOUR CARD STILL HAS PLENTY ON IT. THE MACHINE BEEPS HAPPILY ANYWAY.']); return; } G.ic = 1; save(); dialog(['A LITTLE CARD WITH A BIRD ON IT. TAP IT ON ANY GATE AND THE TRAINS ARE YOURS.', 'IT WORKS IN EVERY CITY. FROM NOW ON THE GATES GO PI! WHEN YOU PASS.']); }
 
   // ---------- flying ----------
-  function fly(to, o) { const P = PORTS[to], sea = to === 'oka' || M.id === 'oka', snow = to === 'cts' || M.id === 'cts'; G.state = 'ride'; G.ride = Object.assign({ plane: 1, t: 0, dur: 8, label: 'FLIGHT TO', name: P.name, go: [to, 580, 184, 'd'], fuji: !snow, sea, snow: to === 'cts', then: () => { NET.say('WELCOME TO ' + P.short + '. FOLLOW THE SIGNS TO ARRIVALS.', 4); if (STAMPS.flight && !G.stamps.flight) award('flight'); } }, o || {}); Snd.play(null); SND.pinpon(); }
-  function intro() { const H_ = Object.keys(PORTS)[0]; G.arrived = 1; save(); fly(H_, { label: 'NOW LANDING AT', dur: 6.5, landing: 1, then: () => { G.banner = 4; NET.say('WELCOME TO JAPAN! FOLLOW THE GREEN SIGNS TO ARRIVALS.', 6); } }); }
+  function fly(to, o) { const P = PORTS[to], sea = to === 'oka' || M.id === 'oka' || to === 'bkk', snow = to === 'cts' || M.id === 'cts'; G.state = 'ride'; G.ride = Object.assign({ plane: 1, t: 0, dur: 8, label: 'FLIGHT TO', name: P.name, go: P.go || [to, 580, 184, 'd'], fuji: !snow, sea, snow: to === 'cts', then: () => { if (P.then) P.then(); NET.say(P.msg || 'WELCOME TO ' + P.short + '. FOLLOW THE SIGNS TO ARRIVALS.', 4); if (!P.intl && STAMPS.flight && !G.stamps.flight) award('flight'); } }, o || {}); Snd.play(null); SND.pinpon(); }
+  function intro() { const H_ = Object.keys(PORTS)[0]; G.arrived = 1; save(); fly(H_, { label: 'NOW LANDING AT', dur: 6.5, landing: 1, then: () => { landed(1); G.banner = 4; NET.say('WELCOME TO JAPAN! FOLLOW THE GREEN SIGNS TO ARRIVALS.', 6); } }); }
   function home() { const back = M.id; G.state = 'ride'; G.ride = { plane: 1, t: 0, dur: 8, label: 'FLIGHT HOME', name: 'SAYONARA, JAPAN', go: [back, 186, 214, 'd'], then: () => { G.state = 'scrap'; G.scrap = { t: 0, sel: 0 }; Snd.play('fuji'); } }; Snd.play(null); SND.pinpon(); }
   // the view from a window seat: take-off, the cloud sea (with Fuji poking through), the descent, the landing
   function drawFlight(r) {
@@ -205,7 +215,7 @@ const AIR = (function () {
   const BAGS = {
     init(m) { const mine = (LOOKOPT.bag[G.look.bag] || [0, '#2f5ab0'])[1] || '#2f5ab0'; m.cases = []; for (let k = 0; k < 12; k++) m.cases.push({ a: k / 12, c: k === 7 ? mine : k % 3 === 0 ? mine : CASEC[(k * 5) % CASEC.length], tag: k === 7 ? '#e0452f' : k % 3 === 0 ? '#f2c14e' : null, me: k === 7 }); m.msg = ''; m.mt = 0; m.done = 0; m.mine = mine; },
     update(m, dt) { for (const c of m.cases) c.a = (c.a + dt * 0.045) % 1; if (m.mt > 0) m.mt -= dt;
-      if (m.done) { if (m.t > m.done + 1) endMini(true, ['YOU HAUL YOUR SUITCASE OFF THE BELT. THE RED RIBBON WAS A GOOD IDEA.', 'SOMEONE HAS ALREADY TURNED IT HANDLE-UP FOR YOU.']); return; }
+      if (m.done) { if (m.t > m.done + 1) { J.bag = 1; endMini(true, ['YOU HAUL YOUR SUITCASE OFF THE BELT. THE RED RIBBON WAS A GOOD IDEA.', 'SOMEONE HAS ALREADY TURNED IT HANDLE-UP FOR YOU.']); } return; }
       if (KP.a) { const near = m.cases.map(c => [c, Math.abs(((c.a - 0.25 + 1.5) % 1) - 0.5)]).sort((a, b) => a[1] - b[1])[0]; if (near[1] < 0.03) { if (near[0].me) { m.done = m.t; Snd.fx('yay'); } else { m.msg = near[0].tag === '#f2c14e' ? 'NOT YOURS: YELLOW RIBBON.' : 'NOT YOURS AT ALL.'; m.mt = 1.2; Snd.fx('land'); } } else { m.msg = 'NOTHING IN FRONT OF YOU.'; m.mt = 0.8; Snd.fx('talk'); } } },
     draw(m) { txtC(ctx, 'BAGGAGE CLAIM', 160, 30, '#c8382e', null, 2); const x = 160, y = 82;
       ell(ctx, x, y + 4, 108, 32, '#3a3446'); ell(ctx, x, y + 2, 102, 28, '#5a5468'); ell(ctx, x, y + 2, 82, 16, '#c8c0d4'); R(ctx, x - 12, y + 26, 24, 6, 'rgba(242,193,78,0.5)');
@@ -222,7 +232,7 @@ const AIR = (function () {
     const s = G.scrap, t = s.t; R(ctx, 0, 0, W, H, '#2a2236'); for (let k = 0; k < 40; k++) p1(ctx, (k * 97) % W, (k * 61) % H, '#5a4a6a');
     const pw = Math.min(W - 16, 300), ph = Math.min(H - 60, 220), px = Math.floor((W - pw) / 2), py = 8; R(ctx, px + 2, py + 2, pw, ph, '#1a1424'); R(ctx, px, py, pw, ph, '#f4ead4'); R(ctx, px + pw / 2 - U, py, 1, ph, '#d8c8a8');
     txtC(ctx, 'YOUR TRIP', W / 2, py + 6, '#c8382e', null, 2);
-    const visited = CLIST.filter(c => Object.keys(c.stamps).some(k => G.stamps[k])), lines = [['CITIES', visited.length + ' OF ' + CLIST.length], ['STAMPS', count(G.stamps) + ' OF ' + count(STAMPS)], ['CATS PETTED', count(G.cats)], ['DRINKS TRIED', count(G.cans)], ['FIGURES', count(G.figs)], ['WISHES HUNG', count(G.ema || {})], ['STEPS', Math.floor(G.steps || 0).toLocaleString('en').replace(/,/g, ' ')]];
+    const visited = CLIST.filter(c => Object.keys(c.stamps).some(k => G.stamps[k])), lines = [['CITIES', visited.length + ' OF ' + CLIST.length], ['STAMPS', count(G.stamps) + ' OF ' + count(STAMPS)], ['CATS PETTED', count(G.cats)], ['DRINKS TRIED', count(G.cans)], ['FIGURES', count(G.figs)], ['WISHES HUNG', count(G.ema || {})], ['SEATS GIVEN UP', G.seats || 0], ['STEPS', Math.floor(G.steps || 0).toLocaleString('en').replace(/,/g, ' ')]];
     const lx = px + 10; lines.forEach(([a, b], i) => { if (t < 0.3 + i * 0.18) return; txt(ctx, a, lx, py + 24 + i * 10, '#8a7a6a'); txt(ctx, String(b), px + pw / 2 - 8 - tw(String(b)), py + 24 + i * 10, '#3a2e40'); });
     txt(ctx, visited.map(c => c.name).join(', ') || 'JUST THE AIRPORT', lx, py + 24 + lines.length * 10 + 4, '#3f7ab0');
     const got_ = Object.keys(G.stamps).filter(k => STAMPS[k]), cols = Math.max(1, Math.floor((pw / 2 - 16) / 16)); got_.slice(0, cols * Math.floor((ph - 40) / 16)).forEach((k, i) => { if (t < 0.6 + i * 0.05) return; const x = px + pw / 2 + 10 + (i % cols) * 16, y = py + 26 + (i / cols | 0) * 16; ctx.save(); ctx.translate(x + 6, y + 6); ctx.rotate(((i * 37) % 9 - 4) * 0.04); ctx.drawImage(stampOf(STAMPS[k][1]), -6, -6); ctx.restore(); });
@@ -230,6 +240,95 @@ const AIR = (function () {
     const b = scrapButtons(); [['KEEP WANDERING', 'BACK TO THE AIRPORT'], ['START A NEW TRIP', '']].forEach(([a], i) => { const [x, y, w, h] = b[i]; R(ctx, x, y, w, h, i === s.sel ? '#c8382e' : '#3a3046'); txtC(ctx, a, x + w / 2, y + 5, '#fff8e8'); });
   }
 
-  return { airport, sprites, fly, intro, home, drawFlight, rideTick, scrapUpdate, scrapDraw, PORTS, minis: { bags: BAGS } };
+  // ---------- flying from here, step by step ----------
+  // At the TABI AIR counters you choose where to fly and check in (bag on the scale, window or aisle); your boarding pass
+  // names the gate and your group. Security lets you through once everything is in the right tray. At the gate the
+  // groups are called in turn and the people around you board with theirs; at yours, you walk on, find your row on the
+  // plane and fly, with tea or a meal on the way. Arriving, the note at the top and an arrow at the edge of the screen lead
+  // from the jet bridge to passport control (from abroad), the carousel, and out to the trains.
+  const J = { dest: null, checked: 0, secured: 0, bstart: 0, group: 0, row: 24, seat: 'A', no: 'TA 101', landed: 0, bag: 0, intl: 0, pp: 0, seated: 0 };
+  const gateOf = () => (MAPS[M.id] && MAPS[M.id].gate) || 1;
+  function next() { if (!M.def.airport) return null;
+    if (J.landed) return J.intl && !J.pp ? [560, 290, 'PASSPORT CONTROL'] : !J.bag ? [580, 420, 'BAGGAGE CLAIM: CAROUSEL 3'] : [200, 676, 'TRAINS, OR THE BUS INTO TOWN'];
+    if (!J.dest) return null; if (!J.checked) return [140, 432, 'CHECK IN AT TABI AIR']; if (!J.secured) return [186, 362, 'SECURITY'];
+    return [186, 200, J.group >= 3 ? 'BOARD NOW: GATE ' + gateOf() : J.bstart ? 'GATE ' + gateOf() + ' - BOARDING GROUP ' + Math.max(1, J.group) : 'TO GATE ' + gateOf()]; }
+  // the arrow at the edge of the screen toward whatever is next
+  function arrow(cx, cy, n) { if (!n || G.state !== 'play') return; const dx = n[0] - pl.x, dy = n[1] - pl.y; if (Math.hypot(dx, dy) < 60) return;
+    const sx = n[0] - cx, sy = n[1] - cy; if (sx > 10 && sx < W - 10 && sy > 30 && sy < H - 10) { const b = Math.abs(Math.sin(G.t * 4)) * 3; R(ctx, sx - 2, sy - 38 - b, 4, 6, '#f2c14e'); for (let k = 0; k < 4; k++) R(ctx, sx - 4 + k, sy - 33 - b + k, 8 - k * 2, 1, '#f2c14e'); return; }
+    const a = Math.atan2(dy, dx), ax = W / 2 + Math.cos(a) * (W / 2 - 14), ay = H / 2 + Math.sin(a) * (H / 2 - 14), p = 1 + Math.sin(G.t * 5) * 0.15; ctx.save(); ctx.translate(Math.max(14, Math.min(W - 14, ax)), Math.max(14, Math.min(H - 14, ay))); ctx.rotate(a); ctx.scale(p, p);
+    ctx.fillStyle = '#1d1626'; ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(-5, -6); ctx.lineTo(-2, 0); ctx.lineTo(-5, 6); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#f2c14e'; ctx.beginPath(); ctx.moveTo(6.5, 0); ctx.lineTo(-4, -4.5); ctx.lineTo(-1.5, 0); ctx.lineTo(-4, 4.5); ctx.closePath(); ctx.fill(); ctx.restore(); }
+  function checkin(to) { G.state = 'mini'; G.mg = { k: 'acheck', sp: { to }, t: 0 }; MG.acheck.init(G.mg); Snd.fx('ui'); }
+  // the express lane: bag tagged, pass printed, walked past security and the queue, and straight into your seat
+  const flightNo = to => 'TA ' + (100 + ((to.length * 97 + gateOf() * 31 + Math.floor(worldTime() / 600)) % 800));
+  function express(to) { const P = PORTS[to]; Object.assign(J, { dest: to, from: M.id, checked: 1, secured: 1, bstart: 0, group: 3, row: 14 + Math.floor(Math.random() * 20), seat: 'A', no: flightNo(to), landed: 0, seated: 3, intl: P.intl ? 1 : 0, exp: 1 }); G.back = null; G.bstack = []; SND.beep(); setTimeout(SND.beep, 120);
+    dialog(['"EXPRESS? RIGHT THIS WAY." YOUR CASE IS TAGGED AND GONE, A BOARDING PASS FOR ' + J.no + ' TO ' + P.short + ' IS PRINTED, AND A MEMBER OF STAFF WALKS YOU PAST SECURITY AND EVERY QUEUE.', 'DOWN THE JET BRIDGE, INTO SEAT ' + J.row + J.seat + ', SEATBELT ON. THE DOORS CLOSE BEHIND YOU.'], takeoff); }
+  const skipArrival = () => Object.assign(J, { landed: 0, bag: 1, pp: 1, exp: 0 }); // express arrivals: no passport queue, no carousel
+  function landed(intl) { Object.assign(J, { dest: null, checked: 0, secured: 0, bstart: 0, group: 0, landed: 1, bag: 0, intl: intl ? 1 : 0, pp: 0, seated: 0 }); }
+  function board() { if (!J.checked || !J.dest) { Snd.fx('talk'); dialog(['"MAY I SEE YOUR BOARDING PASS?" YOU DO NOT HAVE ONE.', '"CHECK-IN IS AT THE TABI AIR COUNTERS DOWNSTAIRS, BEFORE SECURITY."']); return; }
+    if (J.group < 3) { Snd.fx('talk'); dialog(['"WE ARE BOARDING GROUP ' + Math.max(1, J.group) + ' NOW. YOU ARE GROUP 3. PLEASE HAVE A SEAT; WE WILL CALL YOU."']); return; }
+    SND.beep(); setTimeout(SND.beep, 120); G.back = null; G.bstack = []; MAPS.cabin.city = CITY.id; MAPS.cabin.name = J.no + ' TO ' + PORTS[J.dest].short;
+    dialog(['THE SCANNER BEEPS GREEN. "SEAT ' + J.row + J.seat + '. HAVE A NICE FLIGHT." THE TWO STAFF BOW AT EXACTLY THE SAME MOMENT.', 'DOWN THE JET BRIDGE, PAST A CABIN CREW WHO SAY GOOD MORNING IN TWO LANGUAGES, AND INTO THE CABIN.'], () => go('cabin', 36, 96, 'r')); }
+  // the cabin: find your row by the numbers on the floor, sit, and the plane takes off
+  const seatX = row => 78 + (row - 10) * 20, SEATY = { A: 36, B: 52, C: 68, D: 124, E: 140, F: 156 };
+  MAPS.cabin = { indoor: 1, station: 1, name: 'ON BOARD', sub: 'FIND YOUR SEAT', tw: 44, th: 12, music: 'fuji', floor: 'tile', city: 'tokyo',
+    hud: () => J.seated ? null : 'NEXT: FIND SEAT ' + J.row + J.seat,
+    enter() { J.seated = 0; const sp = M.SPOTS.find(s => s.seat); if (sp) { sp.x = seatX(J.row); sp.label = 'SIT IN ' + J.row + J.seat; } NET.say('WELCOME ABOARD TABI AIR ' + J.no + '. YOUR ROW NUMBER IS ON THE FLOOR BY EACH ROW.', 5); },
+    tick() { const t = Snd.ctx && Snd.ctx.state === 'running' ? Snd.ctx.currentTime : 0; if (t && Math.floor(G.t * 1.5) !== Math.floor((G.t - 1 / 60) * 1.5)) Snd.noise(t, 0.7, 0.012, 80, 400, Snd.sfx); if (J.seated === 2 && G.state === 'play') { J.seated = 3; takeoff(); } },
+    over(cx, cy) { if (!J.seated) arrow(cx, cy, [seatX(J.row), 96]); },
+    deco() { M.floor = 'tile'; const g = M.ground.g;
+      R(g, 0, 0, 704, 192, '#15101f'); ell(g, 680, 96, 40, 78, '#e8e4ec'); R(g, 10, 18, 670, 156, '#e8e4ec'); R(g, 10, 18, 670, 3, '#ffffff'); R(g, 10, 171, 670, 3, '#c8c4cc');
+      for (let x = 30; x < 670; x += 20) for (const y of [21, 168]) { ell(g, x, y + 1.5, 4, 2, '#2a3a5a'); ell(g, x - 1, y + 1, 2, 1, '#5a7aa8'); }
+      R(g, 20, 86, 650, 20, '#3a4a7a'); for (let x = 20; x < 670; x += 6) R(g, x, 86, 3, 20, '#344470'); R(g, 20, 86, 650, 1, '#5a6a9a'); R(g, 20, 105, 650, 1, '#2a3460');
+      for (let row = 10; row < 40; row++) { const x = seatX(row); txtC(g, String(row), x, 88, '#8a9ac8'); for (const y of Object.values(SEATY)) { R(g, x - 7, y - 7, 14, 12, '#2f3a6a'); R(g, x - 7, y - 7, 14, 3, '#4a5a9a'); R(g, x - 7, y - 7, 2, 12, '#24305a'); } }
+      R(g, 640, 30, 30, 50, '#d8d4dc'); txtC(g, 'GALLEY', 655, 50, '#8a8496'); R(g, 640, 110, 30, 52, '#d8d4dc'); txtC(g, 'WC', 655, 132, '#8a8496'); R(g, 14, 30, 28, 50, '#d8d4dc'); R(g, 14, 110, 28, 52, '#d8d4dc');
+      block(0, 0, 704, 86); block(0, 106, 704, 192); block(670, 0, 704, 192); block(0, 0, 18, 192);
+      const COL = ['#2a2430', '#5a3a28', '#c9824a', '#3a2a2a', '#cfc9d6', '#1c1822'];
+      M.ACT.push({ x: 0, y: 1, sayT: 0, always: 1, draw(e, sx, sy) { const cx = e.x - sx, cy = e.y - sy + 1, hx = seatX(J.row) - cx; R(ctx, hx - 6, 88 - cy, 12, 6, 'rgba(242,193,78,0.35)'); txtC(ctx, String(J.row), hx, 88 - cy, '#f2c14e');
+        for (let row = 10; row < 40; row++) for (const [s, y] of Object.entries(SEATY)) { const x = seatX(row) - cx, yy = y - cy; if (x < -10 || x > W + 10) continue; if (row === J.row && s === J.seat) { if (J.seated) { disc(ctx, x, yy - 2, 4, '#f1c9a0'); R(ctx, x - 4, yy - 6, 8, 3, '#3a2a2a'); R(ctx, x - 5, yy + 1, 10, 4, '#3f7ab0'); } continue; } const h = hsh(row * 3 + J.row, s.charCodeAt(0)); if (h < 0.2) continue; disc(ctx, x, yy - 2, 3.6, COL[(h * 6) | 0]); R(ctx, x - 4, yy + 1, 8, 4, ['#e0563f', '#5aa8e0', '#f2c14e', '#5aa85a', '#f4f1e6', '#8a6aff'][(h * 37 | 0) % 6]); } } });
+      npc('office', 200, 96, { tint: '#2f5ab0', dir: 'l', lines: ['GOOD MORNING. YOUR ROW NUMBER IS ON THE FLOOR, BY THE AISLE.'] }); npc('office', 600, 96, { tint: '#2f5ab0', dir: 'l', lines: ['BAGS IN THE LOCKERS ABOVE, OR UNDER THE SEAT IN FRONT, PLEASE.'] });
+      M.SPOTS.push({ x: seatX(24), y: 96, r: 13, label: 'SIT DOWN', seat: 1, fn: () => { Snd.fx('ui'); J.seated = 1; G.hidePl = 1; dialog([J.seat === 'A' ? 'YOUR WINDOW SEAT. OUTSIDE, A MAN WITH TWO ORANGE WANDS, AND THE GROUND CREW LINED UP TO WAVE THE PLANE AWAY.' : 'THE AISLE SEAT. YOU CAN STRETCH ONE LEG OUT, AND NOBODY HAS TO CLIMB OVER YOU.', 'SEATBELT ON. THE CREW CHECK EVERY ONE, SMILING, AND THE PLANE STARTS TO ROLL.'], () => { J.seated = 2; }); } });
+      M.st = [36, 96]; M.LIGHTS = [];
+    } };
+  const SERVE = { dom: ['"GREEN TEA OR APPLE JUICE?"', [['GREEN TEA', 'HOT GREEN TEA IN A PAPER CUP, AND A LITTLE PACKET OF RICE CRACKERS SHAPED LIKE TINY SNACK MOONS.'], ['APPLE JUICE', 'APPLE JUICE FROM AOMORI, WHERE THE APPLES ARE FAMOUS. IT TASTES LIKE BITING INTO ONE.']]], intl: ['"CHICKEN OR FISH?"', [['CHICKEN', 'GREEN CURRY WITH CHICKEN AND JASMINE RICE. IT IS GENUINELY SPICY.'], ['FISH', 'TERIYAKI SALMON WITH RICE AND A LITTLE PICKLE, AT THIRTY-FIVE THOUSAND FEET.']]] };
+  function takeoff() { const to = J.dest, P = PORTS[to], from = J.from || M.id, intl = !!P.intl, sv = SERVE[intl ? 'intl' : 'dom'], sea = to === 'oka' || to === 'bkk' || CITY.id === 'okinawa', snow = to === 'cts'; G.hidePl = 0; G.state = 'ride'; Snd.play(null); SND.pinpon();
+    G.ride = { plane: 1, t: 0, dur: intl ? 16 : 10, label: J.no + ' TO', name: P.name, go: P.go || [to, 580, 184, 'd'], sea, snow, fuji: !snow && !intl, meal: 0, pick: 0,
+      upd(r, dt) { if (r.t > r.dur * 0.3 && r.meal === 0) { r.meal = 1; Snd.fx('chime'); } if (r.meal === 1) { if (TAP) { r.pick = TAP.x > W / 2 ? 1 : 0; TAP = null; KP.a = 1; } if (KP.l) r.pick = 0; if (KP.r) r.pick = 1; if (KP.l || KP.r) Snd.fx('ui'); if (KP.a || r.t > r.dur * 0.62) { r.meal = 2; r.mt = r.t; Snd.fx(intl ? 'munch' : 'slurp'); } } },
+      over(r) { const p = Math.min(1, r.t / r.dur), bw = Math.min(W - 20, 200), bx = (W - bw) / 2, by = 6; panel(bx, by, bw, 20); txt(ctx, (PORTS[from] || { code: '' }).code || '', bx + 6, by + 4, '#3a2e40'); txt(ctx, P.code, bx + bw - 18, by + 4, '#3a2e40'); for (let x = bx + 22; x < bx + bw - 22; x += 3) p1(ctx, x, by + 14, '#8a7a6a'); const px = bx + 22 + (bw - 44) * p; R(ctx, px - 3, by + 13, 7, 2, '#2f5ab0'); R(ctx, px - 1, by + 11, 2, 6, '#2f5ab0');
+        const left = Math.max(0, Math.round((1 - p) * (intl ? 360 : 80))); txtC(ctx, (left >= 60 ? Math.floor(left / 60) + 'H ' : '') + String(left % 60).padStart(2, '0') + 'M TO ' + P.short, W / 2, by + 4, '#8a7a6a');
+        if (r.meal === 1) { const w = Math.min(W - 20, 220), x = (W - w) / 2, y = H * 0.62; panel(x, y, w, 34); txtC(ctx, sv[0], W / 2, y + 5, '#3a2e40'); sv[1].forEach(([n], i) => { const b2 = x + 10 + i * (w / 2 - 5); R(ctx, b2, y + 16, w / 2 - 15, 12, r.pick === i ? '#c8382e' : '#5a5468'); txtC(ctx, n, b2 + (w / 2 - 15) / 2, y + 19, '#fff8e8'); }); }
+        else if (r.meal === 2 && r.t - r.mt < 3) { const w = Math.min(W - 16, 260), ls = wrap(sv[1][r.pick][1], w - 12), y = H * 0.62; panel((W - w) / 2, y, w, 8 + ls.length * 7); ls.forEach((l, i) => txtC(ctx, l, W / 2, y + 4 + i * 7, '#3a2e40')); } },
+      then: () => { const ex = J.exp; if (P.then) P.then(); else landed(0); if (ex) skipArrival(); NET.say(P.msg || 'WELCOME TO ' + P.short + (ex ? '. EXPRESS: YOUR BAG IS ALREADY WAITING BY THE EXIT.' : '. FOLLOW THE SIGNS TO BAGGAGE CLAIM.'), 4); if (!intl && STAMPS.flight && !G.stamps.flight) award('flight'); } }; }
+  // check-in: choose the flight, put your case on the scale, window or aisle, and the boarding pass prints
+  const ACHECK = {
+    init(m) { m.to = m.sp.to; m.ph = 'bag'; m.lift = 0; m.kg = 0; m.seat = 0; m.pt = 0; const n = CLIST.filter(c => Object.keys(c.stamps).some(k => G.stamps[k])).length; m.want = 12 + n * 2.5 + (G.umbrella ? 0.4 : 0); m.no = flightNo(m.to); m.from = M.id; },
+    update(m, dt) { m.pt += dt;
+      if (m.ph === 'bag') { if (K.a) m.lift = Math.min(1, m.lift + dt * 0.9); else m.lift = Math.max(0, m.lift - dt * 1.4); if (m.lift >= 1) { m.ph = 'scale'; m.pt = 0; Snd.fx('land'); } }
+      else if (m.ph === 'scale') { m.kg = Math.min(m.want, m.kg + dt * 22); if (m.pt > 1.4) { m.ph = 'seat'; m.pt = 0; } }
+      else if (m.ph === 'seat') { if (KP.l || KP.r) { m.seat ^= 1; Snd.fx('ui'); } if (KP.a && m.pt > 0.2) { m.ph = 'print'; m.pt = 0; Snd.fx('gacon'); } }
+      else if (m.ph === 'print' && m.pt > 2) { Object.assign(J, { exp: 0, dest: m.to, from: m.from, checked: 1, secured: 0, bstart: 0, group: 0, row: 14 + Math.floor(Math.random() * 20), seat: m.seat ? 'C' : 'A', no: m.no, landed: 0, seated: 0, intl: PORTS[m.to].intl ? 1 : 0 });
+        for (const a of M.ACT) if (a.pax) { a.hide = 0; a.go = 0; a.x = a.x0; a.y = a.y0; }
+        endMini(true, ['"HERE IS YOUR BOARDING PASS. ' + J.no + ' TO ' + PORTS[m.to].short + ', GATE ' + gateOf() + ', GROUP 3. SECURITY IS JUST BEHIND YOU."', 'SHE HOLDS IT OUT WITH BOTH HANDS AND A SMALL BOW, AND YOUR CASE GLIDES AWAY DOWN THE BELT.']); } },
+    draw(m) { txtC(ctx, 'TABI AIR CHECK-IN', 160, 26, '#2f5ab0', null, 2); R(ctx, 56, 38, 208, 80, '#e8e4ec'); R(ctx, 56, 96, 208, 22, '#c89a6a'); R(ctx, 56, 96, 208, 2, '#f0d0a0'); R(ctx, 70, 92, 60, 6, '#8a8496'); R(ctx, 140, 90, 110, 8, '#5a5468'); for (let x = 140 + ((G.t * 20) % 8); x < 250; x += 8) R(ctx, x, 92, 3, 1, '#8a8496');
+      const caseC = (LOOKOPT.bag[G.look.bag] || [0, '#2f5ab0'])[1] || '#2f5ab0';
+      if (m.ph === 'bag') { const y = 92 - m.lift * 14; R(ctx, 84, y - 26, 32, 26, caseC); R(ctx, 84, y - 26, 32, 2, lite(caseC, 0.35)); R(ctx, 96, y - 30, 8, 4, '#2a2430'); R(ctx, 110, y - 22, 3, 8, '#e0452f'); R(ctx, 70, 104, 60, 4, '#d9cba8'); R(ctx, 70, 104, 60 * m.lift, 4, '#5ad88a'); txtC(ctx, 'TO ' + PORTS[m.to].name + ': HOLD E TO LIFT YOUR CASE ONTO THE SCALE', 160, 130, '#3a2e40'); return; }
+      if (m.ph === 'scale') { R(ctx, 84, 66, 32, 26, caseC); R(ctx, 96, 62, 8, 4, '#2a2430'); R(ctx, 76, 44, 48, 14, '#1d1626'); txtC(ctx, m.kg.toFixed(1) + ' KG', 100, 48, '#5ad88a'); txtC(ctx, m.want > 15 ? 'HEAVIER THAN WHEN YOU ARRIVED. SOUVENIRS!' : 'LIMIT 20 KG. FINE!', 160, 130, '#3a2e40'); return; }
+      if (m.ph === 'seat') { txtC(ctx, '"WINDOW OR AISLE?"', 160, 50, '#3a2e40'); [['WINDOW', 0], ['AISLE', 1]].forEach(([s, v], i) => { const x = 82 + i * 82; R(ctx, x, 64, 74, 18, m.seat === v ? '#c8382e' : '#5a5468'); txtC(ctx, s, x + 37, 70, '#fff8e8'); }); txtC(ctx, '< > CHOOSE, E TO CONFIRM', 160, 130, '#3a2e40'); return; }
+      const q = Math.min(1, m.pt / 0.8); R(ctx, 80, 46, 160, 40 * q, '#f4ead4'); R(ctx, 80, 46, 160, 2, '#2f5ab0'); if (q >= 1) { txt(ctx, 'BOARDING PASS  TABI AIR', 84, 50, '#2f5ab0'); txt(ctx, m.no + '  ' + (PORTS[M.id] || { code: '' }).code + ' > ' + PORTS[m.to].code, 84, 58, '#3a2e40'); txt(ctx, (m.seat ? 'AISLE' : 'WINDOW') + '  GROUP 3', 84, 66, '#3a2e40'); txt(ctx, 'GATE ' + gateOf(), 84, 74, '#c8382e'); for (let x = 200; x < 236; x += 2) R(ctx, x, 60, 1, 18, (x * 7) % 3 ? '#1d1626' : '#f4ead4'); }
+      txtC(ctx, 'YOUR BOARDING PASS!', 160, 130, '#3a2e40'); }
+  };
+  // security: each thing in a tray of its own, left in your bag, or in the bin
+  const TRAYI = [['LAPTOP', 'l', '#3a3a4e'], ['A BIG BOTTLE OF WATER', 'd', '#5ab8e8'], ['YOUR JACKET', 'l', '#c8382e'], ['A PAPERBACK BOOK', 'r', '#f2c14e'], ['LITTLE BOTTLES IN A CLEAR BAG', 'l', '#bfe8ff'], ['PHONE, KEYS AND COINS', 'l', '#8a8496'], ['A BOX OF SOUVENIR BISCUITS', 'r', '#f06a8c'], ['YOUR BELT', 'l', '#6a4a30']];
+  const ATRAY = {
+    init(m) { m.i = 0; m.fly = null; m.msg = ''; m.mt = 0; m.done = 0; },
+    update(m, dt) { if (m.mt > 0) m.mt -= dt; if (m.fly) { m.fly.t += dt * 3; if (m.fly.t >= 1) { m.fly = null; m.i++; if (m.i >= TRAYI.length) m.done = m.t; } return; }
+      if (m.done) { if (m.t > m.done + 1.4) { J.secured = 1; endMini(true, ['THE TRAYS SLIDE INTO THE X-RAY, AND YOU WALK THROUGH THE ARCH. NOTHING BEEPS. THE GUARD BOWS.', 'YOUR THINGS COME OUT THE OTHER SIDE IN THE SAME ORDER YOU PUT THEM IN. OF COURSE THEY DO.']); } return; }
+      const k = KP.l ? 'l' : KP.r ? 'r' : KP.d ? 'd' : null; if (!k) return; const it = TRAYI[m.i];
+      if (k === it[1]) { m.fly = { t: 0, to: k }; Snd.fx(k === 'd' ? 'land' : 'pick'); } else { m.msg = it[1] === 'l' ? 'THAT GOES IN A TRAY OF ITS OWN' : it[1] === 'r' ? 'THAT CAN STAY IN YOUR BAG' : 'OVER 100ML: IN THE BIN, PLEASE'; m.mt = 1.4; SND.beep(); } },
+    draw(m) { txtC(ctx, 'SECURITY', 160, 26, '#3a3a5a', null, 2); R(ctx, 56, 92, 208, 10, '#8a8496'); R(ctx, 56, 92, 208, 1, '#c8c0d4'); R(ctx, 64, 74, 46, 18, '#c8c4cc'); R(ctx, 66, 76, 42, 14, '#9a96a2'); txtC(ctx, 'TRAY <', 87, 66, '#3a2e40'); R(ctx, 210, 70, 40, 22, '#2f5ab0'); R(ctx, 210, 70, 40, 3, '#5a8ae0'); txtC(ctx, '> BAG', 230, 62, '#3a2e40'); R(ctx, 146, 106, 28, 14, '#5a5468'); txtC(ctx, 'BIN', 160, 109, '#f4f1e6');
+      if (m.i < TRAYI.length) { const it = TRAYI[m.i]; let x = 160, y = 60; if (m.fly) { const q = m.fly.t, tx = m.fly.to === 'l' ? 87 : m.fly.to === 'r' ? 230 : 160, ty = m.fly.to === 'd' ? 110 : 80; x += (tx - 160) * q; y += (ty - 60) * q - Math.sin(q * Math.PI) * 14; } R(ctx, x - 10, y - 7, 20, 14, it[2]); R(ctx, x - 10, y - 7, 20, 2, lite(it[2], 0.4)); if (!m.fly) txtC(ctx, it[0], 160, 42, '#3a2e40'); }
+      for (let i = 0; i < TRAYI.length; i++) disc(ctx, 126 + i * 10, 122, 2.5, i < m.i ? '#5ad88a' : '#d9cba8'); txtC(ctx, m.mt > 0 ? m.msg : m.done ? 'ALL CLEAR!' : '< TRAY    > BAG    V BIN', 160, 132, m.mt > 0 ? '#c8382e' : '#3a2e40'); }
+  };
+
+  return { airport, sprites, fly, intro, home, checkin, express, skipArrival, landed, J, drawFlight, rideTick, scrapUpdate, scrapDraw, PORTS, minis: { bags: BAGS, acheck: ACHECK, atray: ATRAY } };
 })();
 const airport = AIR.airport;

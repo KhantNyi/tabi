@@ -143,9 +143,9 @@
       // ---- the inn, the town and the ropeway
       house(352, 560, 84, 30, { sign: 'LAKESIDE INN', noren: '#3f7ab0', rh: 16, lantern: true, to: 'k_onsen' });
       for (const [x, y] of [[300, 520], [412, 516], [470, 470]]) plant('maple', x, y, 1); prop('lanternM', 300, 572, 4); prop('lanternM', 406, 572, 4); M.ACT.push({ cat: true, id: 'inn', x: 428, y: 584, k: 2 });
-      house(320, 656, 52, 26, { sign: 'GIFTS', noren: '#5a8a5a', rh: 14 }); tower(416, 656, 92, 44, { c: '#e8d8c0', sign: 'KAWAGUCHIKO', sc: '#c8382e', wc: '#bfe8ff', gx: 7, ww: 4, roofCol: '#a84a38' }); shinkansen(416, 656); M.st = [416, 674];
+      DAY.konbini(320, 656, 'kawaguchiko'); tower(416, 656, 92, 44, { c: '#e8d8c0', sign: 'KAWAGUCHIKO', sc: '#c8382e', wc: '#bfe8ff', gx: 7, ww: 4, roofCol: '#a84a38' }); shinkansen(416, 656); M.st = [416, 674];
       prop('busstop', 520, 650, 2); npc('salary', 534, 662, { lines: ['THE RETRO BUS GOES ROUND THE LAKE EVERY FIFTEEN MINUTES.', 'I HAVE BEEN WAITING FOR TWENTY. THAT IS ALSO TRADITIONAL.'] });
-      house(600, 656, 56, 28, { sign: 'HOTO', noren: '#c8382e', rh: 14, lantern: true, to: 'k_hoto' }); house(668, 656, 50, 26, { sign: 'CAFE', noren: '#8a5a3a', rh: 14 }); house(736, 656, 50, 26, { sign: 'MUSIC BOX', noren: '#8a6aff', rh: 14 });
+      house(600, 656, 56, 28, { sign: 'HOTO', noren: '#c8382e', rh: 14, lantern: true, to: 'k_hoto' }); house(668, 656, 50, 26, { sign: 'CAFE', noren: '#8a5a3a', rh: 14 }); DAY.hotel(736, 656, 'kawaguchiko', 50);
       tower(880, 656, 76, 50, { c: '#d8c8b0', sign: 'ROPEWAY', sc: '#e0563f', wc: '#bfe8ff' }); M.SPOTS.push({ x: 880, y: 663, r: 14, label: 'RIDE THE ROPEWAY', fn: ropeway('ROPEWAY UP TO', 'MT KACHIKACHI', ['k_summit']) });
       for (const x of [260, 470, 790]) prop('vend', x, 652, 6); for (const x of [180, 560, 820]) prop('lamp', x, 712, 2);
       npc('granny', 300, 690, { lines: ['ON A CLEAR WINTER MORNING YOU CAN SEE EVERY LINE OF SNOW ON IT.', 'IN SUMMER IT HIDES ALL DAY. MOODY MOUNTAIN.'] }); npc('teen', 700, 690, { rad: 30, tint: '#5aa8e0', lines: ['THE ROPEWAY TAKES THREE MINUTES. THE VIEW TAKES YOUR BREATH AWAY.', 'THERE IS A BELL AT THE TOP. RING IT WITH SOMEONE YOU LIKE.'] });
