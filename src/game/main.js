@@ -56,6 +56,9 @@ function go(id, x, y, dir) {
   M = BUILT[id] || build(id); keep(id); CITY = CITIES[M.def.city] || CITY; const st = M.st || [160, 182]; pl.x = x != null ? x : st[0]; pl.y = y != null ? y : st[1]; pl.dir = dir || 'd'; pl.mv = false; pl.act = null; G.fade = 1; G.tgt = null; G.fx = []; G.zn = zoneAt(pl.x, pl.y); G.zb = 0; camSnap(); LIFE.enter();
   if (!M.indoor) { G.dist = id; G.banner = 3.5; save(); } else G.banner = 2.5; Snd.play(M.def.music || 'tokyo'); if (M.def.enter) M.def.enter();
 }
+// If you ever end up standing inside something solid (a ride that set you down on a wall, a gate that shut on you), every
+// step is refused and you are frozen. So, during play, the game moves you to the nearest open ground: in rings, nearest first.
+function unstick() { for (let d = 2; d <= 64; d += 2) for (let a = 0; a < 16; a++) { const x = Math.round(pl.x + Math.cos(a * 0.3927 + 1.5708) * d), y = Math.round(pl.y + Math.sin(a * 0.3927 + 1.5708) * d); if (!hit(x, y) && !hit(x + 3, y) && !hit(x - 3, y) && !hit(x, y + 3)) { pl.x = x; pl.y = y; camSnap(); return true; } } return false; }
 function step(e, dx, dy) { let m = false; if (dx && !hit(e.x + dx, e.y)) { e.x += dx; m = true; } if (dy && !hit(e.x, e.y + dy)) { e.y += dy; m = true; } return m; }
 function say(e, s) { e.say = s; e.sayT = 1.6 + s.length * 0.05; Snd.fx('talk'); }
 function dialog(lines, then) { G.state = 'dialog'; G.dlg = { lines, i: 0, t: 0, then }; }
@@ -90,6 +93,7 @@ function update(dt) {
     else if (st === 'line') { const i = lineHit(tp); if (i < 0) { if (!lineBox().inside(tp)) KP.x = 1; } else if (i === G.line.sel) KP.a = 1; else { G.line.sel = i; Snd.fx('ui'); } } }
   if (st === 'menu') MENU.update(dt);
   else if (st === 'play') {
+    if (hit(pl.x, pl.y)) unstick();
     let dx = (K.r ? 1 : 0) - (K.l ? 1 : 0), dy = (K.d ? 1 : 0) - (K.u ? 1 : 0);
     if (JOY.on) { dx = JOY.x; dy = JOY.y; const m = Math.hypot(dx, dy); if (m > 1) { dx /= m; dy /= m; } }
     pl.mv = !!(dx || dy);

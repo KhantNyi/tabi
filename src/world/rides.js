@@ -128,7 +128,7 @@ const RIDES = (function () {
   }
   function startTour(e) { const T = e.tour; e.going = true; e.i = 0; e.go = 0; e.rider = true; if (e.stand) e.stand.hide = 1; G.state = 'tour'; G.ridee = e; pl.ride = e; pl.mv = false; say(e, T.kind === 'rick' ? pick(['HOLD ON! HERE WE GO!', 'COMFORTABLE? THEN OFF WE GO!']) : 'CASTING OFF!'); Snd.fx(T.kind === 'rick' ? 'clap' : 'chime'); }
   function finish(e) { const T = e.tour; e.going = false; e.i = 0; e.x = T.at[0]; e.y = T.at[1]; e.face = T.kind === 'rick' ? 'l' : 'l'; if (e.stand) e.stand.hide = 0;
-    if (e.rider) { e.rider = false; pl.ride = null; const [lx, ly] = T.dock ? T.dock : landNear(e.x - 30, e.y + 10); pl.x = lx; pl.y = ly; pl.dir = 'd'; G.state = 'play'; G.ridee = null; Snd.fx('yay'); if (T.stamp && STAMPS[T.stamp]) dialog([T.kind === 'rick' ? 'THE PULLER BOWS, A LITTLE OUT OF BREATH, AND HANDS YOU A PHOTO OF YOUR RIDE.' : 'THE BOAT BUMPS GENTLY INTO THE DOCK. EVERYONE CLAPS, INCLUDING THE GUIDE.'], () => award(T.stamp)); } }
+    if (e.rider) { e.rider = false; pl.ride = null; const [lx, ly] = T.dock ? landNear(T.dock[0], T.dock[1]) : landNear(e.x - 30, e.y + 10); pl.x = lx; pl.y = ly; pl.dir = 'd'; G.state = 'play'; G.ridee = null; Snd.fx('yay'); if (T.stamp && STAMPS[T.stamp]) dialog([T.kind === 'rick' ? 'THE PULLER BOWS, A LITTLE OUT OF BREATH, AND HANDS YOU A PHOTO OF YOUR RIDE.' : 'THE BOAT BUMPS GENTLY INTO THE DOCK. EVERYONE CLAPS, INCLUDING THE GUIDE.'], () => award(T.stamp)); } }
   function hopOff(e) { if (e.tour.kind !== 'rick') { say(e, 'PLEASE WAIT UNTIL WE DOCK!'); return; } e.rider = false; pl.ride = null; G.ridee = null; const [lx, ly] = landNear(e.x + 18, e.y + 6); pl.x = lx; pl.y = ly; pl.dir = 'd'; G.state = 'play'; say(e, 'MIND THE STEP! I WILL TAKE THE CART BACK.'); Snd.fx('page'); }
 
   // ---------- boats you steer ----------
@@ -139,7 +139,7 @@ const RIDES = (function () {
     const e = boatActor(B, w[0], w[1]); e.face = w[0] < pl.x ? 'l' : 'r'; M.ACT.push(e); G.state = 'boat'; G.ridee = e; pl.ride = e; pl.x = e.x; pl.y = e.y; SND.splash(1); Snd.fx('ui');
     NET.say && NET.say(TOUCH ? 'STEER WITH THE STICK. E AT THE DOCK TO RETURN THE BOAT.' : 'STEER WITH THE ARROWS. E AT THE DOCK TO RETURN THE BOAT.', 4);
   }
-  function endBoat(e, quick) { const B = e.boat, long = e.t > 20; e.dead = 1; pl.ride = null; G.ridee = null; pl.x = B.dock[0]; pl.y = B.dock[1]; pl.dir = 'd'; G.state = 'play'; if (quick) G.fade = 1; Snd.fx('page');
+  function endBoat(e, quick) { const B = e.boat, long = e.t > 20; e.dead = 1; pl.ride = null; G.ridee = null; [pl.x, pl.y] = landNear(B.dock[0], B.dock[1]); pl.dir = 'd'; G.state = 'play'; if (quick) G.fade = 1; Snd.fx('page');
     if (B.stamp && STAMPS[B.stamp] && long) dialog([B.doneLine || (B.kind === 'row' ? 'YOU TIE THE BOAT UP. YOUR ARMS ACHE IN THE BEST WAY.' : 'YOU STEP OUT ONTO THE DOCK, LEGS STILL PEDALLING A LITTLE.')], () => award(B.stamp));
     else if (B.stamp && !G.stamps[B.stamp]) dialog(['BACK ALREADY? STAY OUT A LITTLE LONGER NEXT TIME.']); }
   function boatTick(e, dt) {
