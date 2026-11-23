@@ -261,8 +261,24 @@
 
   concourse('hir_shinkansen', { name: 'HIROSHIMA', hub: 'hir_town', music: 'hiroshima', track: 13, dest: 'TOKYO', bento: ['ANAGO MESHI', 'GRILLED CONGER EEL ON RICE, A RECIPE FROM MIYAJIMA, IN A LITTLE WOODEN BOX THAT SMELLS OF THE GRILL.'] });
   city({
+    needs: ['nara'], // Miyajima's deer are drawn the same as Nara's
     id: 'hiroshima', name: 'HIROSHIMA', tagline: 'A CITY OF PEACE, AND AN ISLAND SHRINE', start: 'hir_town', hub: 'hir_town', concourse: 'hir_shinkansen', line: LINE, areas: AREAS, stamps: STAMPS, cats: 3, minis: { orizuru: ORI, layers: LAY, manju: MANJU },
     hud: () => M.id === 'miyajima' ? ['wave', tideName()] : null,
+    icons() { // the little pictures for the stamp book and the bag: painted at boot, since they show up everywhere
+      icon('hokono', g => { ell(g, 6, 8, 5.5, 3, '#6a3a24'); ell(g, 6, 7, 5, 2.5, '#e8c060'); R(g, 1.5, 6, 9, 1, '#9ad070'); for (const x of [3, 6, 9]) P(g, x, 6, '#f8f4ea'); });
+      icon('lemon', g => { ell(g, 6, 7, 4.5, 3.5, '#f2d040'); ell(g, 5, 6, 2.5, 1.5, '#fff090'); P(g, 1, 7, '#d8a020'); P(g, 11, 7, '#d8a020'); R(g, 6, 2, 3, 1.5, '#5aa85a'); });
+      icon('htram', g => { R(g, 0, 3, 12, 7, '#f4ead0'); R(g, 0, 7, 12, 3, '#3f8a4a'); R(g, 0, 6.5, 12, U, '#c8382e'); R(g, 2, 4, 2, 2, '#2a3a5a'); R(g, 6, 4, 2, 2, '#2a3a5a'); R(g, 5, 0, 2, 3, '#3a3446'); R(g, 0, 11, 12, 1, '#8a8496'); });
+      icon('hdome', g => { R(g, 1, 7, 10, 5, '#b8ae98'); R(g, 3, 5, 6, 3, '#b8ae98'); for (let k = 0; k < 5; k++) P(g, 3 + k * 1.5, 4 - Math.sin(k / 4 * Math.PI) * 3, '#3a3a44'); R(g, 2, 9, 2, 2, '#3a3430'); R(g, 8, 9, 2, 2, '#3a3430'); });
+      icon('cenot', g => { for (let x = 0; x < 12; x++) { const t = (x - 6) / 6; R(g, x, 2 + t * t * 6, 1, 1.5, '#c8c0b4'); } R(g, 4, 7, 4, 3, '#4a4458'); R(g, 0, 10, 12, 2, '#a8a2b4'); });
+      icon('orizuru', g => { line(g, 1, 2, 5, 7, '#e0452f'); line(g, 11, 3, 7, 7, '#e0452f'); R(g, 3, 6, 6, 2, '#e0452f'); line(g, 4, 8, 1, 11, '#c03020'); line(g, 8, 8, 11, 10, '#c03020'); P(g, 1, 2, '#c03020'); });
+      icon('pbell', g => { ell(g, 6, 3, 5, 1.5, '#b8c8b8'); ell(g, 6, 7, 3, 3.5, '#6a7a5a'); R(g, 3, 7, 6, 3, '#6a7a5a'); R(g, 0, 11, 12, 1, '#a8a2b4'); });
+      icon('otorii', g => { R(g, 0, 1, 12, 2, '#d8402c'); R(g, 1, 4, 10, 1, '#d8402c'); R(g, 2, 3, 2, 7, '#d8402c'); R(g, 8, 3, 2, 7, '#d8402c'); R(g, 0, 9, 12, 3, '#3a8ab0'); R(g, 1, 9, 3, 1, '#a8e0e8'); });
+      icon('steps', g => { R(g, 0, 0, 12, 12, '#b4a486'); for (const [x, y] of [[3, 9], [7, 7], [3, 5], [7, 3], [3, 1]]) ell(g, x, y + 1, 1.2, 1.6, '#8a7a5a'); });
+      icon('mshrine', g => { R(g, 1, 4, 10, 5, '#d8402c'); R(g, 0, 2, 12, 2, '#5a4434'); R(g, 3, 5, 2, 4, '#f8f0e0'); R(g, 7, 5, 2, 4, '#f8f0e0'); R(g, 0, 9, 12, 3, '#3a8ab0'); });
+      icon('manju', g => { for (let k = 0; k < 5; k++) { const a = -1.5708 + (k - 2) * 0.62; ell(g, 6 + Math.cos(a) * 3, 6 + Math.sin(a) * 2.5, 2.2, 1.5, '#d8902a'); } disc(g, 6, 7, 2.5, '#d8902a'); P(g, 5, 6, '#f0c060'); });
+      icon('oyster', g => { ell(g, 6, 7, 5.5, 4, '#8a8496'); ell(g, 6, 6.5, 4, 2.8, '#d8d0c4'); ell(g, 6, 6.5, 2.5, 1.8, '#f0e8dc'); P(g, 6, 6, '#c8b8a0'); });
+      icon('scoop', g => { ell(g, 5, 4, 3.5, 4, '#c8945a'); R(g, 4, 7, 2, 5, '#a8744a'); ell(g, 4, 3, 1.5, 2, '#d8a86a'); });
+    },
     sprites() {
       // the Dome: the shell of the old exhibition hall, walls broken, the steel of its dome left bare
       one('hdome', 160, 140, g => { const W_ = '#b8ae98', WD = '#8a8270', WL = '#d0c8b0';
@@ -294,19 +310,6 @@
       one('ferry', 76, 30, g => { ell(g, 38, 24, 36, 6, '#f4f1e6'); R(g, 4, 18, 68, 6, '#f4f1e6'); R(g, 4, 22, 68, 2, '#c8382e'); R(g, 14, 8, 48, 10, '#f4f1e6'); R(g, 14, 8, 48, 1, '#ffffff'); for (let x = 17; x < 60; x += 6) R(g, x, 11, 4, 4, '#2a3a5a'); R(g, 30, 2, 12, 6, '#f4f1e6'); R(g, 34, 0, 4, 3, '#c8382e'); R(g, 0, 28, 76, 1, '#a6dcee'); }, 1);
       SPR.rideSeto = (() => { const c = mk(320, 84), g = c.g, r = RNG(61); dgrad(g, 0, 0, 320, 84, ['#86bfe8', '#b4d8f0', '#e8f0f4']); for (const [x, w, h] of [[40, 50, 16], [150, 70, 22], [260, 44, 12], [330, 50, 18]]) { ell(g, x, 46, w, h, '#5a8a7a'); ell(g, x - w * 0.3, 44, w * 0.5, h * 0.8, '#6a9a8a'); }
         dgrad(g, 0, 46, 320, 38, ['#4a9ac0', '#3a7aa8']); for (let k = 0; k < 40; k++) R(g, r() * 320, 50 + r() * 32, 4 + r() * 10, U, 'rgba(255,255,255,0.5)'); for (let k = 0; k < 4; k++) { const x = 30 + k * 80; R(g, x, 70, 14, 3, '#8a6448'); for (let j = 0; j < 4; j++) R(g, x + j * 4, 66, 1, 4, '#8a6448'); } return c; })();
-      icon('hokono', g => { ell(g, 6, 8, 5.5, 3, '#6a3a24'); ell(g, 6, 7, 5, 2.5, '#e8c060'); R(g, 1.5, 6, 9, 1, '#9ad070'); for (const x of [3, 6, 9]) P(g, x, 6, '#f8f4ea'); });
-      icon('lemon', g => { ell(g, 6, 7, 4.5, 3.5, '#f2d040'); ell(g, 5, 6, 2.5, 1.5, '#fff090'); P(g, 1, 7, '#d8a020'); P(g, 11, 7, '#d8a020'); R(g, 6, 2, 3, 1.5, '#5aa85a'); });
-      icon('htram', g => { R(g, 0, 3, 12, 7, '#f4ead0'); R(g, 0, 7, 12, 3, '#3f8a4a'); R(g, 0, 6.5, 12, U, '#c8382e'); R(g, 2, 4, 2, 2, '#2a3a5a'); R(g, 6, 4, 2, 2, '#2a3a5a'); R(g, 5, 0, 2, 3, '#3a3446'); R(g, 0, 11, 12, 1, '#8a8496'); });
-      icon('hdome', g => { R(g, 1, 7, 10, 5, '#b8ae98'); R(g, 3, 5, 6, 3, '#b8ae98'); for (let k = 0; k < 5; k++) P(g, 3 + k * 1.5, 4 - Math.sin(k / 4 * Math.PI) * 3, '#3a3a44'); R(g, 2, 9, 2, 2, '#3a3430'); R(g, 8, 9, 2, 2, '#3a3430'); });
-      icon('cenot', g => { for (let x = 0; x < 12; x++) { const t = (x - 6) / 6; R(g, x, 2 + t * t * 6, 1, 1.5, '#c8c0b4'); } R(g, 4, 7, 4, 3, '#4a4458'); R(g, 0, 10, 12, 2, '#a8a2b4'); });
-      icon('orizuru', g => { line(g, 1, 2, 5, 7, '#e0452f'); line(g, 11, 3, 7, 7, '#e0452f'); R(g, 3, 6, 6, 2, '#e0452f'); line(g, 4, 8, 1, 11, '#c03020'); line(g, 8, 8, 11, 10, '#c03020'); P(g, 1, 2, '#c03020'); });
-      icon('pbell', g => { ell(g, 6, 3, 5, 1.5, '#b8c8b8'); ell(g, 6, 7, 3, 3.5, '#6a7a5a'); R(g, 3, 7, 6, 3, '#6a7a5a'); R(g, 0, 11, 12, 1, '#a8a2b4'); });
-      icon('otorii', g => { R(g, 0, 1, 12, 2, '#d8402c'); R(g, 1, 4, 10, 1, '#d8402c'); R(g, 2, 3, 2, 7, '#d8402c'); R(g, 8, 3, 2, 7, '#d8402c'); R(g, 0, 9, 12, 3, '#3a8ab0'); R(g, 1, 9, 3, 1, '#a8e0e8'); });
-      icon('steps', g => { R(g, 0, 0, 12, 12, '#b4a486'); for (const [x, y] of [[3, 9], [7, 7], [3, 5], [7, 3], [3, 1]]) ell(g, x, y + 1, 1.2, 1.6, '#8a7a5a'); });
-      icon('mshrine', g => { R(g, 1, 4, 10, 5, '#d8402c'); R(g, 0, 2, 12, 2, '#5a4434'); R(g, 3, 5, 2, 4, '#f8f0e0'); R(g, 7, 5, 2, 4, '#f8f0e0'); R(g, 0, 9, 12, 3, '#3a8ab0'); });
-      icon('manju', g => { for (let k = 0; k < 5; k++) { const a = -1.5708 + (k - 2) * 0.62; ell(g, 6 + Math.cos(a) * 3, 6 + Math.sin(a) * 2.5, 2.2, 1.5, '#d8902a'); } disc(g, 6, 7, 2.5, '#d8902a'); P(g, 5, 6, '#f0c060'); });
-      icon('oyster', g => { ell(g, 6, 7, 5.5, 4, '#8a8496'); ell(g, 6, 6.5, 4, 2.8, '#d8d0c4'); ell(g, 6, 6.5, 2.5, 1.8, '#f0e8dc'); P(g, 6, 6, '#c8b8a0'); });
-      icon('scoop', g => { ell(g, 5, 4, 3.5, 4, '#c8945a'); R(g, 4, 7, 2, 5, '#a8744a'); ell(g, 4, 3, 1.5, 2, '#d8a86a'); });
     }
   });
 })();

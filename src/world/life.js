@@ -10,7 +10,7 @@
 // they are cleared whenever you enter a map. Everything is local scenery, so friends in a room each see their own.
 const LIFE = (function () {
   const rnd = Math.random, pick = a => a[rnd() * a.length | 0];
-  let next = 9, ambT = 0, gap = 0, fx = [], sky = [], skyT = 12, leafT = 0;
+  let next = 9, ambT = 0, gap = 0, fx = [], sky = [], skyT = 12, leafT = 0, petalT = 0;
   const outdoors = () => !M.indoor, day = () => !M.indoor && !M.night, station = () => !!M.def.station;
   const dist = (x, y) => Math.hypot(x - pl.x, y - pl.y), loud = (x, y, r) => Math.max(0, 1 - dist(x, y) / r);
   const inView = (x, y, m) => x > G.cx - m && x < G.cx + W + m && y > G.cy - m && y < G.cy + H + m;
@@ -192,7 +192,7 @@ const LIFE = (function () {
       if (s.act === 'bow' || s.label === 'PRAY') M.amb.push({ k: 'bell', x: s.x, y: s.y, r: 300, t: 4 + rnd() * 10 });
       if (s.train) M.amb.push({ k: 'chime', x: s.x, y: s.y, r: 220, t: 8 + rnd() * 10 });
     }
-    for (const o of M.OBJ) { const sp = o.base || o.spr; if (sp === SPR.stall && hsh(o.x, o.y) < 0.45) M.emit.push({ x: o.x, y: o.y - 26, k: 'smoke' }); else if (sp === SPR.burner) M.emit.push({ x: o.x, y: o.y - 20, k: 'incense' }); }
+    for (const o of M.OBJ) { const sp = o.base || o.spr; if (sp === SPR.stall && hsh(o.x, o.y) < 0.45) M.emit.push({ x: o.x, y: o.y - 26, k: 'smoke' }); else if (sp === FUR.burner) M.emit.push({ x: o.x, y: o.y - 20, k: 'incense' }); }
     const r = RNG(M.w * 13 + M.h), at = (test, n) => { const out = []; for (let i = 0; i < 400 && out.length < n; i++) { const x = 30 + r() * (M.w - 60), y = 40 + r() * (M.h - 60); if (test(terr(x, y)) && free(x, y) && free(x, y - 8) && !out.some(p => Math.hypot(p[0] - x, p[1] - y) < 140)) out.push([Math.round(x), Math.round(y)]); } return out; };
     if (!M.night && !M.def.station) {
       for (const [x, y] of at(t => t === PL || t === PV || t === VL, 2)) for (let i = 0; i < 4 + (r() * 3 | 0); i++) { const px = x + (r() - 0.5) * 30, py = y + (r() - 0.5) * 14; if (free(px, py)) pigeon(px, py); }
@@ -224,6 +224,8 @@ const LIFE = (function () {
     // steam, smoke and falling leaves near the view
     if (M.emit) for (const e of M.emit) if (inView(e.x, e.y, 40) && rnd() < dt * (e.k === 'incense' ? 3 : 5) * (G.lowFx ? 0.4 : 1)) puff(e);
     leafT -= dt; if (leafT <= 0 && outdoors()) { leafT = G.lowFx ? 0.9 : 0.35; const trees = M.OBJ.filter(o => o.kind && !NOLEAF[o.kind] && inView(o.x, o.y - 40, 0)); if (trees.length) { const o = pick(trees), c = { maple: '#d9602c', ginkgo: '#f2c14e', sakura: '#f9a8c8', plum: '#f4d8e4' }[o.kind]; if (c || rnd() < 0.3) fx.push({ k: 'leaf', x: o.x + (rnd() - 0.5) * 30, y: o.y - 34 - rnd() * 16, vx: 4 + rnd() * 6, vy: 9 + rnd() * 5, t: 0, life: 3.6, c: c || '#6aa85a', ph: rnd() * 6, fall: 1 }); } }
+    // a cherry in view sheds petals all the time: a slow pink snow
+    petalT -= dt; if (petalT <= 0 && outdoors()) { petalT = G.lowFx ? 0.3 : 0.09; const ss = M.OBJ.filter(o => o.kind === 'sakura' && inView(o.x, o.y - 40, 20)); if (ss.length) { const o = pick(ss), w = o.spr.lw * 0.45; fx.push({ k: 'leaf', x: o.x + (rnd() - 0.5) * w * 2, y: o.y - 18 - rnd() * 32, vx: 5 + rnd() * 9, vy: 7 + rnd() * 6, t: 0, life: 4.4, c: pick(['#f9c8d8', '#fdebf1', '#f4b0c8']), ph: rnd() * 6, fall: 1 }); } }
     for (const p of fx) { p.t += dt; p.x += (p.vx + (p.k === 'leaf' ? Math.sin(G.t * 3 + p.ph) * (p.fall ? 8 : 20) : 0)) * dt; p.y += (p.vy + (p.k === 'leaf' && !p.fall ? Math.cos(G.t * 2.6 + p.ph) * 14 : 0)) * dt; }
     fx = fx.filter(p => p.t < p.life); if (fx.length > 160) fx.splice(0, fx.length - 160);
     // birds crossing the sky

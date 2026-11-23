@@ -1,6 +1,7 @@
 'use strict';
 // ---------- runtime: walking, doors, trains between districts and cities, stamps, saving ----------
 const GAME = { title: 'TABI', save: 'tabi', version: CHANGELOG[0][0] }; // the game's name lives here and nowhere else; the version is the newest changelog entry
+if (/[?&]test(&|=|$)/.test(location.search)) GAME.save += '-test'; // the tests (tests/) play on a save of their own, never yours
 const CLIST = Object.values(CITIES); // every city, in the order index.html loads them
 let CITY = CITIES[new URLSearchParams(location.search).get('city')] || CLIST[0]; // the city you are in; go() keeps it in step with the map
 const G = { state: 'menu', menu: { kind: 'main', sel: 0, t: 0 }, mstack: [], ret: null, t: 0, cx: 0, cy: 0, fade: 1, flash: 0, banner: 0, stamps: {}, figs: {}, fit: 0, look: null, cats: {}, cans: {}, ema: {}, knots: {}, steps: 0, ic: 0, arrived: 0, name: NET.name(), seen: '', cl: 0, tgt: null, fx: [], back: null, dist: CITY.start, hasSave: false };
@@ -26,8 +27,8 @@ function lookParts(l) {
 }
 const plLook = (i, l = G.look) => { const k = 'pl' + i + ':' + lookKey(l); return LOOKS[k] || (LOOKS[k] = makeLook(Object.assign({}, PLAYER_LOOK, lookParts(l), i >= KIMONO ? { robe: FITS[i], obi: OBI[i - KIMONO], shirt: FITS[i], pants: FITS[i], shoes: '#f4f1e6', pack: null, skirt: false } : { shirt: FITS[i] }))); };
 // one save for the whole trip (older saves were kept per city under 'tabi-tokyo')
-function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, look: lookKey(G.look), cats: G.cats, cans: G.cans, ema: G.ema, knots: G.knots, steps: Math.round(G.steps || 0), ic: G.ic, arrived: G.arrived, umbrella: G.umbrella || 0, inn: G.inn || {}, dayOff: G.dayOff || 0, tix: G.tix || {}, seats: G.seats || 0, name: G.name, seen: G.seen, mute: !Snd.on, dist: G.dist })); } catch (e) { } }
-function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.look = lookOf(s.look); G.cats = s.cats || {}; G.cans = s.cans || {}; G.ema = s.ema || {}; G.knots = s.knots || {}; G.steps = s.steps || 0; G.ic = s.ic || 0; G.arrived = s.arrived == null ? 1 : s.arrived; G.umbrella = s.umbrella || 0; G.inn = s.inn || {}; G.dayOff = s.dayOff || 0; G.tix = s.tix || {}; G.seats = s.seats || 0; if (NAMES.includes(s.name)) G.name = s.name; G.seen = s.seen || ''; if (s.mute && Snd.on) Snd.toggle(); if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
+function save() { try { localStorage.setItem(GAME.save, JSON.stringify({ v: 2, stamps: G.stamps, figs: G.figs, fit: G.fit, look: lookKey(G.look), cats: G.cats, cans: G.cans, ema: G.ema, knots: G.knots, caps: G.caps, steps: Math.round(G.steps || 0), ic: G.ic, arrived: G.arrived, umbrella: G.umbrella || 0, inn: G.inn || {}, dayOff: G.dayOff || 0, tix: G.tix || {}, seats: G.seats || 0, name: G.name, seen: G.seen, mute: !Snd.on, dist: G.dist })); } catch (e) { } }
+function load() { try { const s = JSON.parse(localStorage.getItem(GAME.save) || localStorage.getItem(GAME.save + '-' + CLIST[0].id)); if (s && s.stamps) { G.stamps = s.stamps; G.figs = s.figs || {}; G.fit = s.fit || 0; G.look = lookOf(s.look); G.cats = s.cats || {}; G.cans = s.cans || {}; G.ema = s.ema || {}; G.knots = s.knots || {}; G.caps = s.caps || {}; G.steps = s.steps || 0; G.ic = s.ic || 0; G.arrived = s.arrived == null ? 1 : s.arrived; G.umbrella = s.umbrella || 0; G.inn = s.inn || {}; G.dayOff = s.dayOff || 0; G.tix = s.tix || {}; G.seats = s.seats || 0; if (NAMES.includes(s.name)) G.name = s.name; G.seen = s.seen || ''; if (s.mute && Snd.on) Snd.toggle(); if (MAPS[s.dist]) G.dist = s.dist; G.hasSave = true; } } catch (e) { } }
 const JCL = CLIST.filter(c => !c.prologue); // the cities on the map of Japan (Bangkok, where a trip can begin, is not one of them)
 const count = o => Object.keys(o).length, STAMPS = {}, SCITY = {}; for (const c of CLIST) for (const k in c.stamps) { STAMPS[k] = c.stamps[k]; SCITY[k] = c; }
 const nst = c => count(c.stamps), got = c => Object.keys(c.stamps).filter(k => G.stamps[k]).length, catsIn = c => Object.keys(G.cats).filter(k => (MAPS[k.split(':')[0]] || {}).city === c.id).length;
@@ -37,7 +38,7 @@ const BOOKP = () => CLIST.concat(['together', 'updates']); // the stamp book's p
 const SOON = [['kawaguchiko', 'MT FUJI'], ['kyoto', 'KYOTO'], ['osaka', 'OSAKA']].filter(c => !CITIES[c[0]]); // on the map, not built yet
 const JPOS = { tokyo: [211, 63, 224, 56, 1], kamakura: [205, 71, 216, 72, 1], kawaguchiko: [192, 65, 190, 81, 0], kyoto: [136, 65, 136, 44, 0], nara: [141, 74, 147, 80, 1], osaka: [129, 74, 122, 82, -1], hiroshima: [94, 73, 94, 50, 0], sapporo: [218, 11, 204, 6, -1], okinawa: [27, 96, 25, 73, 0] }; // dot x,y then label x,y,align on the Japan map
 function build(id) {
-  const d = MAPS[id]; newMap(id, d.tw || 20, d.th || 12, !!d.indoor); M.def = d; M.night = d.night; M.hs = []; M.vs = [];
+  const d = MAPS[id]; citySprites(d.city); newMap(id, d.tw || 20, d.th || 12, !!d.indoor); M.def = d; M.night = d.night; M.hs = []; M.vs = [];
   if (d.lay) d.lay(); if (!d.indoor) { blockTer(WA); paintGround(); } d.deco(); RIDES.build(); DAY.build(); markRoads(); settle();
   M.OBJ.sort((a, b) => a.y - b.y); for (const [x, y, rx, ry] of M.SHD) ell(M.ground.g, x, y, rx, ry, d.indoor ? 'rgba(20,10,30,0.22)' : 'rgba(22,30,50,0.26)');
   return BUILT[id] = M;
@@ -51,9 +52,9 @@ function camSnap() { G.cx = camX(); G.cy = camY(); }
 // Every map is a big painted canvas, so only the last few visited are kept; the rest are let go and built again on return.
 // (On a phone, keeping all seventy would run out of memory on a long trip.)
 const RECENT = [];
-function keep(id) { const i = RECENT.indexOf(id); if (i >= 0) RECENT.splice(i, 1); RECENT.push(id); while (RECENT.length > 6) { const old = RECENT.shift(), B = BUILT[old]; if (!B || B === M) continue; delete BUILT[old]; if (B.ground) B.ground.width = B.ground.height = 0; B.TY = B.SOL = B.TER = null; } }
+function keep(id) { const i = RECENT.indexOf(id); if (i >= 0) RECENT.splice(i, 1); RECENT.push(id); while (RECENT.length > 6) { const old = RECENT.shift(), B = BUILT[old]; if (!B || B === M) continue; delete BUILT[old]; if (B.ground) B.ground.width = B.ground.height = 0; B.TY = B.SOL = B.TER = null; } dropCitySprites(new Set(Object.values(BUILT).concat(M || []).map(B => B.def.city))); }
 function go(id, x, y, dir) {
-  M = BUILT[id] || build(id); keep(id); CITY = CITIES[M.def.city] || CITY; const st = M.st || [160, 182]; pl.x = x != null ? x : st[0]; pl.y = y != null ? y : st[1]; pl.dir = dir || 'd'; pl.mv = false; pl.act = null; G.fade = 1; G.tgt = null; G.fx = []; G.zn = zoneAt(pl.x, pl.y); G.zb = 0; camSnap(); LIFE.enter();
+  M = BUILT[id] || build(id); keep(id); CITY = CITIES[M.def.city] || CITY; const st = M.st || (M.indoor ? [M.w / 2, M.h - 10] : [160, 182]); pl.x = x != null ? x : st[0]; pl.y = y != null ? y : st[1]; pl.dir = dir || 'd'; pl.mv = false; pl.act = null; G.fade = 1; G.tgt = null; G.fx = []; G.zn = zoneAt(pl.x, pl.y); G.zb = 0; camSnap(); LIFE.enter();
   if (!M.indoor) { G.dist = id; G.banner = 3.5; save(); } else G.banner = 2.5; Snd.play(M.def.music || 'tokyo'); if (M.def.enter) M.def.enter();
 }
 // If you ever end up standing inside something solid (a ride that set you down on a wall, a gate that shut on you), every
@@ -68,8 +69,9 @@ function interact() {
   if (t.act) { t.act.use(t.act); return; }
   if (t.cat) { t.cat.purr = 1.2; G.fx.push({ x: t.cat.x, y: t.cat.y - 10, t: 0, icon: 'heart' }); Snd.fx('heart'); G.cats[t.cat.id ? M.id + ':' + t.cat.id : M.id] = 1; save(); return; }
   const sp = t.spot; if (!sp) { const n = t.npc; say(n, n.lines[n.li++ % n.lines.length]); return; }
-  if (sp.door) { if (!M.indoor) G.bstack = []; else (G.bstack = G.bstack || []).push(G.back); G.back = { map: M.id, x: pl.x, y: pl.y }; Snd.fx('page'); go(sp.door, sp.dx || 160, sp.dy || 182, 'u'); }
-  else if (sp.train) { G.state = 'line'; G.line = { sel: (CITY.line.findIndex(s => s[0] === M.id) + 1) % CITY.line.length }; Snd.fx('page'); }
+  if (sp.door && sp.train) MENU.open('train', null, { sel: G.trainX ? 1 : 0, sn: sp.sn, walk: () => { G.trainX = 0; G.state = 'play'; enterDoor(sp); }, ride: () => { G.trainX = 1; lineMap(1); } });
+  else if (sp.door) enterDoor(sp);
+  else if (sp.train) lineMap();
   else if (sp.shink && CITY.concourse && M.id !== CITY.concourse) { Snd.fx('chime'); G.back = null; go(CITY.concourse, 320, 548, 'u'); } // a big station: in through the concourse
   else if (sp.shink) { G.state = 'japan'; G.jp = { sel: (JCL.indexOf(CITY) + 1) % JCL.length }; Snd.fx('page'); }
   else if (sp.fn) sp.fn(sp);
@@ -77,6 +79,9 @@ function interact() {
   else if (sp.act) { G.state = 'event'; G.ev = { sp, t: 0 }; pl.mv = false; pl.dir = sp.act === 'hold' ? 'd' : 'u'; emit('act', sp); }
   else { Snd.fx(sp.fx || 'ui'); dialog(sp.lines); }
 }
+function enterDoor(sp) { if (!M.indoor) G.bstack = []; else (G.bstack = G.bstack || []).push(G.back); G.back = { map: M.id, x: pl.x, y: pl.y }; Snd.fx('page'); const to = MAPS[sp.door]; go(sp.door, sp.dx || (to.tw || 20) * 8, sp.dy || (to.th || 12) * 16 - 10, 'u'); }
+// the line map, choosing a stop; express skips the ticket machine and the gates and puts you straight on a train
+function lineMap(express) { G.state = 'line'; G.line = { sel: (CITY.line.findIndex(s => s[0] === M.id) + 1) % CITY.line.length, express: express ? 1 : 0 }; Snd.fx('page'); }
 function endMini(win, lines) { const sp = G.mg.sp; G.mg = null; G.state = 'play'; dialog(lines, win && sp.stamp ? () => award(sp.stamp) : null); }
 
 // ride the local line to stop sel; sometimes someone older gets on, and you can give them your seat
@@ -101,7 +106,7 @@ function update(dt) {
     if (pl.mv) { if (JOY.on) { if (Math.abs(dx) > Math.abs(dy) * 1.15) pl.dir = dx < 0 ? 'l' : 'r'; else if (Math.abs(dy) > Math.abs(dx) * 1.15) pl.dir = dy < 0 ? 'u' : 'd'; } else { const h = dx < 0 ? 'l' : dx > 0 ? 'r' : null, v = dy < 0 ? 'u' : dy > 0 ? 'd' : null; if (pl.dir !== h && pl.dir !== v) pl.dir = h || v; if (dx && dy) { dx *= 0.7071; dy *= 0.7071; } } const w0 = pl.wt; if (!step(pl, dx * 72 * dt, dy * 72 * dt)) pl.mv = false; else G.steps = (G.steps || 0) + Math.hypot(dx, dy) * 72 * dt / 7; pl.wt += dt; if (pl.mv && Math.floor(pl.wt / 0.27) !== Math.floor(w0 / 0.27)) LIFE.foot(); } else pl.wt = 0;
     if (M.def.zones) { const z = zoneAt(pl.x, pl.y); if (z && z !== G.zn) { G.zn = z; if (G.banner <= 0) G.zb = 2.6; } if (G.zb > 0) G.zb -= dt; }
     if (M.def.tick) M.def.tick(); // a map's own rule (walking out of a station's doors)
-    if (M.indoor && pl.y > 188 && G.back) { const b = G.back; G.back = (G.bstack || []).pop() || null; /* rooms inside rooms (a hotel lobby, then your room) step back one at a time */ Snd.fx('page'); go(b.map, b.x, b.y, 'd'); G.banner = 0; }
+    if (M.indoor && pl.y > M.h - 4 && G.back) { const b = G.back; G.back = (G.bstack || []).pop() || null; /* rooms inside rooms (a hotel lobby, then your room) step back one at a time */ Snd.fx('page'); go(b.map, b.x, b.y, 'd'); G.banner = 0; }
     let best = null, bd = 1e9; const tryT = (x, y, r, o) => { const d = Math.hypot(x - pl.x, (y - pl.y) * 1.3); if (d < r && d < bd) { bd = d; best = o; } };
     for (const s of M.SPOTS) tryT(s.x, s.y, s.r, { spot: s, label: s.label });
     for (const n of M.ACT) { if (n.hide) continue; if (n.cat) tryT(n.x, n.y, 15, { cat: n, x: n.x, y: n.y + 12, label: 'PET' }); else if (n.use) tryT(n.x, n.y + 2, 17, { act: n, x: n.x, y: n.y + 10, label: n.label(n) }); else if (n.spot) tryT(n.x, n.y + 16, 22, { spot: n.spot, label: n.spot.label }); else if (n.lines) tryT(n.x, n.y, 20, { npc: n, x: n.x, y: n.y, label: 'TALK' }); }
@@ -124,7 +129,7 @@ function update(dt) {
   else if (st === 'tog') NET.updTog();
   else if (st === 'say') NET.updSay();
   else if (st === 'mini') { G.mg.t += dt; const m = G.mg; MG[m.k].update(m, dt); if (G.mg === m && KP.x && m.k !== 'dress' && m.k !== 'vend') { G.mg = null; G.state = 'play'; } }
-  else if (st === 'line') { const STN = CITY.line, n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === (M.from || M.id)) G.state = 'play'; else if (!G.ic && !(G.tix || {})[CITY.id]) { G.state = 'mini'; G.mg = { k: 'ticket', sp: { to: L.sel }, t: 0 }; MG.ticket.init(G.mg); Snd.fx('ui'); } else rideLine(L.sel); } }
+  else if (st === 'line') { const STN = CITY.line, n = STN.length, L = G.line; if (KP.u) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.l) { L.sel = (L.sel + n - 1) % n; Snd.fx('ui'); } if (KP.r) { L.sel = (L.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (STN[L.sel][0] === (M.from || M.id)) G.state = 'play'; else if (!L.express && !G.ic && !(G.tix || {})[CITY.id]) { G.state = 'mini'; G.mg = { k: 'ticket', sp: { to: L.sel }, t: 0 }; MG.ticket.init(G.mg); Snd.fx('ui'); } else { if (L.express) NET.say('EXPRESS: STRAIGHT THROUGH THE GATES AND ONTO THE NEXT TRAIN.', 3); rideLine(L.sel); } } }
   else if (st === 'japan') { const n = JCL.length, J = G.jp; if (KP.u || KP.l) { J.sel = (J.sel + n - 1) % n; Snd.fx('ui'); } if (KP.d || KP.r) { J.sel = (J.sel + 1) % n; Snd.fx('ui'); } if (KP.x || KP.b) G.state = 'play'; else if (KP.a) { if (JCL[J.sel] === CITY) G.state = 'play'; else PLACES.travel(JCL[J.sel]); } }
   else if (st === 'scrap') AIR.scrapUpdate(dt);
   else if (st === 'ride') { G.ride.t += dt; if (G.ride.upd) G.ride.upd(G.ride, dt); if (G.ride.seat === 1 && TAP) { TAP = null; KP.a = 1; } if (G.ride.seat === 1 && G.ride.t > 0.9 && G.ride.t < 2.9 && KP.a) { G.ride.seat = 2; G.seats = (G.seats || 0) + 1; Snd.fx('heart'); save(); } if (G.ride.plane) AIR.rideTick(G.ride, dt); else if (G.ride.ship) PLACES.shipTick(G.ride, dt); else if (G.ride.sleep) { /* quiet */ } else if (Math.floor(G.ride.t * 3.4) !== Math.floor((G.ride.t - dt) * 3.4) && Snd.ctx) { Snd.noise(Snd.ctx.currentTime, 0.05, 0.05, 150, 700, Snd.sfx); Snd.noise(Snd.ctx.currentTime + 0.09, 0.05, 0.04, 150, 700, Snd.sfx); } if (G.ride.t > (G.ride.dur || 3.4)) { const r = G.ride; G.state = 'play'; if (r.go) go(...r.go); else if (r.city) { if (r.city.concourse) { go(r.city.concourse, 320, 126, 'd'); Snd.fx('chime'); NET.say('FOLLOW THE YELLOW EXIT SIGNS DOWN TO THE CITY.', 4); } else { go(r.city.hub || r.city.start); if (M.sk) { pl.x = M.sk[0]; pl.y = M.sk[1]; camSnap(); } } } else if (r.to != null) go(CITY.line[r.to][0]); if (!r.plane && !r.sleep) emit('arrived', r); if (r.then) r.then(); } }
@@ -263,7 +268,7 @@ function drawRide() { // the view from the window; on an upright phone the whole
   for (let x = ((Math.floor((W - W0) / 2) + 30) % 44) - 44; x < W; x += 44 * k) { const y = top + (24 + Math.sin(G.t * 3 + x)) * k; R(ctx, x, top + 6 * k, 1, 14 * k, '#c8c0d4'); disc(ctx, x + 0.5, y, 4 * k, '#f4f1e6'); disc(ctx, x + 0.5, y, 2.5 * k, '#2a2a3a'); }
   layout(304, () => {
     ctx.save(); ctx.beginPath(); ctx.rect(20, 34, 280, 84); ctx.clip();
-    const s = r.spr || (r.city ? SPR.ride2 : SPR[CITY.rideSpr] || SPR.ride), o = (G.t * (r.speed || (r.city ? 46 : 150))) % 320; ctx.drawImage(s, o, 0, 320, 84, 20, 34, 320, 84); ctx.drawImage(s, o - 320, 0, 320, 84, 20, 34, 320, 84); for (let x = 300 - (G.t * (r.city ? 760 : 420)) % (r.city ? 150 : 90); x > 0; x -= r.city ? 150 : 90) R(ctx, x, 34, 3, 84, '#3a3a4e'); ctx.restore();
+    const s = r.spr || (r.city ? SPR.ride2 : CITY.rideSpr && SPR[CITY.rideSpr] || SPR.ride), o = (G.t * (r.speed || (r.city ? 46 : 150))) % 320; ctx.drawImage(s, o, 0, 320, 84, 20, 34, 320, 84); ctx.drawImage(s, o - 320, 0, 320, 84, 20, 34, 320, 84); for (let x = 300 - (G.t * (r.city ? 760 : 420)) % (r.city ? 150 : 90); x > 0; x -= r.city ? 150 : 90) R(ctx, x, 34, 3, 84, '#3a3a4e'); ctx.restore();
     for (const x of [20, 112, 206, 298]) R(ctx, x - 2, 30, 4, 92, '#c8c0d4'); R(ctx, 16, 30, 288, 4, '#c8c0d4'); R(ctx, 16, 118, 288, 4, '#c8c0d4');
     panel(70, 136, 180, 32); txtC(ctx, r.label || (r.city ? 'SHINKANSEN TO' : 'NEXT STOP'), 160, 142, '#8a7a6a'); txtC(ctx, r.name || (r.city ? r.city.name : CITY.line[r.to][1]), 160, 152, r.city || r.go ? '#3f7ab0' : '#3f9a5a', null, 2);
   }, top + 90 * k);
@@ -333,7 +338,7 @@ function drawUI() {
     const hits = yy => (G.bub || []).filter(([bx, by, bw, bh]) => x < bx + bw + 2 && x + w > bx - 2 && yy < by + bh + 2 && yy + 10 > by - 2);
     let y = Math.max(top, ay - snap(G.cy) - 43); if (hits(y).length) { const under = Math.min(H - 12, pl.y - snap(G.cy) + 6); if (!hits(under).length) y = under; else y = Math.max(top, Math.min(...hits(y).map(b => b[1])) - 13); }
     R(ctx, x - 2, y - 1, w + 4, 12, 'rgba(29,22,38,0.72)'); const kw = keycap(x, y, 'E'); txt(ctx, g.label, x + kw + 3, y + 2, '#fff8e8', '#1d1626'); }
-  if (st === 'play' && M.def.hud) { const s = M.def.hud(), w = tw(s) + 12, y = NET.on && !TOUCH ? 16 : TOUCH ? 40 : 4; panel(Math.floor((W - w) / 2), y, w, 13); txtC(ctx, s, W / 2, y + 4, '#3f7ab0'); } // a map's own note (the next train)
+  if (st === 'play' && M.def.hud && M.def.hud()) { const s = M.def.hud(), w = tw(s) + 12, y = NET.on && !TOUCH ? 16 : TOUCH ? 40 : 4; panel(Math.floor((W - w) / 2), y, w, 13); txtC(ctx, s, W / 2, y + 4, '#3f7ab0'); } // a map's own note (the next train)
   if (st === 'play') NET.hud();
   if (st === 'tog') NET.drawTog(); if (st === 'say') NET.drawSay();
   if (st === 'play' && G.banner > 0) { const a = Math.min(1, G.banner, (3.5 - G.banner) * 2 + 0.3); ctx.globalAlpha = Math.max(0, Math.min(1, a)); R(ctx, 0, 60, W, M.def.sub ? 30 : 20, 'rgba(29,22,38,0.75)'); txtC(ctx, M.def.name, W / 2, 65, '#fff8e8', '#1d1626', 2); if (M.def.sub) txtC(ctx, M.def.sub, W / 2, 80, '#ffd98a', null); ctx.globalAlpha = 1; }
@@ -373,14 +378,14 @@ function drawUI() {
     });
   }
   if (st === 'line' && W < W0) {
-    const L = G.line, b = lineBox(), STN = CITY.line; R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(b.x, b.y, b.w, b.h); txtC(ctx, 'WHERE TO?', W / 2, b.y + 7, '#3f9a5a', null, 2);
+    const L = G.line, b = lineBox(), STN = CITY.line; R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); panel(b.x, b.y, b.w, b.h); txtC(ctx, G.line.express ? 'EXPRESS: WHERE TO?' : 'WHERE TO?', W / 2, b.y + 7, '#3f9a5a', null, 2);
     for (let k = 0; k < STN.length - 1; k++) R(ctx, b.x + 15, b.y + 36 + k * 24, 2, 24, '#5aa85a');
     STN.forEach(([id, name], i) => { const y = b.y + 26 + i * 24, on = i === L.sel, here = id === (M.from || M.id), got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length;
       if (on) R(ctx, b.x + 4, y, b.w - 8, 20, '#f2e2c0'); disc(ctx, b.x + 16, y + 10, on ? 5.5 : 4.5, '#1d1626'); disc(ctx, b.x + 16, y + 10, on ? 4.5 : 3.5, here ? '#f2c14e' : on ? '#e0452f' : '#fff8e8');
       txt(ctx, name, b.x + 28, y + 5, on ? '#c8382e' : '#3a2e40'); txt(ctx, here ? 'YOU ARE HERE' : have + '/' + got.length + ' STAMPS', b.x + 28, y + 12, here ? '#e08a1a' : have === got.length ? '#3f9a5a' : '#b8a888'); });
     txtC(ctx, STN[L.sel][0] === (M.from || M.id) ? TOUCH ? 'TAP AGAIN TO STAY' : 'E TO STAY' : TOUCH ? 'TAP AGAIN TO RIDE' : 'E TO RIDE', W / 2, b.y + b.h - 12, '#8a7a6a'); const sh = shinkHint(); if (sh) { txtC(ctx, sh[0], W / 2, b.y + b.h - 30, '#3f7ab0'); txtC(ctx, sh[1], W / 2, b.y + b.h - 23, '#3f7ab0'); }
   } else if (st === 'line') {
-    R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); ctx.save(); ctx.translate(ox, oy); panel(20, 10, 280, 160); txtC(ctx, 'WHERE TO?', 160, 17, '#3f9a5a', null, 2); const L = G.line, STN = CITY.line, n = STN.length, P = i => { const a = -1.5708 + i / n * 6.2832; return [160 + Math.cos(a) * 86, 92 + Math.sin(a) * 40]; };
+    R(ctx, 0, 0, W, H, 'rgba(16,12,28,0.7)'); ctx.save(); ctx.translate(ox, oy); panel(20, 10, 280, 160); txtC(ctx, G.line.express ? 'EXPRESS: WHERE TO?' : 'WHERE TO?', 160, 17, '#3f9a5a', null, 2); const L = G.line, STN = CITY.line, n = STN.length, P = i => { const a = -1.5708 + i / n * 6.2832; return [160 + Math.cos(a) * 86, 92 + Math.sin(a) * 40]; };
     for (let k = 0; k < 120; k++) { const a = k / 120 * 6.2832; R(ctx, 160 + Math.cos(a) * 86 - 1, 92 + Math.sin(a) * 40 - 1, 3, 3, '#5aa85a'); }
     STN.forEach(([id, name], i) => { const [x, y] = P(i), on = i === L.sel, here = id === (M.from || M.id), got = Object.keys(STAMPS).filter(k => STAMPS[k][2] === id), have = got.filter(k => G.stamps[k]).length; disc(ctx, x, y, on ? 6 : 4.5, '#1d1626'); disc(ctx, x, y, on ? 5 : 3.5, here ? '#f2c14e' : on ? '#e0452f' : '#fff8e8'); const ty = y + (Math.sin(-1.5708 + i / n * 6.2832) < -0.2 ? -19 : 8), txx = Math.max(26 + tw(name) / 2, Math.min(294 - tw(name) / 2, x + Math.cos(-1.5708 + i / n * 6.2832) * 22)); txtC(ctx, name, txx, ty, on ? '#c8382e' : '#3a2e40'); txtC(ctx, have + '/' + got.length, txx, ty + 7, have === got.length ? '#3f9a5a' : '#b8a888'); });
     ctx.drawImage(ICON.train, 153, 80); txtC(ctx, STN[L.sel][0] === (M.from || M.id) ? 'YOU ARE HERE' : 'TO ' + STN[L.sel][1], 160, 98, '#3a2e40'); const sh = shinkHint(); if (sh) { txtC(ctx, sh[0], 160, 109, '#3f7ab0'); txtC(ctx, sh[1], 160, 116, '#3f7ab0'); } txtC(ctx, '< >  CHOOSE     E  RIDE     ESC  BACK', 160, 160, '#8a7a6a'); ctx.restore();
@@ -392,7 +397,7 @@ function drawUI() {
 
 // ---------- boot ----------
 (function boot() {
-  buildIcons(); buildSprites(); PLACES.sprites(); for (const c of CLIST) { if (c.sprites) c.sprites(); Object.assign(MG, c.minis || {}); } RIDES.sprites(); AIR.sprites(); DAY.sprites(); MG.ema = RIDES.EMA; Object.assign(MG, AIR.minis, DAY.minis); load();
+  buildIcons(); buildSprites(); PLACES.sprites(); for (const c of CLIST) { if (c.icons) c.icons(); Object.assign(MG, c.minis || {}); } RIDES.sprites(); AIR.sprites(); DAY.sprites(); MG.ema = RIDES.EMA; Object.assign(MG, AIR.minis, DAY.minis, SHOP.minis); load();
   SPR.ride = (() => { const c = mk(320, 84), g = c.g, r = RNG(12); dgrad(g, 0, 0, 320, 84, ['#7ab8e8', '#a8d4f0', '#e8f0f8']); skyline(g, 0, 320, 70, 8, 40, '#a8b8d0', r); skyline(g, 0, 320, 84, 10, 34, '#6a7a98', r); return c; })();
   // the countryside from the shinkansen window, and the map of central Japan you pick a city on
   SPR.ride2 = (() => { const c = mk(320, 84), g = c.g, r = RNG(31); dgrad(g, 0, 0, 320, 84, ['#8ac4f0', '#b8dcf4', '#f0f4f0']); for (const [x, y, w] of [[40, 14, 26], [250, 20, 34], [150, 8, 18]]) { ell(g, x, y, w, 4, '#ffffff'); ell(g, x + w * 0.3, y - 3, w * 0.5, 4, '#ffffff'); } mountain(g, 205, 62, 74, 50, '#7a8ac0', r, '#f8f4ee'); for (let x = -20; x < 340; x += 38) ell(g, x + r() * 20, 64, 34 + r() * 16, 10 + r() * 6, '#6a9a78'); for (let x = -10; x < 330; x += 26) ell(g, x + r() * 14, 68, 22, 7, '#5a8a5a'); R(g, 0, 64, 320, 20, '#8fc97a'); for (let y = 66; y < 84; y += 3) R(g, 0, y, 320, U, '#64b054'); for (let x = 0; x < 320; x += 40) { R(g, x + 12, 70, 14, 14, y2(x)); } function y2(x) { return x % 80 ? '#c8d85a' : '#74bf5e'; } for (const x of [60, 96, 232, 290]) { R(g, x, 58, 12, 8, '#f4eedc'); roof(g, x + 6, 53, 3, 9, 5, '#4a4660'); R(g, x + 4, 61, 3, 5, '#6a4638'); } for (let x = 8; x < 320; x += 64) { R(g, x, 46, 1, 20, '#6b6478'); R(g, x - 3, 48, 7, 1, '#6b6478'); } return c; })();
@@ -419,7 +424,7 @@ function drawUI() {
   const q = new URLSearchParams(location.search);
   try {
     go(q.get('map') || (q.has('city') && MAPS[G.dist].city !== CITY.id ? CITY.start : G.dist)); G.fade = 0; G.banner = 0;
-    if (q.has('map') || q.has('x')) { G.state = 'play'; if (MAPS[q.get('map')].indoor) { const h = MAPS[CITY.hub || CITY.start]; build(CITY.start); G.back = { map: CITY.start, x: BUILT[CITY.start].st ? BUILT[CITY.start].st[0] : 70, y: BUILT[CITY.start].st ? BUILT[CITY.start].st[1] : 204 }; M = BUILT[q.get('map')]; pl.x = 160; pl.y = 180; } if (q.has('x')) { pl.x = +q.get('x'); pl.y = +q.get('y'); } camSnap(); G.zn = zoneAt(pl.x, pl.y); }
+    if (q.has('map') || q.has('x')) { G.state = 'play'; if (MAPS[q.get('map')].indoor) { const h = MAPS[CITY.hub || CITY.start]; build(CITY.start); G.back = { map: CITY.start, x: BUILT[CITY.start].st ? BUILT[CITY.start].st[0] : 70, y: BUILT[CITY.start].st ? BUILT[CITY.start].st[1] : 204 }; M = BUILT[q.get('map')]; pl.x = M.w / 2; pl.y = M.h - 12; } if (q.has('x')) { pl.x = +q.get('x'); pl.y = +q.get('y'); } camSnap(); G.zn = zoneAt(pl.x, pl.y); }
     if (q.get('st') === 'book') { G.state = 'book'; G.bk = q.has('pg') ? BOOKP().indexOf(q.get('pg')) : CLIST.indexOf(CITY); } if (q.get('st') === 'tog') NET.open(); if (q.get('st') === 'menu') MENU.open(q.get('kind') || 'main'); if (q.get('st') === 'say') NET.openSay(); if (q.get('st') === 'japan') { G.state = 'japan'; G.jp = { sel: +(q.get('sel') || 0) }; } if (q.get('st') === 'shink') { G.state = 'ride'; G.ride = { city: CLIST[CLIST.length - 1], t: 1.5, dur: 5.6 }; } if (q.get('st') === 'line') { G.state = 'line'; G.line = { sel: 2 }; } if (q.get('st') === 'ride') { G.state = 'ride'; G.ride = { to: 3, t: 1 }; }
     if (q.has('room') && !q.has('sim')) NET.join(q.get('room').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8));
     if (q.has('mini')) { G.state = 'mini'; G.mg = { k: q.get('mini'), sp: {}, t: +(q.get('mt') || 0) }; MG[G.mg.k].init(G.mg); }

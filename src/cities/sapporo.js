@@ -216,6 +216,20 @@
   city({
     id: 'sapporo', name: 'SAPPORO', tagline: 'SNOW, RAMEN AND A CANAL TOWN', start: 'sap_odori', hub: 'sap_odori', line: LINE, areas: LINE.slice(0, 3), stamps: STAMPS, cats: 3, via: 'plane', rideSpr: 'rideSnow', gate: ['FLIGHTS', 'THE PLANE SIGN HERE'], minis: { snowball: SNOWB, ramen: RAMEN, glass: GLASS },
     hud: () => M.id === 'sap_otaru' ? ['steamc', steaming() ? 'WHISTLING NOW!' : 'WHISTLE IN ' + (90 - Math.floor(worldTime() % 90)) + 'S'] : M.indoor || M.def.airport ? null : ['snowf', 'MINUS ' + (6 + Math.floor(worldTime() / 600) % 5) + ' DEGREES'],
+    icons() { // the little pictures for the stamp book and the bag: painted at boot, since they show up everywhere
+      icon('snowf', g => { for (let k = 0; k < 3; k++) { const a = k * 1.047; line(g, 6 - Math.cos(a) * 5, 6 - Math.sin(a) * 5, 6 + Math.cos(a) * 5, 6 + Math.sin(a) * 5, '#5ab8e8'); } disc(g, 6, 6, 1.4, '#ffffff'); });
+      icon('tvt', g => { line(g, 2, 12, 5, 3, '#e8642a'); line(g, 10, 12, 7, 3, '#e8642a'); R(g, 4, 5, 4, 2, '#f4f1e6'); R(g, 5.5, 0, 1, 3, '#e8642a'); R(g, 3, 8, 6, 1, '#e8642a'); });
+      icon('clockt', g => { R(g, 1, 7, 10, 5, '#f4f1e6'); R(g, 0, 6, 12, 1.5, '#c8382e'); R(g, 4, 2, 4, 5, '#f4f1e6'); R(g, 3, 1, 6, 1.5, '#c8382e'); disc(g, 6, 4.5, 1.5, '#2a2430'); });
+      icon('sled', g => { R(g, 1, 6, 10, 3, '#c8382e'); R(g, 1, 6, 10, 1, '#f06a5a'); R(g, 0, 10, 12, 1, '#6b6478'); R(g, 0, 9, 1, 2, '#6b6478'); line(g, 1, 4, 4, 1, '#ffffff'); line(g, 4, 4, 7, 1, '#ffffff'); });
+      icon('sball', g => { disc(g, 6, 6, 4.5, '#f4f8fc'); disc(g, 5, 5, 2, '#ffffff'); P(g, 8, 8, '#c8d4e4'); P(g, 4, 8, '#c8d4e4'); });
+      icon('corn', g => { ell(g, 6, 6, 2.6, 5, '#f2d040'); for (let y = 2; y < 11; y += 2) R(g, 4, y, 4, U, '#c8a020'); line(g, 3, 11, 1, 6, '#5aa85a'); line(g, 9, 11, 11, 6, '#5aa85a'); });
+      icon('ice', g => { R(g, 2, 2, 8, 9, '#bfe8f8'); R(g, 2, 2, 8, 1, '#ffffff'); R(g, 3, 4, 1, 5, '#ffffff'); R(g, 7, 5, 2, 5, '#8ac8e8'); R(g, 0, 11, 12, 1, '#8a6aff'); });
+      icon('lamb', g => { ell(g, 6, 8, 5.5, 3, '#3a3a4e'); ell(g, 6, 6, 4.5, 3, '#5a5a6e'); R(g, 3, 5, 3, 2, '#e8a888'); R(g, 7, 6, 3, 2, '#d88878'); R(g, 1, 9, 2, 1, '#5aa85a'); R(g, 9, 9, 2, 1, '#f4f1e6'); });
+      icon('canal', g => { R(g, 0, 0, 12, 4, '#8a8496'); R(g, 1, 1, 3, 3, '#ffd98a'); R(g, 8, 1, 3, 3, '#ffd98a'); R(g, 0, 4, 12, 6, '#3a5a8a'); R(g, 2, 6, 3, 1, '#ffd98a'); R(g, 0, 10, 12, 2, '#f4f8fc'); });
+      icon('vase', g => { ell(g, 6, 8, 3.5, 3.5, '#5ad8f0'); R(g, 4.5, 1, 3, 5, '#5ad8f0'); R(g, 4, 1, 4, 1, '#8ae8f8'); P(g, 5, 7, '#ffffff'); });
+      icon('mbox', g => { R(g, 1, 4, 10, 7, '#8a5a3a'); R(g, 1, 4, 10, 1, '#c89a6a'); R(g, 1, 1, 10, 3, '#a8744a'); R(g, 4, 6, 4, 3, '#f2c14e'); R(g, 11, 6, 1, 2, '#f2c14e'); });
+      icon('steamc', g => { R(g, 4, 4, 4, 8, '#8a6a3a'); disc(g, 6, 6, 1.6, '#f4ead4'); R(g, 4.5, 1, 1, 3, '#8a8496'); R(g, 6.5, 2, 1, 2, '#8a8496'); disc(g, 3, 1, 1.5, '#ffffff'); disc(g, 9, 0.5, 1.4, '#ffffff'); });
+    },
     sprites() {
       variants('snowpine', 3, (rnd_, i) => { const c = mk(64, 62); pine(c.g, 32, 60, 40 + i * 3, rnd_, ['#1f3a3a', '#2f5a4a', '#4a7a6a']); return PLACES.frostCanvas(c); });
       variants('bare', 3, (rnd_, i) => { const c = mk(56, 62), g = c.g; trunk(g, 28, 60, 34 + i * 3, 3, '#5a4434', 0); const br = (x, y, a, l, d) => { if (d > 4 || l < 2) return; const x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l; line1(g, x, y, x2, y2, d < 2 ? '#5a4434' : '#7a6454'); br(x2, y2, a - 0.45 - rnd_() * 0.2, l * 0.7, d + 1); br(x2, y2, a + 0.45 + rnd_() * 0.2, l * 0.7, d + 1); }; br(28, 30 - i * 2, -1.5708, 12, 0); return PLACES.frostCanvas(c); });
@@ -245,21 +259,8 @@
       one('stram', 70, 30, g => { R(g, 2, 8, 66, 18, '#f4f1e6'); R(g, 2, 19, 66, 7, '#2a6a4a'); R(g, 2, 18, 66, 1, '#5ad88a'); ell(g, 2, 16, 3, 9, '#f4f1e6'); ell(g, 67, 16, 3, 9, '#f4f1e6'); for (let x = 6; x < 64; x += 7) { R(g, x, 10, 5, 6, '#2a3a5a'); R(g, x, 10, 5, 1, '#6a8ab0'); } R(g, 2, 7, 66, 1.5, '#c8c0d0'); for (const x of [14, 52]) { disc(g, x, 27, 2.5, '#2a2430'); disc(g, x + 6, 27, 2.5, '#2a2430'); } line1(g, 30, 7, 36, 0, '#3a3446'); line1(g, 42, 7, 36, 0, '#3a3446'); for (let x = 4; x < 66; x += 3) R(g, x, 7, 2, 1, '#ffffff'); }, 1);
       one('kura', 120, 72, g => { R(g, 4, 30, 112, 40, '#8a8496'); for (let y = 30; y < 70; y += 5) for (let x = 4 + ((y / 5) % 2) * 6; x < 116; x += 12) { R(g, x, y, 11, 4.5, '#9a94a6'); R(g, x, y, 11, U, '#b8b0c4'); } roof(g, 60, 10, 46, 60, 22, '#3a3446'); for (const x of [26, 94]) { R(g, x - 8, 42, 16, 28, '#2a2430'); ell(g, x, 42, 8, 5, '#2a2430'); R(g, x - 7, 44, 14, 26, '#3a3a4e'); R(g, x - U, 44, 1, 26, '#1d1626'); } for (const x of [50, 70]) { R(g, x - 4, 40, 8, 8, '#1d1626'); R(g, x - 3, 41, 6, 6, '#ffd98a'); } R(g, 0, 70, 120, 2, '#5a5468'); }, 1);
       one('snowcandle', 8, 8, g => { ell(g, 4, 5.5, 4, 2.6, '#f4f8fc'); ell(g, 4, 4.5, 3, 2, '#ffffff'); R(g, 3, 3, 2, 2, '#ffc070'); P(g, 3.5, 2.5, '#fff0c0'); });
-      one('gaslamp', 12, 42, g => { R(g, 5, 10, 2, 32, '#2a2430'); R(g, 3, 38, 6, 4, '#2a2430'); R(g, 2, 2, 8, 9, '#2a2430'); R(g, 3, 3, 6, 7, '#ffd98a'); R(g, 3, 3, 6, 2, '#fff4c0'); R(g, 1, 1, 10, 2, '#2a2430'); R(g, 5, 0, 2, 1, '#2a2430'); }, 1);
       one('steamclock', 24, 64, g => { R(g, 4, 56, 16, 8, '#5a4a3a'); R(g, 6, 22, 12, 34, '#8a6a3a'); R(g, 6, 22, 3, 34, '#a8844a'); for (const x of [8, 12, 16]) R(g, x, 4 + (x % 8), 2, 18 - (x % 8), '#8a8496'); R(g, 4, 18, 16, 4, '#6a5a4a'); disc(g, 12, 32, 5, '#f4ead4'); disc(g, 12, 32, 5, 'rgba(0,0,0,0)'); R(g, 11.5, 28.5, 1, 4, '#2a2430'); R(g, 12, 31.5, 3, 1, '#2a2430'); R(g, 8, 44, 8, 8, '#3a3a4e'); R(g, 9, 45, 6, 6, '#ffd98a'); }, 1);
       SPR.rideSnow = (() => { const c = mk(320, 84), g = c.g, r = RNG(71); dgrad(g, 0, 0, 320, 84, ['#9aa8c8', '#c8d0e0', '#e8ecf4']); skyline(g, 0, 320, 64, 10, 34, '#a8b0c8', r); for (let x = 0; x < 320; x += 3) R(g, x, 64 - (hsh(x, 3) * 3), 3, 1, '#f4f8fc'); R(g, 0, 64, 320, 20, '#e4eaf4'); for (let x = -10; x < 330; x += 22) { const h = 10 + r() * 12; R(g, x, 84 - h, 18, h, '#c8b8a8'); R(g, x - 1, 84 - h - 3, 20, 3, '#f4f8fc'); } for (let k = 0; k < 80; k++) p1(g, r() * 320, r() * 84, '#ffffff'); return c; })();
-      icon('snowf', g => { for (let k = 0; k < 3; k++) { const a = k * 1.047; line(g, 6 - Math.cos(a) * 5, 6 - Math.sin(a) * 5, 6 + Math.cos(a) * 5, 6 + Math.sin(a) * 5, '#5ab8e8'); } disc(g, 6, 6, 1.4, '#ffffff'); });
-      icon('tvt', g => { line(g, 2, 12, 5, 3, '#e8642a'); line(g, 10, 12, 7, 3, '#e8642a'); R(g, 4, 5, 4, 2, '#f4f1e6'); R(g, 5.5, 0, 1, 3, '#e8642a'); R(g, 3, 8, 6, 1, '#e8642a'); });
-      icon('clockt', g => { R(g, 1, 7, 10, 5, '#f4f1e6'); R(g, 0, 6, 12, 1.5, '#c8382e'); R(g, 4, 2, 4, 5, '#f4f1e6'); R(g, 3, 1, 6, 1.5, '#c8382e'); disc(g, 6, 4.5, 1.5, '#2a2430'); });
-      icon('sled', g => { R(g, 1, 6, 10, 3, '#c8382e'); R(g, 1, 6, 10, 1, '#f06a5a'); R(g, 0, 10, 12, 1, '#6b6478'); R(g, 0, 9, 1, 2, '#6b6478'); line(g, 1, 4, 4, 1, '#ffffff'); line(g, 4, 4, 7, 1, '#ffffff'); });
-      icon('sball', g => { disc(g, 6, 6, 4.5, '#f4f8fc'); disc(g, 5, 5, 2, '#ffffff'); P(g, 8, 8, '#c8d4e4'); P(g, 4, 8, '#c8d4e4'); });
-      icon('corn', g => { ell(g, 6, 6, 2.6, 5, '#f2d040'); for (let y = 2; y < 11; y += 2) R(g, 4, y, 4, U, '#c8a020'); line(g, 3, 11, 1, 6, '#5aa85a'); line(g, 9, 11, 11, 6, '#5aa85a'); });
-      icon('ice', g => { R(g, 2, 2, 8, 9, '#bfe8f8'); R(g, 2, 2, 8, 1, '#ffffff'); R(g, 3, 4, 1, 5, '#ffffff'); R(g, 7, 5, 2, 5, '#8ac8e8'); R(g, 0, 11, 12, 1, '#8a6aff'); });
-      icon('lamb', g => { ell(g, 6, 8, 5.5, 3, '#3a3a4e'); ell(g, 6, 6, 4.5, 3, '#5a5a6e'); R(g, 3, 5, 3, 2, '#e8a888'); R(g, 7, 6, 3, 2, '#d88878'); R(g, 1, 9, 2, 1, '#5aa85a'); R(g, 9, 9, 2, 1, '#f4f1e6'); });
-      icon('canal', g => { R(g, 0, 0, 12, 4, '#8a8496'); R(g, 1, 1, 3, 3, '#ffd98a'); R(g, 8, 1, 3, 3, '#ffd98a'); R(g, 0, 4, 12, 6, '#3a5a8a'); R(g, 2, 6, 3, 1, '#ffd98a'); R(g, 0, 10, 12, 2, '#f4f8fc'); });
-      icon('vase', g => { ell(g, 6, 8, 3.5, 3.5, '#5ad8f0'); R(g, 4.5, 1, 3, 5, '#5ad8f0'); R(g, 4, 1, 4, 1, '#8ae8f8'); P(g, 5, 7, '#ffffff'); });
-      icon('mbox', g => { R(g, 1, 4, 10, 7, '#8a5a3a'); R(g, 1, 4, 10, 1, '#c89a6a'); R(g, 1, 1, 10, 3, '#a8744a'); R(g, 4, 6, 4, 3, '#f2c14e'); R(g, 11, 6, 1, 2, '#f2c14e'); });
-      icon('steamc', g => { R(g, 4, 4, 4, 8, '#8a6a3a'); disc(g, 6, 6, 1.6, '#f4ead4'); R(g, 4.5, 1, 1, 3, '#8a8496'); R(g, 6.5, 2, 1, 2, '#8a8496'); disc(g, 3, 1, 1.5, '#ffffff'); disc(g, 9, 0.5, 1.4, '#ffffff'); });
     }
   });
 })();

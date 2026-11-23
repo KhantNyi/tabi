@@ -1,8 +1,43 @@
 'use strict';
 // ---------- world: building a top-down map, its ground, buildings, rooms and furniture ----------
 const T = 16, GR = 0, DT = 1, PV = 2, WA = 3, VL = 4, FR = 5, AS = 6, PL = 7, HARD = [0, 0, 1, 0, 1, 0, 1, 1];
-const MAPS = {}, BUILT = {}, SPR = {}, LOOKS = {}, CITIES = {}; // MAPS holds every district and room of every city, so map ids must be unique
+const MAPS = {}, BUILT = {}, LOOKS = {}, CITIES = {}; // MAPS holds every district and room of every city, so map ids must be unique
 let M = null; // the map being built or walked
+// ---------- sprites, painted when they are first needed ----------
+// Shared art (trees, lamps, stations, airports) is painted at boot. Each city's own art (its temples, trams, mascots) is
+// painted the first time one of its maps is built, and let go again once none of its maps are kept (see keep() in main.js),
+// so the game starts just as fast, and holds no more, however many cities it has.
+// SPR looks like a plain object. Asking it for a name nobody has painted yet paints the cities one by one until the
+// name turns up, so a picture one city borrows from another is always there; LAZY.miss lists those, so the tests can
+// point at them and the borrowing city can say so (needs: [...]) instead.
+const LAZY = { made: {}, keys: {}, cur: null, none: new Set(), miss: [] };
+const SPR = new Proxy({}, {
+  get(t, k) { return k in t || typeof k !== 'string' ? t[k] : sprMiss(t, k); },
+  set(t, k, v) { if (LAZY.cur && !(k in t)) LAZY.keys[LAZY.cur].push(k); t[k] = v; return true; },
+});
+function citySprites(cid) {
+  const c = CITIES[cid]; if (!c || LAZY.made[cid]) return; LAZY.made[cid] = 1;
+  for (const n of c.needs || []) citySprites(n);
+  if (!c.sprites) return;
+  const was = LAZY.cur; LAZY.cur = cid; LAZY.keys[cid] = LAZY.keys[cid] || [];
+  try { c.sprites(); } finally { LAZY.cur = was; }
+}
+function sprMiss(t, k) {
+  if (LAZY.none.has(k)) return undefined;
+  LAZY.miss.push(k + ' on ' + (M ? M.id : '-'));
+  for (const cid in CITIES) { citySprites(cid); if (k in t) return t[k]; }
+  LAZY.none.add(k); return undefined;
+}
+// a city none of whose maps are kept gives its art back (pictures already placed on a kept map stay where they are)
+function dropCitySprites(keepIds) {
+  const add = cid => { if (!CITIES[cid] || keepIds.has(cid) && add.seen.has(cid)) return; keepIds.add(cid); add.seen.add(cid); (CITIES[cid].needs || []).forEach(add); };
+  add.seen = new Set(); [...keepIds].forEach(add);
+  for (const cid in LAZY.made) {
+    if (!LAZY.made[cid] || keepIds.has(cid)) continue;
+    for (const k of LAZY.keys[cid]) delete SPR[k];
+    LAZY.keys[cid] = []; LAZY.made[cid] = 0; LAZY.none.clear();
+  }
+}
 // ---------- hooks for playing together (src/net/net.js) ----------
 // OTHERS: friends' avatars ({ id, name, col, F, map, x, y, dir, mv, wt, ph, act, alpha, say, sayT }); drawWorld draws the
 // ones on your map. on()/emit(): moments worth telling friends about ('act', 'photo', 'ride', 'arrived', 'gift', 'say').
@@ -79,12 +114,34 @@ function put(spr, x, y, ox, oy, o) { const e = Object.assign({ spr, x, y, ox, oy
 function clearAt(x, y, rad) { for (let a = 0; a < 9; a++) { const px = a === 8 ? x : x + Math.cos(a * 0.7854) * rad, py = a === 8 ? y : y + Math.sin(a * 0.7854) * rad * 0.7, t = terr(px, py); if ((t !== GR && t !== FR) || solidAt(px, py)) return false; } return true; }
 function variants(name, n, fn) { SPR[name] = []; for (let i = 0; i < n; i++) SPR[name].push(fn(RNG(name.length * 131 + i * 17 + 5), i)); }
 const one = (name, w, h, fn, ol) => { const c = mk(w, h); fn(c.g); return SPR[name] = ol ? outline(c) : c; };
+// fallen petals, scattered on the ground under a cherry (more of them on the side the wind blows to)
+function petals(x, y, n = 26, r = 26) { const g = M.ground.g; for (let k = 0; k < n; k++) { const a = hsh(x + k * 7, y) * 6.283, d = Math.sqrt(hsh(x, y + k * 11)) * r; R(g, x + Math.cos(a) * d + 3, y - 1 + Math.sin(a) * d * 0.38, k % 3 ? 1 : 1.5, U, k % 4 ? '#f9c8d8' : '#fdebf1'); } }
+// ---------- hanami: picnics under the cherries ----------
+// A blue sheet on the ground with people sitting on it, their shoes lined up at its edge, bento, cans and a bottle.
+// people: [[look, dx, dy, dir, tint, lines], ...]; they sit (only the top of them shows, knees folded) and can be talked to.
+function hanami(x, y, people) { M.ground.g.drawImage(SPR.tarp, x - 24, y - 13); return people.map(([name, dx, dy, dir, tint, lines]) => { const n = npc(name, x + dx, y + dy, { dir, tint, lines }); n.draw = sitting; return n; }); }
+function sitting(e, x, y) { const f = frameOf(e); ell(ctx, x, y, 6, 1.8, 'rgba(22,30,50,0.25)'); ctx.drawImage(f, 0, 0, f.lw, 19, snap(x - 10), snap(y - 21), f.lw, 19); R(ctx, x - 4.5, y - 3, 9, 3, '#3a3a4e'); R(ctx, x - 4.5, y - 3, 9, U, '#5a5a6e'); }
+// a string of paper lanterns along a path: wooden posts, a rope sagging between them, lanterns hanging from it, lit at dusk
+function lanterns(x0, x1, y, gap = 52) {
+  const posts = []; for (let x = x0; x <= x1; x += gap) posts.push(x);
+  M.NLx = (M.NLx || []).concat(posts.slice(0, -1).map(x => [x + gap / 2, y - 20, 18, '#ffc890']));
+  M.ACT.push({ x: (x0 + x1) / 2, y, always: 1, sayT: 0, draw(e, sx, sy) {
+    const ox = sx - e.x, oy = sy - e.y;
+    for (let i = 0; i + 1 < posts.length; i++) {
+      const a = posts[i], b = posts[i + 1], rope = t => [ox + a + (b - a) * t, oy + y - 25 + Math.sin(t * Math.PI) * 5];
+      for (let t = 0; t < 0.99; t += 0.1) { const [x1, y1] = rope(t), [x2, y2] = rope(t + 0.1); line1(ctx, x1, y1, x2, y2, '#5a4a48'); }
+      for (const t of [0.2, 0.4, 0.6, 0.8]) { const [lx, ly] = rope(t), sw = Math.sin(G.t * 1.6 + lx * 0.1) * 0.6; R(ctx, lx - 1.5 + sw, ly + 1, 3, 4.5, '#fff4e0'); R(ctx, lx - 1.5 + sw, ly + 1, 3, 1, '#c8382e'); R(ctx, lx - 1.5 + sw, ly + 4.5, 3, 1, '#c8382e'); R(ctx, lx - 0.5 + sw, ly + 2.5, 1, 1.5, '#f06a8c'); }
+    }
+    for (const p of posts) { R(ctx, ox + p - 0.75, oy + y - 27, 1.5, 27, '#8a5a3a'); R(ctx, ox + p - 0.75, oy + y - 27, U, 27, '#b8865a'); }
+  } });
+}
 function plant(kind, x, y, force) {
   if (!force && !clearAt(x, y, 9)) return false;
   const v = SPR[kind], s = v[Math.floor(hsh(x * 3, y * 5) * v.length)];
   if (kind === 'bamboo') { put(s, x, y, 14, 72, { split: 48, sw: 0.9, kind }); M.SHD.push([x, y, 8, 2.5]); block(x - 3, y - 3, x + 3, y); }
   else if (kind === 'pine' || kind === 'snowpine') { put(s, x, y, 32, 60, { split: 44, sw: 0.5, kind }); M.SHD.push([x, y, 13, 3.5]); block(x - 3, y - 4, x + 3, y); }
   else if (kind === 'bush' || kind === 'rock') { put(s, x, y, s.lw / 2, s.lh - 1); M.SHD.push([x, y, 8, 2]); block(x - 5, y - 4, x + 5, y); }
+  else if (kind === 'sakura') { put(s, x, y, s.lw / 2, s.lh - 2, { split: s.lh - 20, sw: 0.45, kind }); M.SHD.push([x, y, 20, 4.5]); block(x - 3, y - 4, x + 3, y); petals(x, y); }
   else { put(s, x, y, 28, 60, { split: 46, sw: 0.6, kind }); M.SHD.push([x, y, 14, 4]); block(x - 3, y - 4, x + 3, y); }
   return true;
 }
@@ -182,21 +239,25 @@ const trainSpot = (x, y, r, sn) => Object.assign({ x, y, r: r || 14, label: 'TRA
 function station(x, y, name) { tower(x, y, 92, 44, { c: '#e8e0d0', sign: name + ' STATION', sc: '#3f9a5a', wc: '#bfe8ff', gx: 7, ww: 4 }); M.SPOTS.push(trainSpot(x, y + 7, 14, name)); M.st = [x, y + 12]; }
 
 // ---------- rooms ----------
+// A room is as big as its map (tw x th tiles; 20 x 12 unless it says), with its back wall along the top and the way out
+// in the middle of the bottom edge. o.exit names the mat (EXIT, or STAIRS DOWN on an upper floor).
 function room(o) {
-  const g = M.ground.g, wl = o.wall || '#e8dcc0', f = M.floor = o.floor || 'wood', rnd = RNG(M.id.length * 9 + 1);
-  R(g, 0, 0, 320, 192, '#15101f'); R(g, 8, 4, 304, 44, wl); R(g, 8, 4, 304, 2, lite(wl, 0.35)); R(g, 8, 32, 304, 16, dark(wl, 0.16)); R(g, 8, 32, 304, U, dark(wl, 0.4)); R(g, 8, 46, 304, 2, dark(wl, 0.5));
-  if (f === 'wood') { R(g, 8, 48, 304, 138, '#c89a6a'); for (let y = 48; y < 186; y += 8) { R(g, 8, y, 304, U, '#a47a50'); R(g, 8, y + U, 304, U, '#dcb080'); for (let x = 8 + (y * 5 % 37); x < 312; x += 44) R(g, x, y, U, 8, '#a47a50'); } }
-  else if (f === 'tile') { for (let y = 48; y < 186; y += 12) for (let x = 8; x < 312; x += 12) { const k = ((x - 8) / 12 + (y - 48) / 12) & 1; R(g, x, y, 12, 12, k ? (o.t1 || '#e8e4ec') : (o.t2 || '#cfc8d8')); R(g, x, y, 12, U, '#f8f6fc'); } }
-  else if (f === 'tatami') { for (let y = 48; y < 186; y += 23) for (let x = 8 + ((y - 48) / 23 & 1) * 22; x < 312; x += 44) { R(g, x, y, 44, 23, '#b8c078'); R(g, x, y, 44, 1, '#5a7a48'); R(g, x, y, 1, 23, '#5a7a48'); for (let k = 2; k < 44; k += 2) R(g, x + k, y + 1, U, 22, '#a8b068'); } R(g, 8, 48, 22, 138, '#b8c078'); }
-  else { R(g, 8, 48, 304, 138, o.carpet || '#a83a48'); for (let y = 54; y < 186; y += 10) for (let x = 14 + (y / 10 & 1) * 5; x < 312; x += 10) { R(g, x, y, 1, 1, lite(o.carpet || '#a83a48', 0.25)); } }
-  R(g, 8, 48, 304, 3, 'rgba(20,10,30,0.25)'); R(g, 146, 184, 28, 8, '#5a3a28'); R(g, 148, 178, 24, 10, o.mat || '#3f7a5a'); R(g, 148, 178, 24, 1, lite(o.mat || '#3f7a5a', 0.3)); txt(g, 'EXIT', 153, 181, '#fff8e8');
+  const g = M.ground.g, wl = o.wall || '#e8dcc0', f = M.floor = o.floor || 'wood', rnd = RNG(M.id.length * 9 + 1), w = M.w, h = M.h, fy = h - 6, cx = w / 2;
+  R(g, 0, 0, w, h, '#15101f'); R(g, 8, 4, w - 16, 44, wl); R(g, 8, 4, w - 16, 2, lite(wl, 0.35)); R(g, 8, 32, w - 16, 16, dark(wl, 0.16)); R(g, 8, 32, w - 16, U, dark(wl, 0.4)); R(g, 8, 46, w - 16, 2, dark(wl, 0.5));
+  if (f === 'wood') { R(g, 8, 48, w - 16, fy - 48, '#c89a6a'); for (let y = 48; y < fy; y += 8) { R(g, 8, y, w - 16, U, '#a47a50'); R(g, 8, y + U, w - 16, U, '#dcb080'); for (let x = 8 + (y * 5 % 37); x < w - 8; x += 44) R(g, x, y, U, 8, '#a47a50'); } }
+  else if (f === 'tile') { for (let y = 48; y < fy; y += 12) for (let x = 8; x < w - 8; x += 12) { const k = ((x - 8) / 12 + (y - 48) / 12) & 1; R(g, x, y, 12, Math.min(12, fy - y), k ? (o.t1 || '#e8e4ec') : (o.t2 || '#cfc8d8')); R(g, x, y, 12, U, '#f8f6fc'); } }
+  else if (f === 'tatami') { for (let y = 48; y < fy; y += 23) for (let x = 8 + ((y - 48) / 23 & 1) * 22; x < w - 8; x += 44) { R(g, x, y, 44, 23, '#b8c078'); R(g, x, y, 44, 1, '#5a7a48'); R(g, x, y, 1, 23, '#5a7a48'); for (let k = 2; k < 44; k += 2) R(g, x + k, y + 1, U, 22, '#a8b068'); } R(g, 8, 48, 22, fy - 48, '#b8c078'); R(g, 0, fy, w, h - fy, '#15101f'); R(g, w - 8, 0, 8, h, '#15101f'); }
+  else { R(g, 8, 48, w - 16, fy - 48, o.carpet || '#a83a48'); for (let y = 54; y < fy; y += 10) for (let x = 14 + (y / 10 & 1) * 5; x < w - 8; x += 10) { R(g, x, y, 1, 1, lite(o.carpet || '#a83a48', 0.25)); } }
+  R(g, 8, 48, w - 16, 3, 'rgba(20,10,30,0.25)'); const ex = o.exit || 'EXIT', mw = Math.max(24, tw(ex) + 8);
+  R(g, cx - mw / 2 - 2, fy - 2, mw + 4, 8, '#5a3a28'); R(g, cx - mw / 2, fy - 8, mw, 10, o.mat || '#3f7a5a'); R(g, cx - mw / 2, fy - 8, mw, 1, lite(o.mat || '#3f7a5a', 0.3)); txtC(g, ex, cx, fy - 5, '#fff8e8');
   if (o.art) o.art(g, rnd);
-  block(0, 0, 320, 50); block(0, 0, 8, 192); block(312, 0, 320, 192); block(0, 186, 148, 192); block(172, 186, 320, 192);
+  block(0, 0, w, 50); block(0, 0, 8, h); block(w - 8, 0, w, h); block(0, fy, cx - 12, h); block(cx + 12, fy, w, h);
 }
 function wallShelf(g, x, w, cols, rnd) { R(g, x, 8, w, 36, '#6a4638'); R(g, x + 1, 9, w - 2, 34, '#3a2630'); for (let r = 0; r < 3; r++) { R(g, x, 19 + r * 11, w, 1.5, '#8a5a3a'); for (let xx = x + 2; xx < x + w - 3; xx += 3 + (rnd() * 2 | 0)) { const h = 4 + (rnd() * 5 | 0), c = cols[rnd() * cols.length | 0]; R(g, xx, 19 + r * 11 - h, 2.5, h, c); R(g, xx, 19 + r * 11 - h, U, h, lite(c, 0.3)); } } }
 function poster(g, x, y, w, h, c, s) { R(g, x - 1, y - 1, w + 2, h + 2, '#3a2630'); R(g, x, y, w, h, c); R(g, x, y, w, 1, lite(c, 0.4)); if (s) txtC(g, s, x + w / 2, y + (h - 5) / 2, '#fff8e8'); }
+const FUR = {}; // furniture (and the vending game's drinks), painted the first time a room asks for each kind, size and colour
 function fur(kind, x, y, a, b) {
-  const key = kind + (a || '') + (b || ''); let s = SPR[key];
+  const key = kind + (a || '') + (b || ''); let s = FUR[key];
   if (!s) {
     const D = { counter: [a, 18], stool: [8, 9], table: [24, 16], rack: [28, 24], cas: [30, 22], cab: [14, 26], gacha: [12, 22], crane: [26, 36], plant: [12, 20], altar: [64, 44], bones: [76, 46], panda: [22, 22], booth: [30, 20], escal: [44, 40], till: [14, 12], belt: [a, 16], scope: [10, 18], burner: [22, 22] }[kind];
     const c = mk(D[0], D[1]), g = c.g, w = D[0], h = D[1], rnd = RNG(key.length * 7 + (a | 0));
@@ -219,7 +280,7 @@ function fur(kind, x, y, a, b) {
     else if (kind === 'till') { R(g, 1, 4, 12, 8, '#3a3a4e'); R(g, 1, 4, 12, 1, '#6a6a80'); R(g, 3, 0, 8, 5, '#2a2a3a'); R(g, 4, 1, 6, 3, '#5ad88a'); for (let i = 0; i < 3; i++) R(g, 3 + i * 3, 7, 2, 1, '#c8c0d4'); }
     else if (kind === 'scope') { R(g, 4, 8, 2, 10, '#6b6478'); R(g, 2, 17, 6, 1, '#4a4458'); R(g, 1, 2, 8, 6, '#c8c0d4'); R(g, 1, 2, 8, 1, '#ffffff'); disc(g, 3, 5, 1.5, '#2a2430'); disc(g, 7, 5, 1.5, '#2a2430'); }
     else if (kind === 'burner') { ell(g, 11, 14, 10, 4, '#3a3346'); R(g, 3, 9, 16, 6, '#6b6478'); R(g, 3, 9, 16, 1, '#c8c0d4'); ell(g, 11, 9, 8, 2.5, '#e8e0d0'); R(g, 5, 15, 2, 6, '#4a4458'); R(g, 15, 15, 2, 6, '#4a4458'); roof(g, 11, 0, 4, 11, 5, '#3d3852'); R(g, 4, 5, 1, 4, '#8a3a2a'); R(g, 17, 5, 1, 4, '#8a3a2a'); for (let i = 0; i < 5; i++) R(g, 7 + i * 2, 7, U, 2, '#c8382e'); }
-    s = SPR[key] = kind === 'counter' || kind === 'belt' || kind === 'escal' ? c : outline(c);
+    s = FUR[key] = kind === 'counter' || kind === 'belt' || kind === 'escal' ? c : outline(c);
   }
   put(s, x, y, s.lw / 2, s.lh - 1);
   if (kind === 'counter' || kind === 'belt') block(x - a / 2, y - 14, x + a / 2, y); else if (kind !== 'stool') block(x - s.lw / 2 + 2, y - 8, x + s.lw / 2 - 2, y);
@@ -229,11 +290,20 @@ function fur(kind, x, y, a, b) {
 const icon = (n, fn) => { const c = mk(12, 12); fn(c.g); ICON[n] = outline(epx(c)); };
 function buildSprites() {
   const tr = cols => (rnd, i) => { const c = mk(56, 62); tree(c.g, 28, 60, 25 + i % 3, cols, rnd, { cw: 36 + (i % 2) * 4, ch: 26, n: 14, up: 2 }); return c; };
-  variants('sakura', 3, tr(LEAF.sakura)); variants('green', 4, tr(LEAF.green)); variants('green2', 2, tr(LEAF.green2)); variants('maple', 2, tr(LEAF.maple)); variants('ginkgo', 3, tr(LEAF.maple2));
+  variants('sakura', 3, (rnd, i) => { const c = mk(76, 60); sakuraTree(c.g, 38, 58, 46 + i * 3, rnd, { limbs: 4 + i % 2 * 2 }); return c; });
+  one('shidare', 110, 96, g => weepingCherry(g, 55, 94, 70, RNG(77)));
+  // bonbori: paper lanterns on posts, strung along the paths under the cherries for hanami, lit at dusk
+  one('bonbori', 10, 30, g => { R(g, 4, 10, 2, 20, '#8a5a3a'); R(g, 4, 10, U, 20, '#b8865a'); R(g, 1, 0, 8, 11, '#fff4e0'); R(g, 1, 0, 8, 1.5, '#c8382e'); R(g, 1, 9.5, 8, 1.5, '#c8382e'); R(g, 1, 0, U, 11, '#e8d4b8'); for (let k = 0; k < 3; k++) disc(g, 3 + k * 2, 5, 0.8, '#f06a8c'); R(g, 2, 29, 6, 1, '#5a3a28'); }, 1);
+  // a hanami sheet: the blue tarp, shoes lined up at its edge, bento boxes, a bottle and some cans
+  one('tarp', 48, 26, g => { R(g, 0, 2, 48, 22, '#3a6ac8'); R(g, 0, 2, 48, 1, '#6a9ae8'); for (let x = 8; x < 48; x += 12) R(g, x, 2, U, 22, '#2f5aa8'); R(g, 0, 13, 48, U, '#2f5aa8'); for (const [x, y] of [[0, 2], [47, 2], [0, 23], [47, 23]]) R(g, x, y, 1, 1, '#c8c0d4'); R(g, 18, 9, 9, 6, '#2a2430'); R(g, 19, 10, 3.5, 4, '#f8f8f4'); R(g, 23, 10, 3, 4, '#e0563f'); R(g, 29, 11, 7, 5, '#c8382e'); R(g, 30, 12, 2, 2, '#f2c14e'); R(g, 38, 7, 2, 6, '#5aa85a'); R(g, 41, 9, 2.5, 4, '#f2c14e'); R(g, 12, 15, 2.5, 4, '#c8c0d4'); for (let k = 0; k < 4; k++) { R(g, 4 + k * 5, 24, 3, 2, ['#3a3a4e', '#8a5a3a', '#f4f1e6', '#3a3a4e'][k]); } for (let k = 0; k < 14; k++) p1(g, (k * 37) % 46 + 1, (k * 13) % 20 + 3, '#f9c8d8'); }); variants('green', 4, tr(LEAF.green)); variants('green2', 2, tr(LEAF.green2)); variants('maple', 2, tr(LEAF.maple)); variants('ginkgo', 3, tr(LEAF.maple2));
   variants('pine', 3, (rnd, i) => { const c = mk(64, 62); pine(c.g, 32, 60, 40 + i * 3, rnd); return c; });
   variants('bush', 3, (rnd, i) => { const c = mk(26, 16); bush(c.g, 13, 15, 16 + i * 2, i === 2 ? LEAF.sakura : LEAF.green, rnd); return c; });
   variants('rock', 3, (rnd, i) => { const c = mk(22, 14), g = c.g, w = 8 + i * 1.5; ell(g, 11, 9, w, 4.5, '#6b6478'); ell(g, 10, 8, w - 1, 4, '#8c8498'); ell(g, 8.5, 6.5, w * 0.55, 2.2, '#aaa4b8'); p1(g, 7, 6, '#c8c0d4'); if (i !== 1) { ell(g, 14, 9, 3, 1.5, '#6aa85a'); p1(g, 13, 8.5, '#8fd070'); } R(g, 3, 12.5, 16, 1, '#514a60'); return outline(c); });
   one('lantern', 14, 25, g => stoneLantern(g, 6, 24, true, false)); one('bench', 20, 13, g => bench(g, 1, 12)); one('vend', 14, 22, g => vending(g, 1, 21)); one('vend2', 14, 22, g => vending(g, 1, 21, '#e0563f')); one('vend3', 14, 22, g => vending(g, 1, 21, '#5aa8e0'));
+  // gas lamps (Otaru, and the night lights look for them everywhere) and beach umbrellas (Kamakura, Okinawa)
+  one('gaslamp', 12, 42, g => { R(g, 5, 10, 2, 32, '#2a2430'); R(g, 3, 38, 6, 4, '#2a2430'); R(g, 2, 2, 8, 9, '#2a2430'); R(g, 3, 3, 6, 7, '#ffd98a'); R(g, 3, 3, 6, 2, '#fff4c0'); R(g, 1, 1, 10, 2, '#2a2430'); R(g, 5, 0, 2, 1, '#2a2430'); }, 1);
+  ['#f06a8c', '#5aa8e0', '#f2c14e'].forEach((c, i) => one('brolly' + i, 30, 28, g => { R(g, 14.5, 6, 1, 22, '#8a8496'); for (let k = 0; k < 8; k++) { const x = 1 + k * 3.6; R(g, x, 3 + Math.abs(k - 3.5) * 0.7, 3.6, 5, k % 2 ? '#ffffff' : c); } ell(g, 15, 3, 14, 2.5, c); R(g, 14, 0, 2, 2, '#8a8496'); }, 1));
+  one('box', 16, 10, g => { R(g, 1, 2, 14, 8, '#8a5a3a'); R(g, 1, 2, 14, 3, '#5a3a28'); for (let x = 2; x < 15; x += 2) R(g, x, 2, 1, 3, '#a8744a'); R(g, 6, 6.5, 4, 2, '#f2c14e'); }, 1); // the offering box in front of every temple altar
   one('lamp', 12, 34, g => streetLamp(g, 8, 33, 30)); one('torii', 60, 50, g => torii(g, 30, 49, 40, 44)); one('toriiW', 84, 70, g => torii(g, 42, 69, 60, 62, '#9a6a40'));
   one('hall', 176, 92, g => templeHall(g, 88, 90, 108, 30, { gold: 1 })); one('hallG', 176, 92, g => templeHall(g, 88, 90, 108, 30, { wall: '#8a5a3a', roof: '#4a8a7a', door: '#6a4028' }));
   one('pagoda', 104, 132, g => pagoda(g, 52, 130, 5, 54, { bh: 11, rh: 8, step: 6 }));
@@ -274,7 +344,7 @@ function wild(kinds, gap = 1) {
     const px = Math.round(x + rnd() * 8 - 4), py = Math.round(y + rnd() * 6 - 3), d = dist(px, py), kind = kinds[rnd() * kinds.length | 0]; if (d < gap || (d === gap && rnd() < 0.55)) continue;
     if (d <= 8 && py < M.h) plant(kind, px, py, 1); else deep.push([kind, px, py]);
   }
-  const g = M.ground.g; for (const [kind, x, y] of deep) { const v = SPR[kind], sp = v[Math.floor(hsh(x * 3, y * 5) * v.length)]; g.drawImage(sp, x - (kind === 'pine' || kind === 'snowpine' ? 32 : kind === 'bamboo' ? 14 : 28), y - (kind === 'bamboo' ? 72 : 60)); }
+  const g = M.ground.g; for (const [kind, x, y] of deep) { const v = SPR[kind], sp = v[Math.floor(hsh(x * 3, y * 5) * v.length)]; g.drawImage(sp, x - sp.lw / 2, y - sp.lh + 2); }
 }
 // ledge(): a retaining wall or cliff face running left to right through pts (px). The ground north of it reads as higher.
 const LEDGE = { rock: ['#8a8496', '#aaa4b8', '#6b6478', '#514a60'], stone: ['#b8b0a4', '#d8d0c4', '#8e887c', '#6a6458'], earth: ['#a8845a', '#c4a070', '#8a6a48', '#5a4630'] };

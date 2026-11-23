@@ -167,9 +167,15 @@
   concourse('os_shinkansen', { name: 'SHIN-OSAKA', hub: 'osa_namba', music: 'osaka', track: 26, dest: 'TOKYO', bento: ['TAKO MESHI', 'RICE COOKED WITH OCTOPUS AND GINGER. OSAKA PUTS OCTOPUS IN EVERYTHING, AND IS RIGHT TO.'] });
   city({
     id: 'osaka', name: 'OSAKA', tagline: 'EAT UNTIL YOU DROP', start: 'osa_namba', hub: 'osa_namba', concourse: 'os_shinkansen', line: LINE, stamps: STAMPS, cats: 5, minis: { tako: TAKO },
+    icons() { // the little pictures for the stamp book and the bag: painted at boot, since they show up everywhere
+      icon('runner', g => { R(g, 0, 0, 12, 12, '#3a7ad8'); disc(g, 6, 2.5, 1.5, '#f6cfa6'); R(g, 5, 4, 2, 4, '#f4f1e6'); line(g, 5, 4, 2, 1, '#f6cfa6'); line(g, 7, 4, 10, 1, '#f6cfa6'); line(g, 5, 8, 3, 11, '#f4f1e6'); line(g, 7, 8, 9, 11, '#f4f1e6'); });
+      icon('fish', g => { ell(g, 6, 6, 5, 2.5, '#8a94b0'); ell(g, 6, 5.5, 4, 1.5, '#c8d0e0'); R(g, 10, 4, 2, 5, '#8a94b0'); P(g, 3, 5, '#1d1626'); });
+      icon('tsuten', g => { R(g, 5, 2, 2, 7, '#8a90b4'); R(g, 4, 3, 4, 2, '#ffe08a'); R(g, 5.5, 0, 1, 2, '#4ad0f0'); line(g, 5, 9, 2, 12, '#8a90b4'); line(g, 7, 9, 10, 12, '#8a90b4'); });
+      icon('kushi', g => { for (const x of [3, 6, 9]) { R(g, x, 0, 1, 12, '#c8a070'); R(g, x - 1, 2, 3, 6, '#d9903a'); R(g, x - 1, 2, 3, 1, '#f0c070'); } });
+      icon('plum', g => { for (const [x, y] of [[3, 4], [8, 3], [6, 8]]) { disc(g, x, y, 2.5, '#f4d8e4'); P(g, x, y, '#e0563f'); } line(g, 1, 11, 10, 2, '#6a4a38'); });
+    },
     sprites() {
       one('crab', 92, 42, g => { for (const s of [-1, 1]) { for (let k = 0; k < 4; k++) { const x = 46 + s * (22 + k * 5); line(g, 46 + s * 14, 26 + k * 2, x, 34 + k * 1.5, '#c0302a'); line(g, x, 34 + k * 1.5, x + s * 4, 41, '#c0302a'); } line(g, 46 + s * 16, 18, 46 + s * 30, 8, '#e0452f'); ell(g, 46 + s * 34, 6, 8, 5, '#e0452f'); ell(g, 46 + s * 34, 5, 6, 3, '#f06a5a'); R(g, 46 + s * 30 - 3, 6, 6, 1.5, '#8a2a24'); } ell(g, 46, 24, 20, 12, '#c0302a'); ell(g, 46, 22, 18, 10, '#e0452f'); ell(g, 42, 18, 8, 4, '#f06a5a'); for (const x of [40, 52]) { R(g, x, 6, 1.5, 8, '#c0302a'); disc(g, x + 0.75, 5, 2.5, '#f4f1e6'); disc(g, x + 0.75, 5, 1.2, '#1d1626'); } }, 1);
-      one('cruise', 56, 18, g => { ell(g, 28, 12, 26, 5, '#f4f1e6'); R(g, 4, 9, 48, 4, '#f4f1e6'); R(g, 4, 12, 48, 2, '#3f7ab0'); R(g, 12, 3, 30, 7, '#5ad8f0'); R(g, 12, 3, 30, 1, '#bfe8ff'); for (let x = 15; x < 40; x += 6) R(g, x, 4, 3, 4, '#3a3a5a'); R(g, 0, 16, 56, 1, '#a6dcee'); }, 1);
       one('hozen', 110, 70, g => templeHall(g, 55, 68, 70, 22, { bays: 4, wall: '#7a3a2a', roof: '#3d3852', door: '#5a2a20', rh: 18 }));
       one('fudo', 22, 32, g => { R(g, 1, 24, 20, 8, '#8c8498'); R(g, 1, 24, 20, 1, '#c8c0d4'); ell(g, 11, 16, 7, 9, '#3f7a3a'); disc(g, 11, 6, 5, '#3f7a3a'); for (let k = 0; k < 40; k++) p1(g, 5 + (k * 7 % 13), 2 + (k * 11 % 22), k % 2 ? '#6aa85a' : '#2f5a2a'); R(g, 16, 4, 1.5, 16, '#5a8a5a'); disc(g, 9, 6, 1, '#1d1626'); disc(g, 13, 6, 1, '#1d1626'); }, 1);
       one('fishbox', 26, 16, g => { R(g, 1, 6, 24, 10, '#a8844a'); R(g, 1, 6, 24, 1, '#d8b070'); R(g, 2, 3, 22, 4, '#dceef8'); for (let k = 0; k < 4; k++) { ell(g, 5 + k * 5.5, 4.5, 3, 1.3, k % 2 ? '#8a94b0' : '#c84a3a'); p1(g, 3 + k * 5.5, 4.5, '#1d1626'); } R(g, 0, 15, 26, 1, '#5a3a28'); }, 1);
@@ -188,11 +194,6 @@
         for (const [w, h] of [[54, 12], [42, 11], [30, 10], [20, 9]]) { R(g, cx - w / 2, y - h, w, h, '#f4f0e4'); R(g, cx - w / 2, y - h, w, 2, '#d0c8ba'); for (let x = cx - w / 2 + 3; x < cx + w / 2 - 3; x += 5) R(g, x, y - h + 4, 2, 3, '#3a3550'); R(g, cx - w / 2, y - 2, w, 1, '#d9b04a'); y -= h; roof(g, cx, y - 5, w / 2 - 3, w / 2 + 6, 6, '#3f8a7a'); y -= 4; }
         R(g, cx - 5, y - 3, 2, 3, '#f2c14e'); R(g, cx + 4, y - 3, 2, 3, '#f2c14e'); };
       one('keep', 220, 220, g => { g.save(); g.scale(2.2, 2.2); osakaCastle(g, 50, 99.5); g.restore(); });
-      icon('runner', g => { R(g, 0, 0, 12, 12, '#3a7ad8'); disc(g, 6, 2.5, 1.5, '#f6cfa6'); R(g, 5, 4, 2, 4, '#f4f1e6'); line(g, 5, 4, 2, 1, '#f6cfa6'); line(g, 7, 4, 10, 1, '#f6cfa6'); line(g, 5, 8, 3, 11, '#f4f1e6'); line(g, 7, 8, 9, 11, '#f4f1e6'); });
-      icon('fish', g => { ell(g, 6, 6, 5, 2.5, '#8a94b0'); ell(g, 6, 5.5, 4, 1.5, '#c8d0e0'); R(g, 10, 4, 2, 5, '#8a94b0'); P(g, 3, 5, '#1d1626'); });
-      icon('tsuten', g => { R(g, 5, 2, 2, 7, '#8a90b4'); R(g, 4, 3, 4, 2, '#ffe08a'); R(g, 5.5, 0, 1, 2, '#4ad0f0'); line(g, 5, 9, 2, 12, '#8a90b4'); line(g, 7, 9, 10, 12, '#8a90b4'); });
-      icon('kushi', g => { for (const x of [3, 6, 9]) { R(g, x, 0, 1, 12, '#c8a070'); R(g, x - 1, 2, 3, 6, '#d9903a'); R(g, x - 1, 2, 3, 1, '#f0c070'); } });
-      icon('plum', g => { for (const [x, y] of [[3, 4], [8, 3], [6, 8]]) { disc(g, x, y, 2.5, '#f4d8e4'); P(g, x, y, '#e0563f'); } line(g, 1, 11, 10, 2, '#6a4a38'); });
     }
   });
 })();

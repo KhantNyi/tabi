@@ -244,6 +244,10 @@ const RIDES = (function () {
   }
 
   function sprites() {
+    // boats and rickshaws more than one city rides in: the swan boats (Ueno, Kawaguchiko), the rickshaw (Asakusa, Kamakura, Arashiyama), the harbour cruiser (Osaka, Hiroshima)
+    one('swan', 22, 18, g => { ell(g, 10, 13, 9, 4, '#e8e4f0'); ell(g, 9, 12, 8, 3, '#ffffff'); R(g, 15, 3, 3, 9, '#ffffff'); R(g, 15, 2, 5, 3, '#ffffff'); R(g, 19, 3, 2, 1, '#f2a03a'); p1(g, 17.5, 3, '#1d1626'); R(g, 3, 9, 9, 2, '#f06a8c'); R(g, 0, 16, 22, 1, '#a6dcee'); }, 1);
+    one('rick', 26, 20, g => { disc(g, 8, 14, 5, '#2a2430'); disc(g, 8, 14, 3.5, '#c8c0d4'); disc(g, 8, 14, 1, '#2a2430'); R(g, 4, 5, 10, 7, '#c8382e'); R(g, 4, 2, 2, 10, '#2a2430'); R(g, 4, 2, 9, 2, '#2a2430'); R(g, 12, 11, 13, 1, '#2a2430'); R(g, 5, 6, 8, 2, '#e86a50'); }, 1);
+    one('cruise', 56, 18, g => { ell(g, 28, 12, 26, 5, '#f4f1e6'); R(g, 4, 9, 48, 4, '#f4f1e6'); R(g, 4, 12, 48, 2, '#3f7ab0'); R(g, 12, 3, 30, 7, '#5ad8f0'); R(g, 12, 3, 30, 1, '#bfe8ff'); for (let x = 15; x < 40; x += 6) R(g, x, 4, 3, 4, '#3a3a5a'); R(g, 0, 16, 56, 1, '#a6dcee'); }, 1);
     one('chozu', 30, 30, g => { R(g, 2, 26, 26, 4, '#8c8498'); R(g, 4, 16, 22, 11, '#a8a2b4'); R(g, 4, 16, 22, 1.5, '#d8d4e4'); R(g, 6, 17.5, 18, 3, '#4a8ac0'); R(g, 6, 17.5, 18, 1, '#8ad0f0'); for (const x of [8, 13, 18]) { R(g, x, 15, 1, 3, '#b8a070'); ell(g, x + 1, 14.5, 1.5, 1, '#d8c090'); }
       for (const x of [2, 26]) { R(g, x, 4, 2, 23, '#8a5a3a'); R(g, x, 4, U, 23, '#b8865a'); } roof(g, 15, 0, 6, 16, 6, '#4a4660'); R(g, 20, 6, 2, 9, '#6a8a3a'); R(g, 21, 6, 2, 1, '#8ab05a'); }, 1);
     one('rackS', 34, 28, g => { for (const x of [2, 30]) { R(g, x, 6, 2, 22, '#6a4a30'); R(g, x, 6, U, 22, '#a8744a'); } R(g, 0, 5, 34, 2, '#5a3a28'); R(g, 0, 5, 34, U, '#8a5a3a'); R(g, 4, 12, 26, 1, '#5a3a28'); R(g, 4, 18, 26, 1, '#5a3a28');

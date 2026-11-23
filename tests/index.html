@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tabi tests</title>
+<style>
+  body { background: #1d1626; color: #e8e0f0; font: 13px/1.5 ui-monospace, Consolas, monospace; margin: 16px; }
+  h1 { font-size: 15px; margin: 0 0 4px; }
+  p { color: #a89cb8; margin: 0 0 12px; }
+  pre { white-space: pre-wrap; margin: 0; }
+  .head { font-weight: bold; }
+  .pass.head { color: #7ad08a; }
+  .fail { color: #ff8a7a; }
+  .log { color: #a89cb8; }
+</style>
+</head>
+<body>
+<h1>Tabi tests</h1>
+<p>Each suite plays the real game in a hidden frame. Add ?only=maps,stations to run just some. From a terminal: tests/run.ps1</p>
+<pre id="o"></pre>
+<script src="harness.js"></script>
+<script src="suites/sprites.js"></script>
+<script src="suites/maps.js"></script>
+<script src="suites/stations.js"></script>
+<script src="suites/journeys.js"></script>
+<script src="suites/everyday.js"></script>
+<script src="suites/shops.js"></script>
+<script src="suites/sakura.js"></script>
+<script src="suites/minigames.js"></script>
+<script src="suites/stuck.js"></script>
+<script>runAll();</script>
+</body>
+</html>

@@ -205,6 +205,51 @@ function tree(g, x, base, h, cols, rnd, o = {}) {
   line(g, x, bh + 3, x + h * 0.25, bh - h * 0.15, tc); line1(g, x, bh + 4, x + h * 0.25, bh - h * 0.15 + 1, lo);
   canopy(g, x, base - h - (o.up || 0), o.cw || h * 0.95, o.ch || h * 0.55, cols, rnd, o.n || 12);
 }
+// ---------- cherry trees ----------
+// A Somei Yoshino in full bloom: a short dark trunk with the horizontal marks of cherry bark, forking low into long limbs
+// that reach up and out, under a wide, flat cloud of pale blossom clusters. The branches show through the gaps, and
+// there are no leaves yet: the flowers come first.
+const BLOSSOM = ['#d68aa8', '#eeb2c6', '#f8d0dc', '#fdebf1'];
+function sakuraTree(g, x, base, h, rnd, o = {}) {
+  const bark = '#46323a', mark = '#6a525a', w = o.w || h * 1.3, cy = base - h * 0.66, ry = h * 0.27, fork = base - h * 0.34;
+  trunk(g, x, base, h * 0.36, 5.5, bark, 0.6); for (let y = base - 3; y > fork + 2; y -= 3.5) R(g, x - 2, y, 3.5, U, mark);
+  const limbs = [], n = o.limbs || 5;
+  for (let k = 0; k < n; k++) {
+    const s = (k / (n - 1)) * 2 - 1, ex = x + s * w * 0.42 + (rnd() - 0.5) * 4, ey = cy - ry * 0.4 + Math.abs(s) * ry * 0.7 - rnd() * 4, mx = x + s * w * 0.16 + (rnd() - 0.5) * 3, my = fork - h * 0.14 - rnd() * 3;
+    limbs.push([x, fork, mx, my, ex, ey]); line(g, x, fork, mx, my, bark); line(g, mx, my, ex, ey, bark); line1(g, mx, my, ex + (rnd() - 0.5) * 6, ey - 4 - rnd() * 4, bark);
+  }
+  // blossom clusters along the outer half of each limb, filling a flattened dome
+  const puffs = [];
+  for (let i = 0; i < (o.n || 46); i++) {
+    const L = limbs[rnd() * limbs.length | 0], t = 0.35 + rnd() * 0.75, px = t < 1 ? L[2] + (L[4] - L[2]) * t : L[4], py = t < 1 ? L[3] + (L[5] - L[3]) * t : L[5];
+    const qx = px + (rnd() - 0.5) * 14, qy = py + (rnd() - 0.5) * 9 - 3, dx = (qx - x) / (w / 2), dy = (qy - cy) / ry;
+    if (dx * dx + dy * dy > 1.15) continue; puffs.push([qx, qy, 3 + rnd() * 3]);
+  }
+  puffs.sort((a, b) => a[1] - b[1]);
+  const puff = ([px, py, r]) => { disc(g, px, py + 1, r, BLOSSOM[0]); disc(g, px, py, r * 0.92, BLOSSOM[1]); disc(g, px - r * 0.3, py - r * 0.3, r * 0.55, BLOSSOM[2]); if (r > 4) disc(g, px - r * 0.4, py - r * 0.45, r * 0.22, BLOSSOM[3]); };
+  const cut = Math.floor(puffs.length * 0.72); puffs.slice(0, cut).forEach(puff);
+  // twigs that show between the clusters, then the front clusters over them
+  for (let k = 0; k < 7; k++) { const L = limbs[k % limbs.length], t = 0.5 + rnd() * 0.4, px = L[2] + (L[4] - L[2]) * t, py = L[3] + (L[5] - L[3]) * t; line1(g, px, py, px + (rnd() - 0.5) * 8, py - 2 - rnd() * 4, bark); }
+  puffs.slice(cut).forEach(puff);
+  for (let k = 0; k < 26; k++) { const a = rnd() * 6.283, d = Math.sqrt(rnd()); p1(g, x + Math.cos(a) * d * w * 0.46, cy + Math.sin(a) * d * ry, rnd() < 0.5 ? '#ffffff' : '#c86a90'); }
+}
+// A weeping cherry (shidarezakura): an old trunk, branches arching up and over, and long strands of blossom falling
+// almost to the ground like a pink waterfall. Parks have one, propped on wooden crutches, and people come just to see it.
+function weepingCherry(g, x, base, h, rnd) {
+  const bark = '#3e2c32';
+  trunk(g, x, base, h * 0.42, 8, bark, 0.4); for (let y = base - 4; y > base - h * 0.4; y -= 4) R(g, x - 3, y, 5, U, '#64505a');
+  // the wooden crutches holding the old limbs up
+  for (const s of [-1, 1]) { line(g, x + s * 22, base, x + s * 14, base - h * 0.42, '#a8845a'); line1(g, x + s * 22, base, x + s * 14, base - h * 0.42, '#7a5a3a'); }
+  const top = base - h, arcs = [];
+  for (let k = 0; k < 9; k++) { const s = (k / 8) * 2 - 1, ex = x + s * h * 0.62, peak = top + Math.abs(s) * h * 0.12; arcs.push([ex, peak, s]); line(g, x, base - h * 0.42, x + s * h * 0.25, peak - 2, bark); line(g, x + s * h * 0.25, peak - 2, ex, peak + 6, bark); }
+  // strands falling from the arches, longest at the edges
+  const strands = [];
+  for (let i = 0; i < 70; i++) { const A = arcs[rnd() * arcs.length | 0], sx = A[0] + (rnd() - 0.5) * 22, sy = A[1] + 2 + rnd() * 6, len = h * (0.35 + Math.abs(A[2]) * 0.45 + rnd() * 0.15); strands.push([sx, sy, Math.min(len, base - sy - 4)]); }
+  strands.sort((a, b) => a[0] - b[0]);
+  for (const [sx, sy, len] of strands) { line1(g, sx, sy, sx + 1, sy + len, '#8a5a6a'); for (let t = 0; t < len; t += 2.2) { const r = 1.6 - t / len * 0.7, c = BLOSSOM[(t / 2.2 + sx | 0) % 3]; disc(g, sx + Math.sin(t * 0.3) * 0.8, sy + t, r, c); } }
+  for (let i = 0; i < 26; i++) { const A = arcs[rnd() * arcs.length | 0]; disc(g, A[0] + (rnd() - 0.5) * 18, A[1] + rnd() * 6, 3 + rnd() * 2, BLOSSOM[1 + (rnd() * 2 | 0)]); }
+  for (let k = 0; k < 40; k++) p1(g, x + (rnd() - 0.5) * h * 1.3, top + rnd() * h * 0.9, rnd() < 0.5 ? '#ffffff' : '#c86a90');
+}
 function pine(g, x, base, h, rnd, cols = LEAF.pine) {
   trunk(g, x, base, h, 3, '#5a3c3c', 2);
   const n = 3 + (h / 16 | 0), dk = dark(cols[0], 0.25);

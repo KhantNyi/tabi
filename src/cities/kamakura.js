@@ -213,6 +213,18 @@
 
   city({
     id: 'kamakura', name: 'KAMAKURA', tagline: 'THE OLD CAPITAL BY THE SEA', start: 'kam_town', hub: 'kam_town', line: LINE, stamps: STAMPS, cats: 4, local: 'tokyo', rideSpr: 'rideSea', gate: ['JR LINE', 'THE BLUE SIGN HERE'], minis: { surf: SURF },
+    icons() { // the little pictures for the stamp book and the bag: painted at boot, since they show up everywhere
+      icon('hgu', g => { R(g, 1, 4, 10, 6, '#d8382e'); R(g, 0, 2, 12, 2, '#2a2a3a'); R(g, 3, 5, 2, 5, '#f4ecd8'); R(g, 7, 5, 2, 5, '#f4ecd8'); R(g, 0, 10, 12, 2, '#8c8498'); });
+      icon('dove', g => { ell(g, 6, 7, 4.5, 3, '#f2c14e'); disc(g, 9, 4.5, 2, '#f2c14e'); R(g, 10.5, 4.5, 1.5, 1, '#d8902a'); P(g, 9, 4, '#5a3a20'); line(g, 2, 7, 0, 4, '#d8a03a'); });
+      icon('lotus', g => { for (const [x, y] of [[3, 6], [9, 6], [6, 3]]) ell(g, x, y + 2, 2.5, 3.5, '#f8f4ee'); ell(g, 6, 7, 2, 3, '#f9a8c8'); R(g, 0, 10, 12, 2, '#5aa85a'); });
+      icon('kbud', g => { ell(g, 6, 9, 5, 3, '#5e8a7c'); R(g, 3, 4, 6, 6, '#5e8a7c'); disc(g, 6, 3, 2.5, '#7aa494'); P(g, 6, 0.5, '#5e8a7c'); R(g, 0, 11, 12, 1, '#8c8498'); });
+      icon('inside', g => { R(g, 0, 0, 12, 12, '#3a5a4e'); for (let y = 2; y < 12; y += 3) R(g, 0, y, 12, U, '#2a443a'); R(g, 4, 2, 4, 4, '#fff0c0'); R(g, 5, 7, 2, 4, '#1d2a24'); });
+      icon('ajisai', g => { for (const [x, y, c] of [[4, 4, '#5a7ad0'], [8, 4, '#9a5ad0'], [6, 7, '#e06a9a'], [3, 8, '#6a9ae0'], [9, 8, '#a8c0f0']]) disc(g, x, y, 2.4, c); R(g, 5, 10, 2, 2, '#3f8a4a'); });
+      icon('bay', g => { R(g, 0, 0, 12, 5, '#8ac4ec'); R(g, 0, 5, 12, 4, '#3e8aa8'); R(g, 0, 9, 12, 3, '#c8b89a'); for (let i = 0; i < 4; i++) R(g, 8 - i * 0.5, 1 + i, i + 1, 1, i ? '#8a9ac8' : '#f8f4ee'); });
+      icon('enoden', g => { R(g, 0, 3, 12, 7, '#f4ead0'); R(g, 0, 7, 12, 3, '#2f7a4a'); R(g, 2, 4, 2, 2, '#2a3a5a'); R(g, 5, 4, 2, 2, '#2a3a5a'); R(g, 8, 4, 2, 2, '#2a3a5a'); R(g, 5, 0, 3, 3, '#3a3446'); R(g, 0, 11, 12, 1, '#8a8496'); });
+      icon('surf', g => { line(g, 2, 11, 10, 1, '#f2c14e'); line(g, 3, 11, 11, 1, '#f06a8c'); R(g, 0, 8, 12, 4, '#5ab4c8'); R(g, 1, 7, 4, 1, '#ffffff'); });
+      icon('kite', g => { line(g, 0, 3, 6, 6, '#6a4a34'); line(g, 12, 3, 6, 6, '#6a4a34'); ell(g, 6, 6, 2.5, 1.5, '#6a4a34'); R(g, 4, 8, 4, 3, '#e8c890'); });
+    },
     sprites() {
       one('hongu', 176, 92, g => templeHall(g, 88, 90, 108, 30, { wall: '#d8382e', roof: '#2a2a3a', plaster: '#f4ecd8', door: '#8a2a24', gold: 1 }));
       one('kannon', 160, 84, g => templeHall(g, 80, 82, 100, 28, { wall: '#6a4a38', roof: '#4a4a5a', plaster: '#e8dcc4', door: '#4a3028', bays: 5 }));
@@ -239,7 +251,6 @@
         for (let k = 0; k < 12; k++) { const x = 30 + (k * 37 % 70), y = 50 + (k * 23 % 40); R(g, x, y, U, 4 + k % 4, '#4a7464'); } }, 1);
       one('surfer', 24, 22, g => { ell(g, 12, 19, 11, 2, '#f4f1e6'); ell(g, 12, 18.5, 10, 1.2, '#f06a8c'); R(g, 9, 9, 6, 9, '#1d2a3a'); disc(g, 12, 7, 3, '#e0a878'); R(g, 9, 4, 6, 2.5, '#3a2a2a'); R(g, 6, 12, 3, 1.5, '#1d2a3a'); R(g, 15, 12, 3, 1.5, '#1d2a3a'); R(g, 0, 20, 24, 1, 'rgba(255,255,255,0.6)'); }, 1);
       one('beachhut', 68, 36, g => { R(g, 4, 14, 60, 20, '#d8c8a0'); for (let x = 6; x < 64; x += 4) R(g, x, 14, U, 20, '#b8a880'); R(g, 14, 18, 40, 10, '#3a2e30'); R(g, 15, 19, 38, 8, '#ffd98a'); R(g, 14, 27, 40, 2, '#a8744a'); for (let i = 0; i < 17; i++) R(g, i * 4, 6, 4, 9, i % 2 ? '#f4f1e6' : '#3f7ab0'); R(g, 0, 5, 68, 1.5, '#2a5a8a'); R(g, 0, 14, 68, 1, '#2a5a8a'); R(g, 18, 0, 32, 6, '#f4e6c0'); txt(g, 'SHIRASU', 20, 0.5, '#2a5a8a'); R(g, 4, 34, 60, 2, '#8a8496'); }, 1);
-      ['#f06a8c', '#5aa8e0', '#f2c14e'].forEach((c, i) => one('brolly' + i, 30, 28, g => { R(g, 14.5, 6, 1, 22, '#8a8496'); for (let k = 0; k < 8; k++) { const x = 1 + k * 3.6; R(g, x, 3 + Math.abs(k - 3.5) * 0.7, 3.6, 5, k % 2 ? '#ffffff' : c); } ell(g, 15, 3, 14, 2.5, c); R(g, 14, 0, 2, 2, '#8a8496'); }, 1));
       one('boards', 30, 26, g => { R(g, 2, 22, 26, 3, '#6a4a30'); for (let k = 0; k < 4; k++) { const c = ['#f06a8c', '#5aa8e0', '#f2c14e', '#f4f1e6'][k]; ell(g, 6 + k * 6, 12, 2.6, 11, dark(c, 0.3)); ell(g, 6 + k * 6, 12, 2, 10.5, c); R(g, 5.5 + k * 6, 2, 1, 20, lite(c, 0.4)); } }, 1);
       one('shelter', 48, 32, g => { for (const x of [4, 42]) R(g, x, 10, 2, 22, '#6b6478'); R(g, 0, 6, 48, 5, '#3f9a5a'); R(g, 0, 6, 48, 1, '#8fd070'); R(g, 6, 22, 36, 3, '#c89a6a'); R(g, 14, 0, 20, 7, '#f4f1e6'); txt(g, 'KOKOMAE', 15, 0.5, '#3f9a5a'); }, 1);
       // the Enoden: a little two-tone tram car, cream above and green below, with a pantograph
@@ -249,16 +260,6 @@
       SPR.rideSea = (() => { const c = mk(320, 84), g = c.g, r = RNG(44); dgrad(g, 0, 0, 320, 84, ['#7ab8e8', '#a8d4f0', '#e8f0f4']); mountain(g, 60, 34, 40, 18, '#8a9ac8', r, '#f8f4ee'); ell(g, 230, 34, 20, 7, '#4f7a5a'); R(g, 234, 20, 2, 10, '#e8e4dc');
         dgrad(g, 0, 34, 320, 24, ['#3e8aa8', '#68b2b4']); for (let k = 0; k < 30; k++) R(g, r() * 320, 36 + r() * 20, 4 + r() * 8, U, 'rgba(255,255,255,0.5)'); R(g, 0, 56, 320, 6, '#c8b89a'); for (let x = 0; x < 320; x += 3) R(g, x, 56 + Math.sin(x / 9) * 1, 3, 1, '#ffffff');
         R(g, 0, 62, 320, 6, '#5a5a6a'); for (let x = 0; x < 320; x += 20) R(g, x, 64.5, 10, U, '#e8e4f0'); for (let x = -6; x < 330; x += 22) { const h = 8 + r() * 10, cc = ['#e8e0d0', '#c8b8a8', '#a8b4c8', '#f4f1e6'][r() * 4 | 0]; R(g, x, 84 - h, 18, h, cc); R(g, x - 1, 84 - h - 3, 20, 3, dark(cc, 0.5)); } return c; })();
-      icon('hgu', g => { R(g, 1, 4, 10, 6, '#d8382e'); R(g, 0, 2, 12, 2, '#2a2a3a'); R(g, 3, 5, 2, 5, '#f4ecd8'); R(g, 7, 5, 2, 5, '#f4ecd8'); R(g, 0, 10, 12, 2, '#8c8498'); });
-      icon('dove', g => { ell(g, 6, 7, 4.5, 3, '#f2c14e'); disc(g, 9, 4.5, 2, '#f2c14e'); R(g, 10.5, 4.5, 1.5, 1, '#d8902a'); P(g, 9, 4, '#5a3a20'); line(g, 2, 7, 0, 4, '#d8a03a'); });
-      icon('lotus', g => { for (const [x, y] of [[3, 6], [9, 6], [6, 3]]) ell(g, x, y + 2, 2.5, 3.5, '#f8f4ee'); ell(g, 6, 7, 2, 3, '#f9a8c8'); R(g, 0, 10, 12, 2, '#5aa85a'); });
-      icon('kbud', g => { ell(g, 6, 9, 5, 3, '#5e8a7c'); R(g, 3, 4, 6, 6, '#5e8a7c'); disc(g, 6, 3, 2.5, '#7aa494'); P(g, 6, 0.5, '#5e8a7c'); R(g, 0, 11, 12, 1, '#8c8498'); });
-      icon('inside', g => { R(g, 0, 0, 12, 12, '#3a5a4e'); for (let y = 2; y < 12; y += 3) R(g, 0, y, 12, U, '#2a443a'); R(g, 4, 2, 4, 4, '#fff0c0'); R(g, 5, 7, 2, 4, '#1d2a24'); });
-      icon('ajisai', g => { for (const [x, y, c] of [[4, 4, '#5a7ad0'], [8, 4, '#9a5ad0'], [6, 7, '#e06a9a'], [3, 8, '#6a9ae0'], [9, 8, '#a8c0f0']]) disc(g, x, y, 2.4, c); R(g, 5, 10, 2, 2, '#3f8a4a'); });
-      icon('bay', g => { R(g, 0, 0, 12, 5, '#8ac4ec'); R(g, 0, 5, 12, 4, '#3e8aa8'); R(g, 0, 9, 12, 3, '#c8b89a'); for (let i = 0; i < 4; i++) R(g, 8 - i * 0.5, 1 + i, i + 1, 1, i ? '#8a9ac8' : '#f8f4ee'); });
-      icon('enoden', g => { R(g, 0, 3, 12, 7, '#f4ead0'); R(g, 0, 7, 12, 3, '#2f7a4a'); R(g, 2, 4, 2, 2, '#2a3a5a'); R(g, 5, 4, 2, 2, '#2a3a5a'); R(g, 8, 4, 2, 2, '#2a3a5a'); R(g, 5, 0, 3, 3, '#3a3446'); R(g, 0, 11, 12, 1, '#8a8496'); });
-      icon('surf', g => { line(g, 2, 11, 10, 1, '#f2c14e'); line(g, 3, 11, 11, 1, '#f06a8c'); R(g, 0, 8, 12, 4, '#5ab4c8'); R(g, 1, 7, 4, 1, '#ffffff'); });
-      icon('kite', g => { line(g, 0, 3, 6, 6, '#6a4a34'); line(g, 12, 3, 6, 6, '#6a4a34'); ell(g, 6, 6, 2.5, 1.5, '#6a4a34'); R(g, 4, 8, 4, 3, '#e8c890'); });
     }
   });
 })();

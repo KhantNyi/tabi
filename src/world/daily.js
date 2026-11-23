@@ -7,8 +7,7 @@
 // together the shared clock wins).
 // The weather: now and then it rains, more in some cities than others (in Sapporo it snows instead). The light goes grey,
 // streaks of rain fall, drops splash, and people put up umbrellas. Buy a clear plastic one at a konbini and you will too.
-// Every city has a konbini (onigiri to open in three pulls, a fridge of drinks, coffee, hot snacks, an umbrella stand
-// and something you can only get there) and a hotel or inn to sleep in. The first time you ride a city's line without an
+// Every city has a konbini (shelves, a basket and a till: see shops.js; and something you can only get there) and a hotel or inn to sleep in. The first time you ride a city's line without an
 // IC card, you buy a ticket from the machine: find your stop's fare on the map above it.
 const DAY = (function () {
   const LEN = 1440, rnd = Math.random, pick = a => a[rnd() * a.length | 0];
@@ -82,26 +81,70 @@ const DAY = (function () {
   function hotel(x, y, cid, w) { if (RYOKAN[cid]) house(x, y, w || 64, 30, { sign: 'RYOKAN', noren: '#3d5a80', rh: 16, lantern: true, to: 'ht_' + cid, lab: 'STAY AT THE INN' }); else tower(x, y, w || 60, 84, { c: '#c8c0b8', sign: 'HOTEL', sc: '#3d5a80', to: 'ht_' + cid, lab: 'STAY AT THE HOTEL', lit: 0.5 }); }
   const chime = () => { const t = S(); if (t) ['E6', 'C6', 'D6', 'G5', 'G5', 'D6', 'E6', 'C6'].forEach((n, i) => tone('sine', nf(n), t + i * 0.18, 0.3, 0.04, { pluck: 1, echo: 1 })); };
   for (const cid in MUSIC) {
-    MAPS['kb_' + cid] = { indoor: 1, city: cid, name: 'KONBINI', music: MUSIC[cid], enter() { chime(); const c = M.ACT.find(a => a.clerk); if (c) say(c, 'IRASSHAIMASE!'); }, deco() {
-      room({ wall: '#f4f4f0', floor: 'tile', t1: '#f2f2ee', t2: '#e2e2de', mat: '#3f9a5a', art: (g, r) => {
-        R(g, 8, 4, 304, 6, '#3f9a5a'); R(g, 8, 10, 304, 3, '#5ab8e8'); R(g, 8, 13, 304, 2, '#f08a2a'); txt(g, 'OPEN 24 HOURS', 120, 5, '#ffffff');
-        for (let x = 176; x < 308; x += 22) { R(g, x, 16, 20, 30, '#c8d8e4'); R(g, x + 1, 17, 18, 28, '#e8f4fc'); for (let s = 0; s < 3; s++) for (let k = 0; k < 4; k++) { const c = ['#e0563f', '#5aa8e0', '#f2c14e', '#5aa85a', '#f4f1e6', '#8a6aff'][(x + s * 3 + k) % 6]; R(g, x + 3 + k * 4, 19 + s * 9, 3, 7, c); R(g, x + 3 + k * 4, 19 + s * 9, 3, 1, lite(c, 0.4)); } R(g, x + 1, 17, 1, 28, '#ffffff'); }
-        for (let x = 14; x < 70; x += 7) { const c = ['#f06a8c', '#5aa8e0', '#f2c14e', '#e0563f'][(x / 7 | 0) % 4]; R(g, x, 22, 6, 9, c); R(g, x, 22, 6, 2, '#f4f1e6'); }
-        poster(g, 82, 18, 80, 12, '#e0563f', 'ONIGIRI SALE'); } });
-      fur('counter', 70, 96, 108, '#e8e8e8'); fur('till', 40, 82); fur('till', 100, 82);
-      const ck = npc('office', 70, 72, { tint: '#3f9a5a', lines: ['IRASSHAIMASE! WE ARE OPEN EVERY HOUR OF EVERY DAY. EVEN THAT ONE.', 'YOU CAN PAY BILLS, POST LETTERS, BUY CONCERT TICKETS AND SEND YOUR SUITCASE TO THE AIRPORT. ALSO SNACKS.'] }); ck.clerk = 1;
-      M.ACT.push({ x: 120, y: 97, sayT: 0, draw(e, sx, sy) { R(ctx, sx - 12, sy - 22, 24, 10, '#c8c0b0'); R(ctx, sx - 11, sy - 21, 22, 8, '#fff0c0'); for (let k = 0; k < 4; k++) { disc(ctx, sx - 8 + k * 5, sy - 15, 2, '#d8902a'); p1(ctx, sx - 9 + k * 5, sy - 16, '#f8d080'); } if (!G.lowFx) { ctx.globalAlpha = 0.3; R(ctx, sx - 6 + Math.sin(G.t * 2) * 2, sy - 28 - (G.t * 6 % 6), 2, 4, '#ffffff'); ctx.globalAlpha = 1; } } });
-      M.SPOTS.push({ x: 120, y: 106, r: 13, label: 'HOT SNACKS', fn: () => { Snd.fx('munch'); dialog([pick(['FRIED CHICKEN BITES FROM THE HOT CASE, IN A LITTLE BOX WITH A CARTOON CHICKEN ON IT.', 'A STICK OF ODEN FROM THE BUBBLING POT: RADISH, EGG AND FISHCAKE IN DASHI.', 'A HOT CROQUETTE IN A PAPER SLEEVE. CRISP, THEN SOFT, THEN TOO HOT.']), 'THE CLERK SAYS "ATATAMEMASU KA?" AND THEN REMEMBERS IT IS ALREADY HOT, AND YOU BOTH LAUGH.']); } });
-      for (const [x, y] of [[200, 118], [200, 156]]) { put(SPR.gondola, x, y, 32, 23); block(x - 30, y - 8, x + 30, y); }
-      M.SPOTS.push({ x: 200, y: 130, r: 14, label: 'PICK AN ONIGIRI', mini: 'onigiri' });
-      M.SPOTS.push({ x: 244, y: 60, r: 16, label: 'PICK A DRINK', mini: 'vend', vc: '#e8f4fc' });
-      put(SPR.coffeem, 150, 62, 8, 21); block(143, 56, 157, 62); M.SPOTS.push({ x: 150, y: 70, r: 11, label: 'MAKE A COFFEE', fn: () => { const t = S(); if (t) { Snd.noise(t, 1.6, 0.03, 300, 1200, Snd.sfx); Snd.noise(t + 0.2, 1.2, 0.02, 2000, 5000, Snd.sfx); } Snd.fx('slurp'); dialog(['YOU PUT THE CUP IN, PRESS THE BUTTON, AND THE MACHINE GRINDS FRESH BEANS JUST FOR YOU. ONE HUNDRED YEN.', 'IT IS GENUINELY GOOD COFFEE. NOBODY CAN EXPLAIN HOW.']); } });
-      put(SPR.ustand, 128, 178, 7, 19); block(122, 172, 134, 178); M.SPOTS.push({ x: 128, y: 168, r: 12, label: 'BUY AN UMBRELLA', fn: () => { Snd.fx('coin'); if (G.umbrella) { dialog(['YOU ALREADY HAVE ONE. EVERYONE IN JAPAN OWNS SIX OF THESE, LEFT IN SIX DIFFERENT PLACES.']); return; } G.umbrella = 1; save(); dialog(['A CLEAR PLASTIC UMBRELLA, FIVE HUNDRED YEN. YOU CAN SEE THE RAIN THROUGH IT.', 'WHEN IT RAINS NOW, YOU WILL PUT IT UP.']); } });
-      const L = LOCAL[cid]; put(SPR.endcap, 276, 130, 13, 33); block(266, 124, 286, 130); M.SPOTS.push({ x: 276, y: 142, r: 13, label: 'ONLY HERE: ' + L[0], stamp: 'kb_' + cid, act: 'hold', fx: 'munch', lines: [L[2], 'THE LABEL SAYS LIMITED TO THIS REGION. YOU WILL THINK ABOUT IT ON THE TRAIN HOME.'] });
-      M.SPOTS.push({ x: 40, y: 150, r: 13, label: 'READ A MAGAZINE', lines: ['A MANGA MAGAZINE AS THICK AS A BRICK. SOMEONE NEXT TO YOU HAS BEEN STANDING HERE READING FOR AN HOUR.', 'THAT IS ALLOWED. IT IS CALLED TACHIYOMI: STANDING READING.'] }); put(SPR.magrack, 40, 140, 16, 23); block(24, 134, 56, 140);
-      put(SPR.atm, 290, 176, 7, 21); block(283, 170, 297, 176); M.SPOTS.push({ x: 290, y: 166, r: 11, label: 'LOOK', lines: ['A CASH MACHINE THAT TAKES FOREIGN CARDS, A COPIER, AND A TICKET MACHINE FOR CONCERTS AND THEME PARKS.', 'THE KONBINI IS ALSO A POST OFFICE, A BANK AND A BOX OFFICE. IT IS EVERYTHING.'] });
-      npc('salary', 240, 110, { rad: 16, dir: 'u', lines: ['DINNER. BREAKFAST. LUNCH. ALL FROM HERE. I REGRET NOTHING.'] }); npc('teen', 90, 150, { rad: 16, tint: '#f06a8c', lines: ['THE NEW FLAVOUR OF CRISPS IS STRAWBERRY SHORTCAKE. I AM AFRAID AND I MUST KNOW.'] });
-    } };
+    // The konbini, laid out like the real thing: the open chiller of onigiri and bento and the wall of drink fridges at
+    // the back, aisles of snacks, noodles, sweets and daily goods, an ice cream chest, the till with its hot case, and
+    // along the window the magazines, the bins, the umbrella stand and the eat-in counter. Fill a basket, pay at the till
+    // (it asks the things a konbini asks), then eat at the counter, make a coffee, sort your rubbish, use the toilet.
+    MAPS['kb_' + cid] = { indoor: 1, city: cid, name: 'KONBINI', tw: 24, th: 14, shop: 'kb_' + cid, style: 'konbini', front: 1, music: MUSIC[cid], hud: () => SHOP.hud(), tick: () => SHOP.tick(),
+      enter() { chime(); SHOP.enter(); const c = M.ACT.find(a => a.clerk); if (c) say(c, 'IRASSHAIMASE!'); M.ACT.filter(a => a.staff).forEach((a, i) => { a.greet = 0.7 + i * 0.6; }); },
+      deco() {
+        SHOP.sprites(); const L = LOCAL[cid];
+        room({ wall: '#f4f4f0', floor: 'tile', t1: '#f2f2ee', t2: '#e2e2de', mat: '#3f9a5a', art: (g, r) => {
+          R(g, 8, 4, 368, 5, '#3f9a5a'); R(g, 8, 9, 368, 2, '#5ab8e8'); R(g, 8, 11, 368, 1.5, '#f08a2a'); txt(g, 'OPEN 24 HOURS', 256, 4.5, '#ffffff');
+          // the open chiller: onigiri on top, bento in the middle, sandwiches at the bottom, every one with a yellow price tag
+          R(g, 12, 14, 112, 32, '#5a6a7a'); R(g, 14, 16, 108, 29, '#e8f0f4'); R(g, 14, 16, 108, 1, '#ffffff');
+          for (let s = 0; s < 3; s++) {
+            const y = 24 + s * 9; R(g, 14, y, 108, 1.5, '#a8b8c4');
+            for (let x = 17; x < 117; x += 7) {
+              const c = ['#f08a6a', '#f4ead4', '#c8382e', '#c8783a', '#5aa85a'][(x / 7 + s) % 5 | 0];
+              if (s === 0) { R(g, x + 1.5, y - 6, 2, 1, '#f8f8f4'); R(g, x + 0.5, y - 5, 4, 2, '#f8f8f4'); R(g, x, y - 3, 5, 3, '#1d2a24'); p1(g, x + 2, y - 4.5, c); }
+              else if (s === 1) { R(g, x, y - 5, 6, 5, '#2a2430'); R(g, x + 0.5, y - 4.5, 2.5, 4, '#f8f8f4'); R(g, x + 3, y - 4.5, 2.5, 4, c); }
+              else { R(g, x, y - 5, 5, 5, '#f4ead4'); R(g, x, y - 3, 5, 1.5, ['#f2d040', '#e8a0a0', '#8fc97a'][x % 3]); }
+              R(g, x, y + 0.5, 4, 1, '#f2d040');
+            }
+          }
+          poster(g, 30, 4, 76, 8, '#e0563f', 'ONIGIRI BENTO SANDO');
+          // the drink fridges: glass doors, bottles and cans on every shelf, the last door all beer
+          for (let i = 0; i < 8; i++) { const x = 132 + i * 22; R(g, x, 14, 20, 32, '#c8d8e4'); R(g, x + 1, 15, 18, 30, '#e8f4fc'); for (let s = 0; s < 3; s++) for (let k = 0; k < 4; k++) { const c = i === 7 ? ['#f2c14e', '#e8e4ec', '#c8a040'][(k + s) % 3] : ['#e0563f', '#5aa8e0', '#f2c14e', '#5aa85a', '#f4f1e6', '#8a6aff'][(i + s * 3 + k) % 6]; R(g, x + 3 + k * 4, 17 + s * 9, 3, 7, c); R(g, x + 3 + k * 4, 17 + s * 9, 3, 1, lite(c, 0.4)); } R(g, x + 1, 15, 1, 30, '#ffffff'); R(g, x + 17, 26, 1, 8, '#8a8496'); }
+          poster(g, 196, 4, 48, 8, '#3f7ab0', 'DRINKS');
+          // the toilet, at the back, as in every konbini: ask first
+          R(g, 324, 12, 40, 34, '#d8d4dc'); R(g, 330, 16, 28, 30, '#c8c0d4'); R(g, 330, 16, 28, 1, '#e8e4ec'); R(g, 353, 30, 2, 4, '#8a8496'); R(g, 334, 20, 20, 9, '#f4f4f0'); disc(g, 339, 22.5, 1.3, '#3f7ab0'); R(g, 338, 24, 2, 4, '#3f7ab0'); disc(g, 349, 22.5, 1.3, '#e0452f'); R(g, 347.5, 24, 3, 4, '#e0452f'); txt(g, 'TOILET', 333, 5, '#3a2e40');
+          // the front window, either side of the door
+          R(g, 8, M.h - 8, M.w / 2 - 22, 2, '#bfe0f0'); R(g, M.w / 2 + 14, M.h - 8, M.w / 2 - 22, 2, '#bfe0f0');
+        } });
+        // aisles: snacks and noodles, then daily goods and sweets; the ice cream chest and the local special at the end
+        for (const [s, x, y] of [['kgSnack', 110, 100], ['kgNoodle', 200, 100], ['kgGoods', 110, 150], ['kgSweet', 200, 150]]) { put(SPR[s], x, y, 32, 27); block(x - 30, y - 8, x + 30, y); }
+        SHOP.shelf(110, 112, 'BROWSE THE SNACKS', SHOP.SNACKS); SHOP.shelf(200, 112, 'BROWSE NOODLES AND BREAD', SHOP.NOODLES);
+        SHOP.shelf(110, 162, 'BROWSE DAILY GOODS', SHOP.GOODS); SHOP.shelf(200, 162, 'BROWSE THE SWEETS', SHOP.SWEETS);
+        put(SPR.kFreezer, 262, 104, 15, 19); block(248, 96, 276, 104); SHOP.shelf(262, 116, 'BROWSE THE ICE CREAM', SHOP.ICE);
+        put(SPR.endcap, 262, 152, 13, 33); block(252, 146, 272, 152); M.SPOTS.push({ x: 262, y: 163, r: 13, label: 'ONLY HERE: ' + L[0], stamp: 'kb_' + cid, act: 'hold', fx: 'munch', lines: [L[2], 'THE LABEL SAYS LIMITED TO THIS REGION. YOU WILL THINK ABOUT IT ON THE TRAIN HOME.'] });
+        SHOP.shelf(68, 60, 'BROWSE ONIGIRI AND BENTO', SHOP.BENTO, { r: 16 }); SHOP.shelf(220, 60, 'PICK A DRINK', SHOP.fridge, { r: 18, title: 'THE DRINKS FRIDGE' });
+        M.SPOTS.push({ x: 344, y: 60, r: 14, label: 'ASK TO USE THE TOILET', fn: () => { const c = M.ACT.find(a => a.clerk); if (c) say(c, 'DOUZO!'); dialog(['"SUMIMASEN, TOIRE O KARITE MO II DESU KA?" MAY I USE THE TOILET?', 'THE CLERK SAYS "DOUZO!" AND POINTS. IT IS SPOTLESS.'], () => { G.state = 'mini'; G.mg = { k: 'washlet', sp: { label: 'TOILET' }, t: 0 }; MG.washlet.init(G.mg); }); } });
+        // the till: cigarettes, the microwave and the receipt printer behind, two registers, the hot case on the counter
+        put(SPR.kBack, 332, 100, 44, 25); block(288, 90, 376, 100); put(SPR.kGate, 287, 126, 3, 15); block(284, 100, 290, 126);
+        fur('counter', 332, 140, 88, '#e8e8e8'); fur('till', 306, 126); fur('till', 346, 126);
+        const ck = npc('office', 318, 114, { tint: '#3f9a5a', lines: ['IRASSHAIMASE! WE ARE OPEN EVERY HOUR OF EVERY DAY. EVEN THAT ONE.', 'YOU CAN PAY BILLS, POST LETTERS, BUY CONCERT TICKETS AND SEND YOUR SUITCASE TO THE AIRPORT. ALSO SNACKS.'] }); ck.clerk = 1;
+        M.ACT.push({ x: 362, y: 141, sayT: 0, draw(e, sx, sy) { R(ctx, sx - 12, sy - 22, 24, 10, '#c8c0b0'); R(ctx, sx - 11, sy - 21, 22, 8, '#fff0c0'); for (let k = 0; k < 4; k++) { disc(ctx, sx - 8 + k * 5, sy - 15, 2, '#d8902a'); p1(ctx, sx - 9 + k * 5, sy - 16, '#f8d080'); } if (!G.lowFx) { ctx.globalAlpha = 0.3; R(ctx, sx - 6 + Math.sin(G.t * 2) * 2, sy - 28 - (G.t * 6 % 6), 2, 4, '#ffffff'); ctx.globalAlpha = 1; } } });
+        SHOP.shelf(362, 152, 'HOT SNACKS', SHOP.HOT, { title: 'THE HOT CASE, AND COFFEE CUPS' }); SHOP.till(316, 152);
+        // the machines on the side wall
+        put(SPR.atm, 22, 120, 7, 21); block(15, 114, 29, 120); M.SPOTS.push({ x: 26, y: 130, r: 11, label: 'LOOK AT THE MACHINES', lines: ['A CASH MACHINE THAT TAKES FOREIGN CARDS, A COPIER, AND A TICKET MACHINE FOR CONCERTS AND THEME PARKS.', 'THE KONBINI IS ALSO A POST OFFICE, A BANK AND A BOX OFFICE. IT IS EVERYTHING.'] });
+        // along the window: magazines, the bins, the umbrellas, the door, then the coffee machine and the eat-in counter
+        put(SPR.magrack, 56, 210, 16, 23); put(SPR.magrack, 92, 210, 16, 23); block(40, 204, 108, 210);
+        M.SPOTS.push({ x: 74, y: 196, r: 13, label: 'READ A MAGAZINE', lines: ['A MANGA MAGAZINE AS THICK AS A BRICK. SOMEONE NEXT TO YOU HAS BEEN STANDING HERE READING FOR AN HOUR.', 'THAT IS ALLOWED. IT IS CALLED TACHIYOMI: STANDING READING.'] });
+        put(SPR.kBins, 132, 212, 20, 21); block(113, 206, 151, 212); SHOP.sortSpot(132, 198);
+        put(SPR.ustand, 168, 212, 7, 19); block(162, 206, 174, 212);
+        M.SPOTS.push({ x: 168, y: 200, r: 11, label: 'BUY AN UMBRELLA', fn: () => { if (G.umbrella) { dialog(['YOU ALREADY HAVE ONE. EVERYONE IN JAPAN OWNS SIX OF THESE, LEFT IN SIX DIFFERENT PLACES.']); return; } const K = SHOP.kago(); if (!K.items.some(i => i.umb)) K.items.push(Object.assign({}, SHOP.UMBRELLA)); Snd.fx('pick'); dialog(['A CLEAR PLASTIC UMBRELLA, FIVE HUNDRED YEN. INTO THE BASKET IT GOES. PAY FOR IT AT THE TILL.']); } });
+        put(SPR.coffeem, 232, 213, 8, 21); block(225, 206, 239, 213); M.SPOTS.push({ x: 232, y: 199, r: 11, label: 'MAKE A COFFEE', fn: SHOP.coffee });
+        put(SPR.kEatin, 300, 212, 64, 13); block(240, 204, 364, 212); for (const x of [258, 282, 306, 330]) put(SPR.kStool, x, 202, 4, 9); put(SPR.kPot, 352, 213, 5, 14);
+        M.SPOTS.push({ x: 290, y: 194, r: 14, label: 'SIT AT THE EAT-IN', fn: SHOP.eatIn });
+        // the people: a second clerk stocking shelves, someone reading, someone eating, and shoppers coming and going
+        const st = SHOP.shopper('teen', '#3f9a5a', [[60, 124, 0], [62, 124, 5, 'u'], [150, 124, 0], [176, 124, 6, 'u'], [150, 124, 0]], ['IRASSHAIMASE! THE NEW SWEETS COME IN ON TUESDAYS. I KNOW THEM ALL BY NAME.', 'THE ONIGIRI ARE THROWN AWAY AT MIDNIGHT IF NOBODY BUYS THEM. SO, PLEASE, BUY THEM.']);
+        st.staff = 1; st.carry = 1; st.carryC = '#5aa8e0'; st.draw = SHOP.staffDraw;
+        npc('salary', 108, 198, { dir: 'd', lines: ['SHH. CHAPTER NINE. THE RIVAL IS ABOUT TO TURN UP.'] });
+        npc('office', 330, 200, { dir: 'd', lines: ['LUNCH. EVERY DAY. THE SAME SEAT. THE SAME CURRY. I AM VERY HAPPY.'] });
+        const a = SHOP.shopper('salary', null, [[192, 214, -12], [192, 180, 0], [155, 176, 0], [155, 66, 0], [66, 66, 3, 'u'], [155, 66, 0], [155, 176, 0], [300, 162, 4, 'u'], [230, 180, 0]], ['DINNER. BREAKFAST. LUNCH. ALL FROM HERE. I REGRET NOTHING.']); a.hide = true; a.pw = 2;
+        const b = SHOP.shopper('teen', '#f06a8c', [[192, 214, -18], [192, 180, 0], [240, 176, 0], [240, 66, 0], [220, 66, 3, 'u'], [240, 66, 0], [240, 120, 0], [110, 120, 4, 'u'], [155, 120, 0], [155, 176, 0], [300, 162, 4, 'u'], [230, 180, 0]], ['THE NEW CRISPS ARE STRAWBERRY SHORTCAKE FLAVOUR. I AM AFRAID, AND I MUST KNOW.']); b.hide = true; b.pw = 9;
+      } };
     // the hotel: a lobby with the front desk, and your room upstairs; a ryokan also has a shoe-off entrance and a bath
     const ry = RYOKAN[cid], checkedIn = () => (G.inn || {})[cid];
     MAPS['ht_' + cid] = { indoor: 1, city: cid, name: ry ? 'RYOKAN - ENTRANCE' : 'HOTEL LOBBY', music: MUSIC[cid], enter() { const c = M.ACT.find(a => a.clerk); if (c) say(c, ry ? 'IRASSHAIMASE. WELCOME HOME.' : 'WELCOME. CHECKING IN?'); }, deco() {
@@ -183,7 +226,7 @@ const DAY = (function () {
   const ONI = [['SALMON', '#f08a6a'], ['TUNA MAYO', '#f4ead4'], ['PICKLED PLUM', '#c8382e'], ['KOMBU', '#3a2a24']];
   const OPEN = [['d', 'PULL TAB 1 DOWN THE MIDDLE'], ['l', 'PULL CORNER 2 TO THE LEFT'], ['r', 'PULL CORNER 3 TO THE RIGHT']];
   const ONIGIRI = {
-    init(m) { m.ph = 'pick'; m.sel = 0; m.bag = 0; m.i = 0; m.torn = 0; m.pt = 0; m.done = 0; },
+    init(m) { m.ph = 'pick'; m.sel = 0; m.bag = 0; m.i = 0; m.torn = 0; m.pt = 0; m.done = 0; if (m.sp && m.sp.oni != null) { m.sel = m.sp.oni; m.ph = 'open'; } },
     update(m, dt) { m.pt += dt;
       if (m.ph === 'pick') { if (KP.l) { m.sel = (m.sel + 3) % 4; Snd.fx('ui'); } if (KP.r) { m.sel = (m.sel + 1) % 4; Snd.fx('ui'); } if (KP.a) { m.ph = 'pay'; m.pt = 0; Snd.fx('page'); } }
       else if (m.ph === 'pay') { if (KP.l || KP.r) { m.bag ^= 1; Snd.fx('ui'); } if (KP.a && m.pt > 0.3) { m.ph = 'paid'; m.pt = 0; if (G.ic) Snd.fx('beep'); else Snd.fx('coin'); } }

@@ -7,7 +7,7 @@
     hachi: ['HACHIKO', 'dog', 'shibuya'], scramble: ['SCRAMBLE CROSSING', 'camera', 'shibuya'], ramen: ['SHOYU RAMEN', 'ramen', 'shibuya'],
     crepe: ['HARAJUKU CREPE', 'crepe', 'harajuku'], meiji: ['MEIJI SHRINE', 'torii', 'harajuku'], fit: ['NEW OUTFIT', 'shirt', 'harajuku'],
     view: ['NIGHT VIEW', 'sun', 'shinjuku'], yaki: ['YAKITORI ALLEY', 'stick', 'shinjuku'],
-    panda: ['UENO PANDA', 'panda', 'ueno'], bone: ['DINOSAUR HALL', 'bone', 'ueno'],
+    panda: ['UENO PANDA', 'panda', 'ueno'], bone: ['DINOSAUR HALL', 'bone', 'ueno'], hanami: ['HANAMI IN UENO', 'sakura', 'ueno'],
     kaminari: ['THUNDER GATE', 'lantern', 'asakusa'], omikuji: ['FORTUNE SLIP', 'omikuji', 'asakusa'], sky: ['SKYTREE', 'sky', 'asakusa'],
     crane: ['CRANE GAME PRIZE', 'claw', 'akiba'], fig: ['CAPSULE FIGURE', 'fig', 'akiba'], denki: ['ELECTRIC TOWN', 'gacha', 'akiba'],
     brick: ['RED BRICK STATION', 'train', 'tokyo'], sushi: ['CONVEYOR SUSHI', 'sushi', 'tokyo'], sweets: ['DEPACHIKA SWEETS', 'mochi', 'tokyo'],
@@ -54,6 +54,10 @@
     for (let x = 30; x < M.w; x += 58) { plant('pine', x + hsh(x, 3) * 14, 160 + hsh(x, 7) * 16, 1); } for (const x of [140, 260, 470, 590]) prop('bench', x, 130, 9); for (const x of [200, 520]) prop('lantern', x, 70, 4);
     crowd(5, 30, 96, 640, 96, 6); crowd(5, 640, 112, 30, 112, 6);
     npc('granny', 600, 92, { rad: 20, lines: ['I WALK ROUND THE PALACE EVERY MORNING. FIVE KILOMETRES.', 'THE JOGGERS GO THE OTHER WAY. THEY ARE ALL WRONG.'] });
+    for (const x of [30, 76, 122, 160, 244, 282, 392, 430, 470, 566, 606, 648]) plant('sakura', x, 68, 1);
+    // the rafts float over the water (which is drawn over the ground), drifting slowly with the current
+    M.ACT.push({ x: M.w / 2, y: 56, always: 1, sayT: 0, draw(e, sx, sy) { const ox = sx - e.x, oy = sy - e.y; for (let k = 0; k < 90; k++) { const x = (hsh(k, 5) * M.w + G.t * (2 + hsh(k, 7) * 3)) % M.w, y = 20 + hsh(k, 9) * 32 + Math.sin(G.t * 0.8 + k) * 0.6; const n = 2 + (hsh(k, 2) * 4 | 0); for (let j = 0; j < n; j++) R(ctx, ox + x + j * 1.5 + (j % 2) * 0.5, oy + y + (j % 2) * U, 1.5, 1, j % 3 ? '#f7b8cc' : '#fdebf1'); } } });
+    npc('kimono', 200, 84, { dir: 'u', lines: ['CHIDORIGAFUCHI. IN SPRING THE CHERRIES LEAN SO FAR OUT OVER THE MOAT THAT THE BOATS GO UNDER A PINK ROOF.', 'THE PETALS ON THE WATER ARE CALLED HANAIKADA: FLOWER RAFTS.'] });
     npc('tourist', 120, 80, { dir: 'u', lines: ['THOSE STONES IN THE WALL WEIGH AS MUCH AS A HOUSE.', 'NOBODY USED MORTAR. THEY JUST FIT.'] });
   } };
 
@@ -150,10 +154,20 @@
       prop('saigo', 250, 300, 7); for (const [x, y] of [[388, 232], [470, 262], [450, 240]]) put(SPR.swan, x, y, 11, 17);
       for (let x = 60; x < 330; x += 34) { plant('sakura', x + 190, 300, 1); if (x < 250) plant('sakura', x + 40, 292, 1); } for (let y = 200; y < 300; y += 34) { plant('sakura', 120, y, 1); plant('sakura', 172, y + 10, 1); plant('sakura', 306, y, 1); plant('sakura', 352, y + 12, 1); }
       ledge([[0, 348], [320, 346], [640, 348]], 12, 'stone'); block(0, 358, 640, 370); steps(136, 347, 24, 22); steps(232, 347, 24, 22);
-      for (const [x, y] of [[230, 120], [240, 220], [430, 120], [520, 130], [580, 190], [600, 280], [560, 340], [70, 240], [66, 120], [420, 340], [500, 190]]) plant(hsh(x, y) < 0.5 ? 'green2' : 'pine', x, y, 1);
+      for (const [x, y] of [[230, 120], [430, 120], [520, 130], [580, 190], [600, 280], [560, 340], [70, 240], [66, 120], [420, 340], [500, 190]]) plant(hsh(x, y) < 0.5 ? 'green2' : 'pine', x, y, 1);
       for (const [x, y] of [[226, 330], [300, 336], [400, 300], [470, 300]]) prop('bench', x, y, 9); for (const [x, y] of [[360, 266], [520, 270]]) prop('lantern', x, y, 4);
       station(70, 384, 'UENO'); house(180, 384, 60, 28, { sign: 'BENTO', noren: '#e0563f', rh: 14 }); tower(290, 384, 70, 44, { c: '#c8b8a0', sign: 'AMEYOKO MARKET', sc: '#e0563f' }); tower(400, 384, 60, 48, {}); tower(480, 384, 70, 44, { sign: 'KISSATEN', sc: '#8a5a3a' }); tower(570, 384, 60, 48, {});
       sideTowers(410); prop('vend', 112, 400, 6); wild(['green', 'green2', 'pine', 'sakura', 'green']);
+      // the old weeping cherry in the middle of the park, propped on its crutches; under it, try to catch a falling petal
+      put(SPR.shidare, 240, 214, 55, 94, { kind: 'sakura' }); block(234, 208, 246, 214); M.SHD.push([240, 214, 34, 6]); petals(240, 214, 70, 46);
+      M.SPOTS.push({ x: 240, y: 230, r: 14, label: 'CATCH A FALLING PETAL', mini: 'petal' });
+      // hanami: lanterns strung along the avenue under the blossom, blue sheets on the ground, and a dango stall
+      lanterns(40, 196, 306); lanterns(300, 612, 306);
+      hanami(186, 322, [['office', -13, -2, 'r', '#f06a8c', ['KANPAI! TO THE CHERRIES!', 'THEY ONLY LAST A WEEK. THAT IS WHY WE ALL COME OUT AT ONCE.']], ['salary', 13, -3, 'l', null, ['MY BOSS IS ASLEEP UNDER THAT TREE. THIS IS THE BEST DAY OF THE YEAR.']], ['kid', 0, 7, 'u', null, ['A PETAL LANDED IN MY JUICE! THAT MEANS LUCK!']]]);
+      hanami(352, 324, [['granny', -12, -1, 'r', null, ['I HAVE SAT UNDER THESE TREES EVERY SPRING FOR SEVENTY YEARS.', 'THEY WERE SMALLER THEN. SO WAS I.']], ['kimono', 12, -2, 'l', null, ['WE CAME AT DAWN FOR THIS SPOT. WORTH IT.']]]);
+      hanami(520, 322, [['salary', 0, 0, 'd', '#3a3a4e', ['MY BOSS SENT ME HERE AT SIX THIS MORNING TO SAVE THIS SPOT. THE PARTY STARTS AT SEVEN TONIGHT.', 'IT IS CALLED BASHOTORI. IT IS THE MOST IMPORTANT JOB A NEW EMPLOYEE HAS. I AM VERY PROUD.']]]);
+      M.SPOTS.push({ x: 186, y: 342, r: 13, label: 'JOIN THE HANAMI', stamp: 'hanami', act: 'hold', fx: 'munch', lines: ['"OI! COME AND SIT!" THE GROUP ON THE BLUE SHEET WAVES YOU OVER. YOU TAKE YOUR SHOES OFF, LINE THEM UP AT THE EDGE, AND SIT.', 'SOMEONE HANDS YOU AN ONIGIRI, SOMEONE POURS YOU TEA. A PETAL LANDS IN YOUR CUP, AND EVERYONE CHEERS AS IF YOU DID IT ON PURPOSE.'] });
+      prop('stall', 590, 322, 13); const dg = npc('granny', 590, 334, { lines: ['DANGO!'] }); dg.spot = { label: 'BUY HANAMI DANGO', fx: 'munch', lines: ['THREE BALLS ON A STICK: PINK, WHITE AND GREEN. HANAMI DANGO, SOLD ONLY WHILE THE CHERRIES BLOOM.', 'PINK FOR THE BLOSSOM, WHITE FOR THE LAST SNOW, GREEN FOR THE SUMMER COMING. SPRING IN THREE BITES.'] };
       M.SPOTS.push({ x: 250, y: 308, r: 12, label: 'READ', lines: ['A BRONZE SAMURAI OUT WALKING HIS DOG.', 'PEOPLE HAVE MET UNDER THIS STATUE FOR A HUNDRED YEARS.'] });
       cars(438, -1, 2); cars(446, 1, 2); crowd(5, 40, 394, 600, 394, 5); crowd(5, 150, 322, 330, 322, 6); crowd(3, 146, 190, 146, 310, 6); crowd(3, 328, 150, 328, 310, 6);
       npc('kid', 180, 186, { lines: ['PANDAS! PANDAS! PANDAS!', 'DAD SAYS WE CAN SEE THE PANDAS AGAIN AFTER LUNCH.'] }); npc('granny', 420, 310, { rad: 24, lines: ['THE LOTUS FLOWERS OPEN EARLY IN THE MORNING.', 'I FEED THE DUCKS. THE SIGN SAYS NOT TO. I DO ANYWAY.'] }); M.ACT.push({ cat: true, x: 276, y: 306, k: 2 });
@@ -195,14 +209,49 @@
     fur('booth', 50, 160); fur('booth', 270, 160); fur('plant', 20, 70); fur('plant', 300, 70); npc('kid', 50, 150, { lines: ['THE EGG IS THE BEST PART.'] });
     M.SPOTS.push({ x: 160, y: 108, r: 12, label: 'EAT RAMEN', stamp: 'ramen', act: 'hold', fx: 'slurp', lines: ['THE BOWL ARRIVES STEAMING, WITH A SOFT EGG AND TWO SLICES OF PORK.', 'YOU DRINK THE BROTH TO THE LAST DROP.'] });
   } };
-  function fashion(id, name, wall, col, stamp) { MAPS[id] = { indoor: 1, name, deco() {
-    room({ wall, floor: 'tile', t1: '#f8f0f4', t2: lite(col, 0.6), mat: col, art: (g, r) => { for (const x of [24, 250]) wallShelf(g, x, 46, ['#f06a8c', '#5aa8e0', '#f2c14e', '#f4f1e6', '#8a6aff'], r); R(g, 140, 8, 40, 36, '#8a8496'); R(g, 142, 10, 36, 32, '#cfeaff'); R(g, 146, 12, 4, 28, '#ffffff'); poster(g, 86, 10, 44, 14, col, 'NEW IN'); poster(g, 192, 10, 44, 14, '#1d1626', 'SALE'); } });
-    for (const [x, y, k] of [[50, 96, 0], [270, 96, 3], [50, 150, 2], [270, 150, 5], [110, 124, 1], [210, 124, 4]]) fur('rack', x, y, k);
-    fur('counter', 160, 84, 60, '#f4f1e6'); fur('till', 176, 78); fur('plant', 20, 176); fur('plant', 300, 176);
-    const k = npc('office', 160, 66, { tint: col, lines: ['WELCOME!'] }); k.spot = { label: 'TRY SOMETHING ON', mini: 'dress', stamp };
-    npc('teen', 80, 126, { rad: 26, tint: '#f2c14e', lines: ['DOES THIS COME IN A SMALLER SIZE?', 'I ALREADY OWN FOUR OF THESE.'] }); npc('office', 240, 160, { rad: 26, lines: ['EVERYTHING HERE IS SO CUTE I CANNOT CHOOSE.'] }); npc('teen', 220, 100, { dir: 'u', tint: '#5aa8e0', lines: ['HMM. THE BLUE OR THE OTHER BLUE?'] });
+  // ---------- the boutiques ----------
+  // Folded clothes in cubbies, racks, a table of tees, accessories, mannequins in the window, a long mirror and the
+  // fitting rooms. Take up to three things over your arm, try them on (shoes off at the curtain), and pay: she wraps
+  // everything in tissue, then carries the bag to the door for you and bows. What you buy, you wear out of the shop.
+  // o: { fits: [outfit, price, what it is like] x4 (outfits are FITS in main.js), tees, wall, col, sign, stamp }
+  function boutique(id, name, o) { MAPS[id] = { indoor: 1, name, tw: 24, th: 14, shop: id, style: 'boutique', front: 1, stamp: o.stamp, hud: () => SHOP.hud(), tick: () => SHOP.tick(), enter() { SHOP.enter(); SHOP.arrive(); }, deco() {
+    SHOP.sprites(); const col = o.col, clothes = o.fits.map(([f, p, a]) => ({ n: FITN[f], p, k: 'shirt', c: FITS[f], fit: f, a }));
+    room({ wall: o.wall, floor: 'tile', t1: '#fbf6f8', t2: lite(col, 0.72), mat: col, art: (g, r) => {
+      // cubbies of folded clothes, the shop's name in lights, shoes on shelves
+      R(g, 12, 8, 112, 38, '#f4eef0'); for (let cy = 0; cy < 3; cy++) for (let cx = 0; cx < 7; cx++) { const x = 14 + cx * 15.5, y = 10 + cy * 12, c = ['#f4f1e6', col, '#5aa8e0', '#3a3a4e', '#f2c14e', '#8fc97a', lite(col, 0.4)][(cx + cy * 3) % 7]; R(g, x, y, 14, 11, '#e0d4dc'); R(g, x + 1, y + 1, 12, 10, '#fbf6f8'); for (let s = 0; s < 3; s++) { R(g, x + 2, y + 8 - s * 2.5, 10, 2.2, c); R(g, x + 2, y + 8 - s * 2.5, 10, U, lite(c, 0.35)); } }
+      R(g, 134, 10, 116, 26, '#2a2430'); txtC(g, o.sign, 192, 16, col, null, 2); for (let x = 138; x < 248; x += 6) p1(g, x, 12, lite(col, 0.5)); R(g, 134, 36, 116, 2, col);
+      R(g, 258, 8, 116, 38, '#e8dce4'); for (let s = 0; s < 3; s++) { R(g, 258, 20 + s * 12, 116, 1.5, '#c8b8c4'); for (let x = 262; x < 370; x += 12) { const c = ['#f4f1e6', '#3a3a4e', col, '#c8783a', '#5aa8e0'][(x / 12 + s) % 5 | 0]; R(g, x, 16 + s * 12, 4, 4, c); R(g, x + 4.5, 16 + s * 12, 4, 4, c); R(g, x, 19 + s * 12, 9, 1, dark(c, 0.3)); } }
+      // the window platform where the mannequins stand
+      for (const x of [124, 210]) { R(g, x, M.h - 30, 50, 18, lite(col, 0.55)); R(g, x, M.h - 30, 50, 1, '#ffffff'); R(g, x, M.h - 13, 50, 1, dark(col, 0.2)); }
+    } });
+    // the till, with paper bags waiting
+    fur('counter', 70, 98, 96, '#f4f1e6'); fur('till', 92, 84); R(M.ground.g, 30, 50, 24, 6, '#f8f0e8'); R(M.ground.g, 30, 50, 24, 1, col);
+    const ck = npc('office', 58, 78, { tint: col, lines: ['IRASSHAIMASE! TAKE ANYTHING TO THE FITTING ROOM, UP TO THREE AT A TIME.', 'EVERYTHING HERE IS MADE IN SMALL BATCHES. WHEN IT IS GONE, IT IS GONE.'] }); ck.clerk = 1;
+    SHOP.till(70, 110);
+    // the fitting rooms: the left one is yours (the curtain shuts and your shoes wait outside), the right one is busy
+    for (const [x, k] of [[296, 0], [336, 1]]) { M.ACT.push({ x, y: 96, k, sayT: 0, draw(e, sx, sy) { const shut = e.k === 1 || M.fitting; ctx.drawImage(shut ? SPR.bFitC : SPR.bFitO, snap(sx - 16), snap(sy - 47)); if (shut) { R(ctx, sx - 6, sy + 1, 4, 2, e.k ? '#8a5a3a' : '#3a3a4e'); R(ctx, sx + 1, sy + 1, 4, 2, e.k ? '#8a5a3a' : '#3a3a4e'); } } }); block(x - 15, 88, x + 15, 96); }
+    SHOP.fittingRoom(296, 108); M.SPOTS.push({ x: 336, y: 108, r: 12, label: 'KNOCK', fn: () => { Snd.fx('ui'); dialog(['THERE ARE SHOES OUTSIDE THIS CURTAIN, SO SOMEONE IS IN THERE. A VOICE SAYS "SUMIMASEN, CHOTTO MATTE!" JUST A MOMENT!', 'YOU DO NOT KNOCK ON A CURTAIN. YOU JUST LEARNED THAT.']); } });
+    put(SPR.bMirror, 256, 96, 7, 39); block(250, 90, 262, 96);
+    M.SPOTS.push({ x: 256, y: 106, r: 11, label: 'LOOK IN THE MIRROR', fn: () => { pl.em = 'cheer'; pl.emT = 1.6; Snd.fx('heart'); dialog(['YOUR ' + FITN[G.fit] + ' LOOKS GREAT IN HERE. SHOP MIRRORS ARE ALWAYS A LITTLE KIND, AND THE LIGHTS ARE VERY GOOD.']); } });
+    // racks, the tees table and the accessories
+    fur('rack', 70, 156, 0); fur('rack', 112, 156, 3); fur('rack', 272, 156, 5); fur('rack', 314, 156, 2);
+    SHOP.shelf(91, 168, 'BROWSE THE RACKS', clothes.slice(0, 2), { title: 'THE RACKS: NEW IN' }); SHOP.shelf(293, 168, 'BROWSE THE OTHER RACKS', clothes.slice(2), { title: 'THE RACKS: THIS SEASON' });
+    put(SPR.bTees, 192, 128, 17, 19); block(178, 120, 206, 128); SHOP.shelf(192, 138, 'BROWSE THE T-SHIRTS', o.tees.map(([n, c, a]) => ({ n, p: 2900, k: 'shirt', c, a })));
+    put(SPR.bAcc, 150, 100, 11, 31); block(142, 94, 158, 100);
+    SHOP.shelf(150, 110, 'BROWSE ACCESSORIES', [{ n: 'CANVAS TOTE BAG', p: 1800, k: 'tote', c: lite(col, 0.4), a: 'THE SHOP\'S NAME ON THE SIDE, SMALL. YOU WILL USE IT FOR GROCERIES FOR TEN YEARS.' }, { n: 'BUCKET HAT', p: 2400, k: 'hat', c: '#f2c14e', a: 'FOR THE SUN, AND FOR LOOKING LIKE YOU KNOW A GOOD COFFEE PLACE.' }, { n: 'HAIR CLIPS, SET OF 3', p: 900, k: 'clips', c: col, a: 'A STAR, A HEART, A TINY FROG.' }, { n: 'PATTERNED SOCKS', p: 700, k: 'socks', c: col, a: 'JAPAN TAKES SOCKS SERIOUSLY. YOU TAKE YOUR SHOES OFF A LOT HERE. PEOPLE WILL SEE THEM.' }]);
+    // mannequins in the window, wearing what is new
+    SHOP.manq(146, M.h - 14, FITS[o.fits[0][0]]); SHOP.manq(238, M.h - 14, FITS[o.fits[2][0]]);
+    // the floor staff: calls out to the street, and carries your bag to the door
+    const fl = npc('teen', 222, 120, { tint: col, lines: ['IRASSHAIMASE! PLEASE TAKE YOUR TIME!', 'THE FITTING ROOM IS FREE NOW. JUST LEAVE YOUR SHOES OUTSIDE THE CURTAIN.'] });
+    fl.staff = 1; fl.carry = 0; fl.draw = SHOP.staffDraw; fl.calls = ['IRASSHAIMASE! DOUZO GORAN KUDASAI!', 'NEW ARRIVALS, BY THE WINDOW!', 'PLEASE, TRY THINGS ON!', 'IRASSHAIMASEEE!'];
+    npc('teen', 120, 186, { rad: 22, tint: '#f2c14e', lines: o.chat[0] }); npc('office', 300, 186, { rad: 22, lines: o.chat[1] });
   } }; }
-  fashion('mode', 'MODE 109', '#f0d0dc', '#f06a8c'); fashion('kawaii', 'KAWAII BOUTIQUE', '#e0d4f8', '#8a6aff', 'fit');
+  boutique('mode', 'MODE 109', { wall: '#f0d0dc', col: '#f06a8c', sign: 'MODE', fits: [[1, 5900, 'OVERSIZED, SOFT INSIDE, WITH A HOOD BIG ENOUGH FOR TWO HEADS.'], [3, 8900, 'SATIN, WITH A TIGER EMBROIDERED ON THE BACK. EVERYONE IN SHIBUYA HAS ONE. NOW YOU DO.'], [6, 6500, 'THREE STRIPES DOWN EACH ARM. FOR RUNNING FOR THE LAST TRAIN.'], [4, 12800, 'LONG, BLACK AND SHARP. YOU LOOK LIKE YOU KNOW WHERE THE PARTY IS.']],
+    tees: [['TEE: SHIBUYA', '#3a3a4e', 'THE WORD SHIBUYA, IN JAPANESE, IN PINK.'], ['TEE: NEON CAT', '#f06a8c', 'A CAT IN SUNGLASSES. NO FURTHER INFORMATION.'], ['TEE: PLAIN WHITE', '#f4f1e6', 'THICK COTTON. JAPANESE PLAIN TEES ARE THE BEST IN THE WORLD AND THIS IS NOT AN OPINION.']],
+    chat: [['DOES THIS COME IN A SMALLER SIZE?', 'I ALREADY OWN FOUR OF THESE.'], ['EVERYTHING HERE IS SO CUTE I CANNOT CHOOSE.']] });
+  boutique('kawaii', 'KAWAII BOUTIQUE', { wall: '#e0d4f8', col: '#8a6aff', sign: 'KAWAII', stamp: 'fit', fits: [[0, 7900, 'A SOFT TEAL JACKET WITH BUTTONS SHAPED LIKE LITTLE CLOUDS.'], [2, 4900, 'BRIGHT YELLOW, WITH A HOOD THAT HAS EARS ON IT. FOR RAINY SEASON.'], [5, 3900, 'CRISP AND WHITE WITH A ROUND COLLAR. IT GOES WITH EVERYTHING, AND IT KNOWS IT.'], [7, 6900, 'A GREEN PARKA WITH A FROG ON THE POCKET. THE FROG IS WAVING.']],
+    tees: [['TEE: RAINBOW BEAR', '#f9a8c8', 'A BEAR, A RAINBOW, AND THE WORD HAPPY, THREE TIMES.'], ['TEE: STRAWBERRY MILK', '#f4f1e6', 'A CARTON OF STRAWBERRY MILK WITH A FACE.'], ['TEE: PASTEL SKY', '#bfe0f0', 'CLOUDS. JUST CLOUDS. VERY CALMING.']],
+    chat: [['HMM. THE BLUE OR THE OTHER BLUE?'], ['I CAME FOR SOCKS. I AM LEAVING WITH A WHOLE NEW PERSONALITY.']] });
   MAPS.crepe = { indoor: 1, name: 'CREPE CAFE', deco() {
     room({ wall: '#ffe0ec', floor: 'tile', t1: '#fff8f0', t2: '#f8d0dc', mat: '#f06a8c', art: g => { poster(g, 30, 10, 56, 26, '#f06a8c', 'STRAWBERRY'); poster(g, 96, 10, 56, 26, '#8a5a3a', 'CHOCO BANANA'); poster(g, 168, 10, 56, 26, '#5aa85a', 'MATCHA'); poster(g, 234, 10, 56, 26, '#f2a03a', 'CUSTARD'); } });
     fur('counter', 160, 84, 120, '#f8d0dc'); fur('till', 200, 78); const k = npc('teen', 150, 66, { tint: '#f06a8c', lines: ['HI!'] }); k.spot = { label: 'ORDER A CREPE', stamp: 'crepe', act: 'hold', fx: 'munch', lines: ['A WARM CREPE ROLLED INTO A CONE, STUFFED WITH CREAM AND STRAWBERRIES.', 'YOU GET CREAM ON YOUR NOSE. WORTH IT.'] };
@@ -231,12 +280,78 @@
     M.SPOTS.push({ x: 90, y: 148, r: 16, label: 'PLAY CRANE GAME', mini: 'crane', stamp: 'crane' }, { x: 250, y: 148, r: 12, label: 'PLAY CRANE GAME', mini: 'crane', stamp: 'crane' });
     npc('teen', 54, 88, { dir: 'u', tint: '#5aa8e0', lines: ['NOT NOW. BOSS FIGHT.'] }); npc('kid', 206, 88, { dir: 'u', lines: ['JUST ONE MORE COIN...'] }); npc('salary', 150, 150, { dir: 'l', lines: ['I HAVE SPENT 3000 YEN ON THIS BEAR. IT IS PERSONAL NOW.'] }); npc('teen', 200, 130, { rad: 24, tint: '#f06a8c', lines: ['THE TRICK IS TO PUSH IT, NOT GRAB IT.'] });
   } };
-  MAPS.figures = { indoor: 1, name: 'FIGURE SHOP', music: 'osaka', deco() {
-    room({ wall: '#f2c14e', floor: 'tile', t1: '#f4f1e6', t2: '#d8d0c0', mat: '#e0563f', art: (g, r) => { for (const x of [16, 86, 190, 260]) wallShelf(g, x, 46, ['#f06a8c', '#5aa8e0', '#8a6aff', '#5aa85a', '#e0563f', '#f4f1e6'], r); poster(g, 138, 10, 44, 16, '#e0563f', 'NEW!'); } });
-    for (const [x, y, k] of [[60, 104, 0], [110, 104, 1], [210, 104, 2], [260, 104, 3], [60, 150, 4], [260, 150, 5]]) fur('cas', x, y, k);
-    for (const x of [130, 146, 162, 178]) fur('gacha', x, 150, x % 3); fur('counter', 160, 80, 50, '#f4f1e6'); fur('till', 170, 74);
-    M.SPOTS.push({ x: 154, y: 158, r: 16, label: 'TURN THE HANDLE', mini: 'gacha', stamp: 'fig' });
-    npc('teen', 160, 64, { tint: '#e0563f', lines: ['THE GOLD DRAGON IS ONE IN SIX. GOOD LUCK.', 'NO REFUNDS ON CAPSULES!'] }); npc('salary', 90, 118, { dir: 'u', lines: ['FIRST EDITION. MINT IN BOX. I NEED A MOMENT.'] }); npc('kid', 236, 118, { dir: 'u', lines: ['I WANT THAT ONE. AND THAT ONE. AND THAT ONE.'] }); npc('tourist', 220, 160, { rad: 20, lines: ['MY SUITCASE IS ALREADY FULL OF THESE.'] });
+  // ---------- the figure shop: a narrow Akihabara tower ----------
+  // 1F is the capsule floor: islands of capsule machines, each a little series to collect, the big HERO machine, and a
+  // change machine. Up the stairs, 2F is rental glass cases (each rented by a stranger selling their own collection, with
+  // a handwritten card), boxed figures behind the counter, and a junk bin. Somewhere on 2F is something very rare.
+  const FIGBOX = () => FIGS.map((n, i) => ({ // (made when the shelf is opened: FIGS comes from minigames.js, which loads after the cities)
+    n: n + ' FIGURE', p: [6800, 7400, 5800, 8900, 4800, 12800][i], k: 'figbox', c: ['#f06a8c', '#3a5ac8', '#c8783a', '#8a6aff', '#3f9a5a', '#d9b04a'][i], fc: FIGC[i], a: ['ONE TENTH SCALE, MID-SPELL, WITH A SPARE HAND THAT WAVES.', 'THE ROBOT AND ITS PILOT, WHO IS ALSO IN THE BOX, VERY SMALL.', 'A CAT IN ARMOUR WITH A SWORD SHAPED LIKE A FISH.', 'SHE GLOWS IN THE DARK. THE BOX SAYS SO THREE TIMES.', 'MID-LEAP, ON A CLEAR PLASTIC STAND THAT IS PRETENDING TO BE WATER.', 'THE REISSUE. THE FIRST EDITION IS A LEGEND, AND NOBODY HAS SEEN ONE IN YEARS.'][i] }));
+  const CASES = [
+    'A ROBOT KIT, BUILT WITH GREAT CARE AND ONE ARM ON BACKWARDS. THE CARD SAYS "IT IS A CHOICE." 1,800 YEN.',
+    'FORTY-TWO IDENTICAL CAT KNIGHTS, ARRANGED BY HOW MUCH THEY ARE SMILING.',
+    'A SINGLE DOLL\'S SHOE. THE CARD SAYS: "IF THIS IS YOURS, PLEASE ASK AT THE COUNTER."',
+    'OLD GAME CARTRIDGES, LABELS FADED. ONE CARD SAYS "DO NOT BLOW IN THE SLOT. IT DOES NOT HELP. IT NEVER HELPED."',
+    'A MAGICAL GIRL WITH HER WAND, A SPARE WAND, AND A SPARE SPARE WAND.',
+    'A RAMEN SHOP SMALLER THAN YOUR HAND. THE NOODLES ARE REAL THREAD. THE CHEF IS HALF A GRAIN OF RICE TALL.',
+    'EMPTY, EXCEPT FOR A NOTE: "ALL SOLD. THANK YOU, EVERYONE. - THE OWNER OF CASE 107"',
+    null, // case 108
+    'SPACE IDOLS IN EVERY OUTFIT FROM EVERY CONCERT, IN ORDER, WITH THE DATES WRITTEN UNDERNEATH.',
+    'A HANDWRITTEN SIGN: "MY WIFE SAYS THESE MUST GO." AND UNDER IT, SMALLER: "PLEASE GIVE THEM A GOOD HOME."',
+  ];
+  const JUNK = ['A CABLE FOR A MACHINE THAT NO LONGER EXISTS.', 'A KEYCHAIN OF A MASCOT FOR A TOWN YOU HAVE NEVER HEARD OF. IT IS WINKING.', 'A GAME CASE WITH NO GAME IN IT, AND A DIFFERENT GAME\'S MANUAL.', 'A ROBOT\'S LEFT LEG. JUST THE LEG. FIFTY YEN.', 'A TINY PLASTIC SUSHI. THEN ANOTHER. THEN NINE MORE. THE BIN IS MOSTLY SUSHI.', 'A CASSETTE OF A BAND CALLED "PLEASE WAIT". SIDE B IS LABELLED "STILL WAITING".', 'A SPOON WITH A CARTOON CAT ON THE HANDLE. THE CAT LOOKS UNHAPPY ABOUT IT.', 'A FIGURE\'S HEAD, SMILING, WITH NO BODY. YOU PUT IT BACK GENTLY.'];
+  MAPS.figures = { indoor: 1, name: 'FIGURE SHOP - 1F CAPSULES', music: 'osaka', tw: 22, th: 13, shop: 'figures', style: 'figures', front: 1, hud: () => SHOP.hud(), tick: () => SHOP.tick(), enter() { SHOP.enter(); SHOP.arrive(); }, deco() {
+    SHOP.sprites();
+    room({ wall: '#f2c14e', floor: 'tile', t1: '#f4f1e6', t2: '#e4dcc8', mat: '#e0563f', art: (g, r) => {
+      // posters of made-up heroes, the floor guide, and the stairs up in the corner
+      [[16, '#f06a8c', '#3a2e40'], [52, '#5aa8e0', '#f2c14e'], [88, '#8a6aff', '#f4f1e6'], [190, '#3f9a5a', '#e0563f'], [226, '#e0563f', '#3a3a4e']].forEach(([x, c, hair], i) => { R(g, x, 10, 30, 32, '#3a2630'); R(g, x + 1, 11, 28, 30, c); disc(g, x + 15, 24, 8, '#f6cfa6'); R(g, x + 7, 15, 16, 6, hair); R(g, x + 6, 18, 3, 10, hair); R(g, x + 21, 18, 3, 10, hair); disc(g, x + 11.5, 25, 2, '#ffffff'); disc(g, x + 18.5, 25, 2, '#ffffff'); disc(g, x + 12, 25.5, 1.2, '#1d1626'); disc(g, x + 19, 25.5, 1.2, '#1d1626'); R(g, x + 13, 29, 4, 1, '#c8382e'); R(g, x + 6, 33, 18, 8, lite(c, 0.3)); txtC(g, ['NEW!', 'GO!', '!!', 'VOL 9', 'NOW'][i], x + 15, 34, '#3a2e40'); });
+      poster(g, 124, 8, 60, 12, '#c8382e', 'GACHAPON'); R(g, 124, 24, 60, 20, '#2a2430'); txt(g, '1F CAPSULES', 128, 27, '#f2c14e'); txt(g, '2F FIGURES', 128, 35, '#ffffff');
+      for (let k = 0; k < 9; k++) { const y = 46 - k * 4.4; R(g, 270 + k * 1.5, y, 62 - k * 3, 4.4, k % 2 ? '#c8beaa' : '#d8d0c0'); R(g, 270 + k * 1.5, y, 62 - k * 3, U, '#f4f1e6'); }
+      R(g, 266, 6, 3, 40, '#8a8496'); R(g, 333, 6, 3, 40, '#8a8496'); poster(g, 282, 6, 38, 8, '#3a2e40', '2F UP');
+      for (let k = 0; k < 6; k++) { const y = 50 + k * 6; R(g, 270, y, 62, 6, k % 2 ? '#d8d0c0' : '#c8beaa'); R(g, 270, y, 62, U, '#f4f1e6'); } R(g, 266, 48, 3, 38, '#8a8496'); R(g, 333, 48, 3, 38, '#8a8496');
+    } });
+    block(264, 48, 338, 82);
+    M.SPOTS.push({ x: 300, y: 92, r: 16, label: 'UP THE STAIRS TO 2F', door: 'figures2' });
+    // the capsule machines: four islands of little series, and the big HERO machine of the six figures
+    for (const [x, y, key] of [[70, 100, 'cats'], [170, 100, 'tiny'], [70, 152, 'sleepy'], [170, 152, 'sushi']]) {
+      put(SPR.gRow, x, y, 37, 29); block(x - 36, y - 8, x + 36, y);
+      M.SPOTS.push({ x, y: y + 11, r: 15, label: 'CAPSULES: ' + SHOP.SERIES[key][0], mini: 'capsule', series: key });
+    }
+    put(SPR.gBig, 252, 152, 13, 37); block(240, 144, 264, 152); M.SPOTS.push({ x: 252, y: 162, r: 14, label: 'TURN THE HANDLE', mini: 'gacha', stamp: 'fig' });
+    put(SPR.gChange, 22, 120, 8, 27); block(15, 112, 29, 120);
+    M.SPOTS.push({ x: 26, y: 130, r: 11, label: 'CHANGE A NOTE', fn: () => { Snd.fx('coin'); setTimeout(() => Snd.fx('coin'), 120); setTimeout(() => Snd.fx('coin'), 240); dialog(['YOU FEED IN A THOUSAND YEN NOTE. TEN HUNDRED YEN COINS CRASH INTO THE TRAY, VERY LOUDLY.', 'EVERY MACHINE HERE TAKES HUNDRED YEN COINS ONLY. THAT IS WHY THIS MACHINE EXISTS, AND WHY YOUR POCKETS ARE NOW HEAVY.']); } });
+    // the people: a member of staff refilling a machine, collectors, a kid with a parent's coins
+    const st = SHOP.shopper('teen', '#e0563f', [[124, 124, 0], [126, 124, 6, 'u'], [216, 124, 0], [218, 124, 6, 'u']], ['IRASSHAIMASE! THE CATS IN CUPS SELL OUT EVERY WEEK. I REFILL THEM EVERY MONDAY AND BY FRIDAY THEY ARE GONE.']); st.staff = 1; st.carry = 1; st.carryC = '#f2c14e'; st.draw = SHOP.staffDraw;
+    npc('salary', 40, 160, { dir: 'r', lines: ['I NEED THE CAPYBARA. I HAVE FOUR PANDAS. I DO NOT NEED FIVE PANDAS.', 'YOU CANNOT CHOOSE. THAT IS THE WHOLE POINT. THAT IS THE PAIN.'] });
+    npc('kid', 200, 172, { rad: 20, lines: ['ONE MORE! I CAN FEEL IT! THIS IS THE ONE!'] });
+    npc('tourist', 120, 80, { dir: 'u', lines: ['I CAME FOR ONE CAPSULE. I HAVE BOUGHT THIRTY-ONE.'] });
+    const sh = SHOP.shopper('teen', '#5aa8e0', [[176, 196, -15], [176, 176, 0], [120, 176, 0], [120, 116, 0], [100, 114, 4, 'u'], [120, 124, 0], [120, 176, 0]], ['THE FIGURES ARE UPSTAIRS. THE MONEY IS ALSO UPSTAIRS. MINE, I MEAN.']); sh.hide = true; sh.pw = 4;
+  } };
+  MAPS.figures2 = { indoor: 1, name: 'FIGURE SHOP - 2F', music: 'osaka', tw: 22, th: 13, shop: 'figures', style: 'figures', hud: () => SHOP.hud(), tick: () => SHOP.tick(), enter() { SHOP.enter(); const c = M.ACT.find(a => a.clerk); if (c) c.greet = 0.4; }, deco() {
+    SHOP.sprites();
+    room({ wall: '#e8e0d0', floor: 'tile', t1: '#f4f1e6', t2: '#e4dcc8', mat: '#5a5468', exit: 'STAIRS DOWN', art: (g, r) => {
+      // the wall of boxed figures behind the counter
+      R(g, 12, 8, 120, 38, '#6a4638'); for (let s = 0; s < 3; s++) { R(g, 12, 19 + s * 12, 120, 1.5, '#8a5a3a'); for (let x = 15; x < 128; x += 9) { const c = ['#f06a8c', '#3a5ac8', '#c8783a', '#8a6aff', '#3f9a5a', '#d9b04a'][(x / 9 + s * 2) % 6 | 0]; R(g, x, 9.5 + s * 12, 8, 9.5, c); R(g, x + 1.5, 11 + s * 12, 5, 5, '#cfeaff'); R(g, x + 3, 12.5 + s * 12, 2, 3, FIGC[(x + s) % 6]); } }
+      poster(g, 148, 10, 56, 14, '#e0563f', 'PRE-ORDER'); poster(g, 214, 10, 66, 14, '#3a2e40', 'RENTAL CASES'); txt(g, 'RENTED BY', 216, 28, '#6a5a4a'); txt(g, 'COLLECTORS,', 216, 35, '#6a5a4a'); txt(g, 'BY THE MONTH', 216, 42, '#6a5a4a');
+      poster(g, 292, 10, 48, 30, '#8a6aff', ''); disc(g, 316, 25, 9, '#f6cfa6'); R(g, 306, 14, 20, 6, '#f2c14e'); txtC(g, 'LIMITED', 316, 34, '#ffffff');
+    } });
+    fur('counter', 72, 94, 104, '#f4f1e6'); fur('till', 100, 80);
+    const ck = npc('teen', 56, 74, { tint: '#e0563f', lines: ['IRASSHAIMASE! THE BOXED FIGURES ARE BEHIND ME. POINT, AND I WILL BRING ONE DOWN.', 'THE RENTAL CASES? STRANGERS RENT THEM BY THE MONTH. WE JUST SELL THE THINGS FOR THEM.'] }); ck.clerk = 1;
+    SHOP.shelf(40, 106, 'BROWSE THE BOXED FIGURES', FIGBOX, { title: 'BOXED FIGURES, BEHIND THE COUNTER' }); SHOP.till(100, 106);
+    // the rental glass cases, two rows, cramped as the real thing
+    const coll = npc('salary', 128, 150, { dir: 'r', lines: (G.caps || {}).rare ? ['YOU FOUND THE FIRST EDITION. I HAVE LOOKED FOR SIX YEARS. I AM HAPPY FOR YOU. I AM NOT CRYING.'] : ['THEY SAY SOMEWHERE ON THIS FLOOR THERE IS A GOLD DRAGON, FIRST EDITION, STILL SEALED. I HAVE NEVER FOUND IT.', 'LOOK IN EVERY CASE. THE GOOD THINGS ARE NEVER AT EYE LEVEL.'] });
+    [164, 200, 236, 272, 308].forEach((x, i) => [100, 168].forEach((y, j) => {
+      const n = i + j * 5; put(SPR['gCase' + (n % 4)], x, y, 14, 47); block(x - 12, y - 8, x + 12, y);
+      M.SPOTS.push({ x, y: y + 10, r: 11, label: 'LOOK IN CASE ' + (101 + n), fn: () => {
+        if (CASES[n]) { Snd.fx('ui'); dialog(['CASE ' + (101 + n) + ': ' + CASES[n]]); return; }
+        G.caps = G.caps || {}; const first = !G.caps.rare; G.caps.rare = 1; save(); Snd.fx(first ? 'yay' : 'ui');
+        coll.lines = ['YOU FOUND THE FIRST EDITION. I HAVE LOOKED FOR SIX YEARS. I AM HAPPY FOR YOU. I AM NOT CRYING.']; coll.li = 0;
+        dialog(first ? ['CASE 108, BOTTOM SHELF, RIGHT AT THE BACK: A GOLD DRAGON. FIRST EDITION. STILL SEALED IN ITS BOX.', 'YOU FOUND IT! THE PRICE TAG HAS MORE ZEROS THAN YOUR PHONE NUMBER, SO YOU JUST LOOK AT IT FOR A WHILE.'] : ['CASE 108: THE GOLD DRAGON, FIRST EDITION. STILL THERE. STILL TOO EXPENSIVE. STILL BEAUTIFUL.']);
+      } });
+    }));
+    put(SPR.gJunk, 40, 172, 14, 17); block(28, 164, 52, 172);
+    M.SPOTS.push({ x: 40, y: 182, r: 12, label: 'DIG IN THE JUNK BIN', fn: () => { PLACES.SND.swish(); dialog(['EVERYTHING IN THE BIN IS ONE HUNDRED YEN. YOU DIG. YOU FIND: ' + JUNK[Math.random() * JUNK.length | 0], 'YOU PUT IT BACK. THE NEXT PERSON WILL NEED IT MORE.']); } });
+    npc('teen', 290, 188, { dir: 'u', tint: '#5aa8e0', lines: ['THAT ONE. NO. THAT ONE. NO...'] });
+    npc('office', 120, 120, { rad: 10, lines: ['MY FLAT HAS MORE FIGURES THAN FURNITURE. IT IS FINE. THE FIGURES ARE THE FURNITURE.'] });
   } };
   MAPS.sensoji = { indoor: 1, name: 'SENSO-JI MAIN HALL', music: 'kyoto', deco() {
     room({ wall: '#7a2a24', mat: '#8a2a24', art: g => { for (let x = 20; x < 300; x += 40) { R(g, x, 4, 5, 44, '#c0442f'); R(g, x, 4, 1, 44, '#e86a50'); } for (const x of [70, 250]) chochin(g, x, 6, '#e0452f', 2); R(g, 8, 30, 304, 2, '#f2c14e'); } });
@@ -278,8 +393,20 @@
   city({
     id: 'tokyo', name: 'TOKYO', tagline: 'EIGHT DISTRICTS - ONE TRAIN LINE - NO HURRY',
     start: 'shibuya', hub: 'tokyo', concourse: 'tk_shinkansen', line: LINE, stamps: STAMPS, cats: 7,
+    icons() { // the little pictures for the stamp book and the bag: painted at boot, since they show up everywhere
+      icon('sakura', g => { for (let k = 0; k < 5; k++) { const a = k * 1.2566 - 1.5708, x = 6 + Math.cos(a) * 3.2, y = 6.3 + Math.sin(a) * 3.2; disc(g, x, y, 2.5, '#eeb2c6'); disc(g, x - 0.4, y - 0.4, 1.4, '#fdebf1'); } disc(g, 6, 6.3, 1.3, '#d0507a'); p1(g, 6, 6, '#f2c14e'); });
+      icon('dog', g => { R(g, 2, 5, 6, 6, '#c9824a'); R(g, 5, 1, 5, 5, '#c9824a'); R(g, 5, 0, 1, 2, '#93603a'); R(g, 9, 0, 1, 2, '#93603a'); P(g, 8, 3, '#2a2430'); R(g, 10, 4, 2, 1, '#f6ead4'); R(g, 1, 3, 1, 4, '#c9824a'); R(g, 3, 10, 1, 2, '#93603a'); R(g, 7, 10, 1, 2, '#93603a'); });
+      icon('crepe', g => { for (let i = 0; i < 7; i++) R(g, 3 + i * 0.5, 5 + i, 6 - i, 1, '#f2d98a'); R(g, 2, 3, 8, 3, '#fff8e8'); R(g, 3, 2, 3, 2, '#f06a8c'); R(g, 7, 2, 2, 2, '#e0452f'); P(g, 5, 4, '#8a5a3a'); });
+      icon('panda', g => { disc(g, 6, 6, 5, '#f8f4ea'); R(g, 1, 1, 3, 3, '#2a2430'); R(g, 8, 1, 3, 3, '#2a2430'); R(g, 3, 5, 2, 3, '#2a2430'); R(g, 7, 5, 2, 3, '#2a2430'); P(g, 6, 8, '#2a2430'); });
+      icon('bone', g => { R(g, 2, 5, 8, 2, '#f4eedc'); for (const [x, y] of [[1, 4], [1, 7], [9, 4], [9, 7]]) R(g, x, y, 2, 2, '#f4eedc'); });
+      icon('fig', g => { R(g, 4, 5, 4, 5, '#5aa8e0'); disc(g, 6, 3, 2.5, '#f6cfa6'); R(g, 4, 1, 4, 2, '#f06a8c'); R(g, 2, 10, 8, 2, '#3a3346'); R(g, 2, 5, 2, 1, '#5aa8e0'); R(g, 8, 4, 2, 1, '#5aa8e0'); });
+      icon('shirt', g => { R(g, 3, 2, 6, 9, '#f06a8c'); R(g, 0, 2, 3, 3, '#f06a8c'); R(g, 9, 2, 3, 3, '#f06a8c'); R(g, 5, 2, 2, 1, '#fff8e8'); R(g, 3, 6, 6, 1, '#fff8e8'); });
+      icon('sky', g => { R(g, 5, 0, 1, 2, '#e8f0ff'); R(g, 5, 2, 2, 2, '#c8d4e8'); R(g, 4, 4, 4, 1, '#5a6a8a'); R(g, 5, 5, 2, 3, '#c8d4e8'); R(g, 4, 8, 4, 2, '#a8b8d4'); R(g, 3, 10, 6, 2, '#a8b8d4'); });
+      icon('claw', g => { R(g, 5, 0, 2, 4, '#9a94a8'); R(g, 3, 4, 6, 1, '#c8c0d4'); R(g, 3, 5, 1, 3, '#c8c0d4'); R(g, 8, 5, 1, 3, '#c8c0d4'); disc(g, 6, 9, 2.5, '#f06a8c'); P(g, 5, 8, '#1d1626'); P(g, 7, 8, '#1d1626'); });
+      icon('stick', g => { line(g, 1, 11, 11, 1, '#c9a070'); R(g, 3, 7, 3, 3, '#b86a3a'); R(g, 5, 5, 3, 3, '#d9903a'); R(g, 7, 3, 3, 3, '#b86a3a'); P(g, 6, 6, '#5aa85a'); });
+    },
     sprites() { // landmark art only this city needs
-      one('ttower', 110, 230, g => { for (let i = 0; i < 444; i++) { const t = i / 444, hw = snap(1 + 222 * 0.19 * Math.pow(Math.max(0, t - 0.1) / 0.9, 2.1)); if (t < 0.12) continue; const k = t >= 0.8 ? snap((t - 0.8) / 0.2 * hw * 0.6) : 0, c = Math.floor(t * 9) % 2 ? '#e8d8c0' : '#d8552c'; if (k < 1.5) R(g, 55 - hw, 6 + i / 2, hw * 2, U, c); else { R(g, 55 - hw, 6 + i / 2, hw - k, U, c); R(g, 55 + k, 6 + i / 2, hw - k, U, c); } } tokyoTower(g, 55, 228, 222); }, 1); one('box', 16, 10, g => { R(g, 1, 2, 14, 8, '#8a5a3a'); R(g, 1, 2, 14, 3, '#5a3a28'); for (let x = 2; x < 15; x += 2) R(g, x, 2, 1, 3, '#a8744a'); R(g, 6, 6.5, 4, 2, '#f2c14e'); }, 1);
+      one('ttower', 110, 230, g => { for (let i = 0; i < 444; i++) { const t = i / 444, hw = snap(1 + 222 * 0.19 * Math.pow(Math.max(0, t - 0.1) / 0.9, 2.1)); if (t < 0.12) continue; const k = t >= 0.8 ? snap((t - 0.8) / 0.2 * hw * 0.6) : 0, c = Math.floor(t * 9) % 2 ? '#e8d8c0' : '#d8552c'; if (k < 1.5) R(g, 55 - hw, 6 + i / 2, hw * 2, U, c); else { R(g, 55 - hw, 6 + i / 2, hw - k, U, c); R(g, 55 + k, 6 + i / 2, hw - k, U, c); } } tokyoTower(g, 55, 228, 222); }, 1);
       one('hachi', 18, 26, g => { R(g, 2, 16, 14, 9, '#8c8498'); R(g, 2, 16, 14, 1, '#c8c0d4'); R(g, 1, 24, 16, 2, '#6b6478'); dogStatue(g, 3, 16, '#a8845a'); }, 1);
       one('skytree', 64, 196, g => { // a tripod base, a lattice shaft narrowing as it rises, two observation decks and the antenna
         for (let y = 40; y < 194; y++) {
@@ -298,18 +425,7 @@
       one('arch', 96, 50, g => { for (const x of [4, 86]) { R(g, x, 10, 6, 40, '#f06a8c'); R(g, x, 10, 1.5, 40, '#ffa8c0'); R(g, x + 4.5, 10, 1.5, 40, '#b8405c'); } R(g, 2, 6, 92, 14, '#1d1626'); R(g, 3, 7, 90, 12, '#f06a8c'); R(g, 3, 7, 90, 1.5, '#ffa8c0'); txtC(g, 'TAKESHITA STREET', 48, 11, '#fff8e8'); for (let i = 0; i < 9; i++) disc(g, 8 + i * 10, 4, 2.5, ['#ffd84a', '#5ad8f0', '#ff8a6a', '#8fd070'][i % 4]); });
       one('brick', 300, 96, g => { R(g, 6, 40, 288, 56, '#a84a38'); for (let y = 42; y < 96; y += 3) { R(g, 6, y, 288, U, '#8a3a2c'); for (let x = 8 + (y % 6) * 1.5; x < 294; x += 6) p1(g, x, y + 1, '#c86a50'); } R(g, 6, 40, 288, 3, '#f4eedc'); R(g, 6, 66, 288, 2, '#f4eedc'); for (let x = 14; x < 290; x += 12) { for (const y of [48, 74]) { R(g, x - 1, y - 1, 7, 13, '#f4eedc'); R(g, x, y, 5, 11, '#4a6a8a'); R(g, x, y, 5, 2, '#cfeaff'); R(g, x + 2.25, y, U, 11, '#f4eedc'); } } for (const cx of [60, 150, 240]) { const big = cx === 150; R(g, cx - 22, 26, 44, 16, '#a84a38'); R(g, cx - 22, 26, 44, 2, '#f4eedc'); ell(g, cx, 26, big ? 20 : 18, big ? 16 : 13, '#4a5a6a'); ell(g, cx - 3, 23, big ? 14 : 12, big ? 10 : 8, '#6a7a8a'); R(g, cx - 22, 26, 44, 1, '#f4eedc'); R(g, cx - 0.5, 4, 1, 8, '#f2c14e'); disc(g, cx, 34, 3.5, '#f4eedc'); p1(g, cx, 33, '#1d1626'); R(g, cx, 34, 1.5, U, '#1d1626'); } R(g, 138, 76, 24, 20, '#3a2630'); R(g, 140, 78, 20, 18, '#ffd98a'); R(g, 149.5, 78, 1, 18, '#3a2630'); R(g, 126, 70, 48, 4, '#f4eedc'); });
       one('clock', 70, 120, g => { bldg(g, 6, 118, 58, 70, { c: '#d8d0c0', lit: 0.3, gx: 7, ww: 4, wh: 5, gy: 9, foot: 24, top: false }, RNG(5)); R(g, 6, 96, 58, 22, '#4a4458'); R(g, 8, 98, 54, 18, '#ffd98a'); for (let x = 16; x < 60; x += 9) R(g, x, 98, U, 18, '#4a4458'); R(g, 23, 20, 24, 30, '#d8d0c0'); R(g, 23, 20, 24, 2, '#f4eedc'); R(g, 23, 20, 2, 30, '#f4eedc'); roof(g, 35, 12, 6, 15, 9, '#4a8a7a'); R(g, 34.5, 4, 1, 9, '#4a8a7a'); disc(g, 35, 35, 9, '#3a3346'); disc(g, 35, 35, 8, '#fff8e8'); R(g, 34.5, 29, 1, 6, '#1d1626'); R(g, 35, 34.5, 5, 1, '#1d1626'); for (let k = 0; k < 12; k++) p1(g, 35 + Math.cos(k * 0.5236) * 7, 35 + Math.sin(k * 0.5236) * 7, '#1d1626'); });
-      one('swan', 22, 18, g => { ell(g, 10, 13, 9, 4, '#e8e4f0'); ell(g, 9, 12, 8, 3, '#ffffff'); R(g, 15, 3, 3, 9, '#ffffff'); R(g, 15, 2, 5, 3, '#ffffff'); R(g, 19, 3, 2, 1, '#f2a03a'); p1(g, 17.5, 3, '#1d1626'); R(g, 3, 9, 9, 2, '#f06a8c'); R(g, 0, 16, 22, 1, '#a6dcee'); }, 1);
       one('saigo', 18, 34, g => { R(g, 2, 24, 14, 9, '#8c8498'); R(g, 2, 24, 14, 1, '#c8c0d4'); R(g, 5, 9, 8, 15, '#6a8a7a'); R(g, 5, 9, 2, 15, '#8ab0a0'); disc(g, 9, 6, 4, '#6a8a7a'); disc(g, 8, 5, 2, '#8ab0a0'); R(g, 13, 19, 4, 5, '#6a8a7a'); R(g, 15, 17, 2, 2, '#6a8a7a'); }, 1);
-      one('rick', 26, 20, g => { disc(g, 8, 14, 5, '#2a2430'); disc(g, 8, 14, 3.5, '#c8c0d4'); disc(g, 8, 14, 1, '#2a2430'); R(g, 4, 5, 10, 7, '#c8382e'); R(g, 4, 2, 2, 10, '#2a2430'); R(g, 4, 2, 9, 2, '#2a2430'); R(g, 12, 11, 13, 1, '#2a2430'); R(g, 5, 6, 8, 2, '#e86a50'); }, 1);
-      icon('dog', g => { R(g, 2, 5, 6, 6, '#c9824a'); R(g, 5, 1, 5, 5, '#c9824a'); R(g, 5, 0, 1, 2, '#93603a'); R(g, 9, 0, 1, 2, '#93603a'); P(g, 8, 3, '#2a2430'); R(g, 10, 4, 2, 1, '#f6ead4'); R(g, 1, 3, 1, 4, '#c9824a'); R(g, 3, 10, 1, 2, '#93603a'); R(g, 7, 10, 1, 2, '#93603a'); });
-      icon('crepe', g => { for (let i = 0; i < 7; i++) R(g, 3 + i * 0.5, 5 + i, 6 - i, 1, '#f2d98a'); R(g, 2, 3, 8, 3, '#fff8e8'); R(g, 3, 2, 3, 2, '#f06a8c'); R(g, 7, 2, 2, 2, '#e0452f'); P(g, 5, 4, '#8a5a3a'); });
-      icon('panda', g => { disc(g, 6, 6, 5, '#f8f4ea'); R(g, 1, 1, 3, 3, '#2a2430'); R(g, 8, 1, 3, 3, '#2a2430'); R(g, 3, 5, 2, 3, '#2a2430'); R(g, 7, 5, 2, 3, '#2a2430'); P(g, 6, 8, '#2a2430'); });
-      icon('bone', g => { R(g, 2, 5, 8, 2, '#f4eedc'); for (const [x, y] of [[1, 4], [1, 7], [9, 4], [9, 7]]) R(g, x, y, 2, 2, '#f4eedc'); });
-      icon('fig', g => { R(g, 4, 5, 4, 5, '#5aa8e0'); disc(g, 6, 3, 2.5, '#f6cfa6'); R(g, 4, 1, 4, 2, '#f06a8c'); R(g, 2, 10, 8, 2, '#3a3346'); R(g, 2, 5, 2, 1, '#5aa8e0'); R(g, 8, 4, 2, 1, '#5aa8e0'); });
-      icon('shirt', g => { R(g, 3, 2, 6, 9, '#f06a8c'); R(g, 0, 2, 3, 3, '#f06a8c'); R(g, 9, 2, 3, 3, '#f06a8c'); R(g, 5, 2, 2, 1, '#fff8e8'); R(g, 3, 6, 6, 1, '#fff8e8'); });
-      icon('sky', g => { R(g, 5, 0, 1, 2, '#e8f0ff'); R(g, 5, 2, 2, 2, '#c8d4e8'); R(g, 4, 4, 4, 1, '#5a6a8a'); R(g, 5, 5, 2, 3, '#c8d4e8'); R(g, 4, 8, 4, 2, '#a8b8d4'); R(g, 3, 10, 6, 2, '#a8b8d4'); });
-      icon('claw', g => { R(g, 5, 0, 2, 4, '#9a94a8'); R(g, 3, 4, 6, 1, '#c8c0d4'); R(g, 3, 5, 1, 3, '#c8c0d4'); R(g, 8, 5, 1, 3, '#c8c0d4'); disc(g, 6, 9, 2.5, '#f06a8c'); P(g, 5, 8, '#1d1626'); P(g, 7, 8, '#1d1626'); });
-      icon('stick', g => { line(g, 1, 11, 11, 1, '#c9a070'); R(g, 3, 7, 3, 3, '#b86a3a'); R(g, 5, 5, 3, 3, '#d9903a'); R(g, 7, 3, 3, 3, '#b86a3a'); P(g, 6, 6, '#5aa85a'); });
     }
   });
 })();

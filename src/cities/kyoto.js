@@ -214,6 +214,17 @@
   city({
     id: 'kyoto', name: 'KYOTO', tagline: 'A THOUSAND TEMPLES AND ONE BUS PASS',
     start: 'kyo_station', hub: 'kyo_station', concourse: 'ky_shinkansen', line: LINE, stamps: STAMPS, cats: 6, minis: { tea: TEA },
+    icons() { // the little pictures for the stamp book and the bag: painted at boot, since they show up everywhere
+      icon('ktower', g => { R(g, 5, 3, 2, 7, '#f4f1e6'); R(g, 3, 2, 6, 2, '#e0452f'); R(g, 5.5, 0, 1, 2, '#c8c4bc'); R(g, 2, 10, 8, 2, '#c8c4bc'); });
+      icon('fox', g => { R(g, 3, 5, 6, 5, '#f4f1e6'); R(g, 3, 1, 2, 3, '#f4f1e6'); R(g, 7, 1, 2, 3, '#f4f1e6'); R(g, 3, 4, 6, 3, '#f4f1e6'); R(g, 4, 7, 4, 2, '#e0452f'); P(g, 4, 5, '#1d1626'); P(g, 7, 5, '#1d1626'); R(g, 9, 8, 3, 2, '#f4f1e6'); });
+      icon('udon', g => { ell(g, 6, 8, 5.5, 3, '#3a3a4e'); R(g, 1, 6, 10, 2, '#f8f0dc'); R(g, 3, 5, 6, 2, '#e0a050'); line(g, 8, 0, 6, 5, '#c8a070'); line(g, 10, 0, 8, 5, '#c8a070'); });
+      icon('water', g => { for (const x of [3, 6, 9]) R(g, x, 0, 1, 7, '#7ac8dc'); ell(g, 6, 9, 5, 2, '#3e92c2'); R(g, 4, 8, 4, 1, '#a8dcf0'); });
+      icon('tea', g => { ell(g, 6, 8, 5, 3, '#6a5040'); ell(g, 6, 7, 4.5, 2, '#5a8a3a'); ell(g, 6, 6.8, 3, 1, '#b8d878'); R(g, 9, 0, 1.5, 5, '#d8c090'); });
+      icon('kimono', g => { R(g, 3, 1, 6, 10, '#c8486a'); R(g, 0, 2, 3, 5, '#c8486a'); R(g, 9, 2, 3, 5, '#c8486a'); R(g, 3, 5, 6, 2, '#f2c14e'); R(g, 5, 1, 2, 4, '#f4f1e6'); });
+      icon('monkey', g => { disc(g, 6, 6, 5, '#8a6a50'); disc(g, 6, 7, 3.2, '#e8807a'); P(g, 4.5, 6, '#1d1626'); P(g, 7.5, 6, '#1d1626'); disc(g, 1.5, 6, 1.5, '#8a6a50'); disc(g, 10.5, 6, 1.5, '#8a6a50'); });
+      icon('rock', g => { R(g, 0, 9, 12, 3, '#d8d0c0'); for (let x = 0; x < 12; x += 2) P(g, x, 10, '#b8b0a0'); ell(g, 6, 7, 4, 3, '#8c8498'); ell(g, 5, 6, 2.5, 1.5, '#aaa4b8'); });
+      icon('coin', g => { disc(g, 6, 6, 5, '#d9b04a'); disc(g, 6, 6, 3.5, '#f2c14e'); R(g, 5, 5, 2, 2, '#8a6a2a'); });
+    },
     sprites() {
       variants('bamboo', 3, (rnd, i) => { const c = mk(28, 74), g = c.g; for (let k = 0; k < 4; k++) bamboo(g, 5 + k * 5.5 + rnd() * 2, 73, 56 + rnd() * 14, k % 2 ? '#5aa85a' : '#6ab868', rnd); return c; });
       one('torS', 32, 40, g => torii(g, 16, 39, 24, 34, '#e8502a'), 1);
@@ -238,15 +249,6 @@
         R(g, cx - 13, base - 43, 26, 10, '#f8d45a'); R(g, cx - 3, base - 41, 6, 8, gd2); R(g, cx - 10, base - 40, 3, 5, gd2); R(g, cx + 7, base - 40, 3, 5, gd2);
         roof(g, cx, base - 17, 26, 37, 6, '#6b5a4a'); roof(g, cx, base - 34, 15, 32, 7, '#6b5a4a'); roof(g, cx, base - 53, 1, 21, 11, '#6b5a4a'); P(g, cx, base - 56, gd); R(g, cx - 1, base - 55, 3, 1, gd); P(g, cx, base - 54, gd); };
       one('kinkaku', 140, 120, g => { g.save(); g.scale(2, 2); goldenPavilion(g, 35, 59.5); g.restore(); });
-      icon('ktower', g => { R(g, 5, 3, 2, 7, '#f4f1e6'); R(g, 3, 2, 6, 2, '#e0452f'); R(g, 5.5, 0, 1, 2, '#c8c4bc'); R(g, 2, 10, 8, 2, '#c8c4bc'); });
-      icon('fox', g => { R(g, 3, 5, 6, 5, '#f4f1e6'); R(g, 3, 1, 2, 3, '#f4f1e6'); R(g, 7, 1, 2, 3, '#f4f1e6'); R(g, 3, 4, 6, 3, '#f4f1e6'); R(g, 4, 7, 4, 2, '#e0452f'); P(g, 4, 5, '#1d1626'); P(g, 7, 5, '#1d1626'); R(g, 9, 8, 3, 2, '#f4f1e6'); });
-      icon('udon', g => { ell(g, 6, 8, 5.5, 3, '#3a3a4e'); R(g, 1, 6, 10, 2, '#f8f0dc'); R(g, 3, 5, 6, 2, '#e0a050'); line(g, 8, 0, 6, 5, '#c8a070'); line(g, 10, 0, 8, 5, '#c8a070'); });
-      icon('water', g => { for (const x of [3, 6, 9]) R(g, x, 0, 1, 7, '#7ac8dc'); ell(g, 6, 9, 5, 2, '#3e92c2'); R(g, 4, 8, 4, 1, '#a8dcf0'); });
-      icon('tea', g => { ell(g, 6, 8, 5, 3, '#6a5040'); ell(g, 6, 7, 4.5, 2, '#5a8a3a'); ell(g, 6, 6.8, 3, 1, '#b8d878'); R(g, 9, 0, 1.5, 5, '#d8c090'); });
-      icon('kimono', g => { R(g, 3, 1, 6, 10, '#c8486a'); R(g, 0, 2, 3, 5, '#c8486a'); R(g, 9, 2, 3, 5, '#c8486a'); R(g, 3, 5, 6, 2, '#f2c14e'); R(g, 5, 1, 2, 4, '#f4f1e6'); });
-      icon('monkey', g => { disc(g, 6, 6, 5, '#8a6a50'); disc(g, 6, 7, 3.2, '#e8807a'); P(g, 4.5, 6, '#1d1626'); P(g, 7.5, 6, '#1d1626'); disc(g, 1.5, 6, 1.5, '#8a6a50'); disc(g, 10.5, 6, 1.5, '#8a6a50'); });
-      icon('rock', g => { R(g, 0, 9, 12, 3, '#d8d0c0'); for (let x = 0; x < 12; x += 2) P(g, x, 10, '#b8b0a0'); ell(g, 6, 7, 4, 3, '#8c8498'); ell(g, 5, 6, 2.5, 1.5, '#aaa4b8'); });
-      icon('coin', g => { disc(g, 6, 6, 5, '#d9b04a'); disc(g, 6, 6, 3.5, '#f2c14e'); R(g, 5, 5, 2, 2, '#8a6a2a'); });
     }
   });
 })();

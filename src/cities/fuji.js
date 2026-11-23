@@ -195,6 +195,12 @@
     id: 'kawaguchiko', name: 'KAWAGUCHIKO', tagline: 'MOUNT FUJI ACROSS A QUIET LAKE',
     start: 'kawaguchiko', hub: 'kawaguchiko', line: [], areas: AREAS, stamps: STAMPS, cats: 4,
     hud: () => ['fuji', clear() ? 'CLEAR' : 'CLOUDY'],
+    icons() { // the little pictures for the stamp book and the bag: painted at boot, since they show up everywhere
+      icon('fuji', g => { for (let i = 0; i < 9; i++) R(g, 6 - i * 0.6, 2 + i, i * 1.2 + 1, 1, i < 3 ? '#f8f4ee' : '#6a7ab8'); R(g, 0, 10, 12, 2, '#5aa85a'); });
+      icon('onsen', g => { ell(g, 6, 9, 5, 2.5, '#3f7ab0'); ell(g, 6, 8.5, 4, 1.8, '#7ac8dc'); for (const x of [3, 6, 9]) { R(g, x, 1, 1, 2, '#e0563f'); R(g, x + 1, 3, 1, 2, '#e0563f'); R(g, x, 5, 1, 2, '#e0563f'); } });
+      icon('pot', g => { ell(g, 6, 7, 5.5, 3.5, '#3a3a4e'); R(g, 0.5, 4.5, 11, 2, '#5a5a6e'); R(g, 2, 4, 8, 1.5, '#f2d98a'); R(g, 3, 3, 3, 1.5, '#e08a3a'); R(g, 7, 3, 2, 1.5, '#5aa85a'); R(g, 0, 5, 1, 1.5, '#3a3a4e'); R(g, 11, 5, 1, 1.5, '#3a3a4e'); });
+      icon('flower', g => { for (const x of [2, 5, 8]) { R(g, x, 1 + (x % 2), 2, 6, '#8a6ac8'); R(g, x, 1 + (x % 2), 1, 6, '#b8a0f0'); R(g, x + 0.5, 7, 1, 4, '#5aa85a'); } });
+    },
     sprites() {
       const scene = (w, h, cx, hw, mh, seed) => { const c = mk(w, h), g = c.g, r = RNG(seed);
         dgrad(g, 0, 0, w, h - 8, ['#7ab8e8', '#a8d4f0', '#dcecf4']); for (let k = 0; k < w / 120; k++) { const x = r() * w, y = 8 + r() * (h * 0.3); ell(g, x, y, 16 + r() * 18, 3, '#f4f8fc'); ell(g, x + 6, y - 2, 9, 2.5, '#ffffff'); }
@@ -207,10 +213,6 @@
       one('tanuki', 22, 28, g => { ell(g, 11, 20, 8, 7, '#8a6a48'); ell(g, 11, 22, 5, 4, '#e8d8b0'); disc(g, 11, 10, 6, '#8a6a48'); R(g, 6, 9, 10, 3, '#3a2a28'); disc(g, 9, 10, 1, '#f4f1e6'); disc(g, 13, 10, 1, '#f4f1e6'); p1(g, 11, 12.5, '#1d1626'); ell(g, 11, 4.5, 9, 2, '#d8b860'); ell(g, 11, 3.5, 5, 2.5, '#e8c870'); R(g, 17, 16, 4, 7, '#c8a070'); R(g, 18, 14, 2, 2, '#c8a070'); R(g, 1, 26, 20, 2, '#6b6478'); }, 1);
       one('usagi', 16, 26, g => { ell(g, 8, 19, 6, 6, '#f4f1e6'); disc(g, 8, 10, 4.5, '#f4f1e6'); R(g, 5, 0, 2, 8, '#f4f1e6'); R(g, 9, 0, 2, 8, '#f4f1e6'); R(g, 5.5, 1, 1, 5, '#f0b8c0'); R(g, 9.5, 1, 1, 5, '#f0b8c0'); p1(g, 6.5, 10, '#c8382e'); p1(g, 9.5, 10, '#c8382e'); R(g, 1, 24, 14, 2, '#6b6478'); }, 1);
       one('bellH', 30, 34, g => { for (const x of [3, 25]) { R(g, x, 6, 2.5, 28, '#c0442f'); R(g, x, 6, U, 28, '#e86a50'); } for (let i = 0; i < 12; i++) { const a = i / 11 * 3.1416, x = 15 - Math.cos(a) * 11, y = 10 - Math.sin(a) * 8; R(g, x - 1, y - 1, 2.5, 2.5, '#e0452f'); } disc(g, 15, 13, 4, '#d9b04a'); R(g, 11, 13, 8, 4, '#d9b04a'); R(g, 11, 16.5, 8, 1, '#8a6a2a'); disc(g, 15, 18, 1, '#8a6a2a'); R(g, 1, 32, 28, 2, '#6b6478'); }, 1);
-      icon('fuji', g => { for (let i = 0; i < 9; i++) R(g, 6 - i * 0.6, 2 + i, i * 1.2 + 1, 1, i < 3 ? '#f8f4ee' : '#6a7ab8'); R(g, 0, 10, 12, 2, '#5aa85a'); });
-      icon('onsen', g => { ell(g, 6, 9, 5, 2.5, '#3f7ab0'); ell(g, 6, 8.5, 4, 1.8, '#7ac8dc'); for (const x of [3, 6, 9]) { R(g, x, 1, 1, 2, '#e0563f'); R(g, x + 1, 3, 1, 2, '#e0563f'); R(g, x, 5, 1, 2, '#e0563f'); } });
-      icon('pot', g => { ell(g, 6, 7, 5.5, 3.5, '#3a3a4e'); R(g, 0.5, 4.5, 11, 2, '#5a5a6e'); R(g, 2, 4, 8, 1.5, '#f2d98a'); R(g, 3, 3, 3, 1.5, '#e08a3a'); R(g, 7, 3, 2, 1.5, '#5aa85a'); R(g, 0, 5, 1, 1.5, '#3a3a4e'); R(g, 11, 5, 1, 1.5, '#3a3a4e'); });
-      icon('flower', g => { for (const x of [2, 5, 8]) { R(g, x, 1 + (x % 2), 2, 6, '#8a6ac8'); R(g, x, 1 + (x % 2), 1, 6, '#b8a0f0'); R(g, x + 0.5, 7, 1, 4, '#5aa85a'); } });
     }
   });
 })();

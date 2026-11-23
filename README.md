@@ -47,11 +47,21 @@ The four city-street districts go on north, up the avenue that crosses their mai
 - **Shibuya:** Center Gai, a lane of shops and photo booths under its banner.
 - **Shinjuku:** Omoide Yokocho, rows of tiny lantern-lit yakitori stalls with narrow alleys between them.
 - **Akihabara:** back streets of parts stalls, a maid café and a wall of capsule machines.
-- **Tokyo Station:** Marunouchi, a gravel walk beside the Imperial Palace moat, its stone walls and a bridge.
+- **Tokyo Station:** Marunouchi, a gravel walk beside the Imperial Palace moat, its stone walls and a bridge. Cherries lean out over the water, as at Chidorigafuchi, and their fallen petals drift on it in rafts.
 
-You can walk into 15 places, each with its own indoor screen: a ramen shop, two clothes shops, a crepe café, a yakitori bar, an observation deck, the Tokyo Tower deck, a game center, a figure shop, Senso-ji's main hall, the panda house, the museum, a department-store food hall and conveyor sushi.
+Tokyo is the city of spring. Cherry trees bloom in Ueno, Harajuku, Asakusa and along the palace moat, and anywhere there is one in view, petals drift down and gather on the ground under it.
 
-There are 21 stamps to collect, along with capsule figures and cats to pet. The minigames are:
+- **Hanami in Ueno:** paper lanterns strung along the avenue under the blossom (they light up at dusk), groups picnicking on blue sheets, a young salaryman who has been saving his company's spot since six in the morning, and a stall of pink, white and green hanami dango. Join a picnic for the HANAMI IN UENO stamp.
+- **The weeping cherry** in the middle of Ueno Park, its old limbs propped on wooden crutches. Under it, try to catch a falling petal before it touches the ground; they say your wish comes true.
+
+Shops:
+
+- **The figure shop** is two floors. Downstairs: islands of capsule machines, each a series of four to collect (cats in cups, a tiny konbini, sleepy animals, sushi keychains), the HERO machine of six figures, and a change machine. Upstairs: rows of rental glass cases with handwritten cards (and, somewhere, a first-edition gold dragon), boxed figures behind the counter (the clerk opens the box for you to check it; over 5,000 yen, she offers tax free), and a junk bin.
+- **The clothes shops** (MODE 109 in Shibuya, the kawaii boutique in Harajuku): cubbies of folded clothes, racks, a table of tees, accessories, mannequins in the window and fitting rooms. Take up to three things to the fitting room (shoes off at the curtain), pay, and you wear it out; she wraps everything in tissue, carries the bag to the door and bows.
+
+You can walk into 16 places, each with its own indoor screen: a ramen shop, two clothes shops, a crepe café, a yakitori bar, an observation deck, the Tokyo Tower deck, a game center, a two-floor figure shop, Senso-ji's main hall, the panda house, the museum, a department-store food hall and conveyor sushi.
+
+There are 29 stamps to collect, along with capsule figures and cats to pet. The minigames are:
 
 - a crane game
 - conveyor sushi
@@ -195,10 +205,12 @@ Any Japanese airport gate can fly you back to Bangkok later. The prologue lives 
 
 ## Everyday Japan
 
-- **A konbini in every city** (the chime plays as you walk in, and the clerk says irasshaimase):
-  - **Onigiri:** pick one, then pay at the till (a beep with your IC card, coins without one) and say whether you want a bag. Open it in three pulls in the order on the wrapper; get the order wrong and the seaweed tears.
-  - **The rest of the shop:** a fridge of drinks (the vending machine game), fresh coffee from the machine, hot snacks from the counter, a magazine rack and the cash machine.
-  - **An umbrella stand:** buy a clear plastic umbrella for the rain.
+- **A konbini in every city**, laid out like the real thing. The chime plays as you walk in, and every member of staff calls irasshaimase, one after another.
+  - **Shopping:** fill a basket from the open chiller (onigiri, bento, sandwiches), the drink fridges, the aisles (snacks, noodles and bread, sweets, daily goods), the ice cream chest and the hot case. Walk out without paying and the basket stays by the door.
+  - **The till** asks what a konbini asks: shall I warm it up (the microwave hums and dings), chopsticks or a spoon, a bag for three yen (or a strip of tape on each thing), a point card. Tap your IC card or put cash on the little tray.
+  - **After:** eat at the counter along the window (an onigiri opens in three pulls in the order on the wrapper; get it wrong and the seaweed tears; cup noodles get hot water and three minutes), make a coffee with the cup you paid for, and sort your rubbish into burnable, plastic, and cans and bottles. Drinks you buy count toward your collection.
+  - **The toilet:** ask the clerk, then work out the control panel (spray, dry, the music that hides other noises, and flush).
+  - **Also:** magazines to read standing up, the cash machine, the umbrella stand (pay at the till, then it opens in the rain), shoppers who come in and leave, and a clerk restocking the shelves.
   - **Something you can only get in that city**, with its own stamp. For example, the tamago sando in Tokyo, the pork tamago onigiri in Okinawa and the milk pudding in Sapporo.
 - **A hotel or ryokan in every city.** You come in to the lobby and check in at the desk; the lift (or the stairs) won't take you up until you have a key. Your room is upstairs, and walking out of it takes you back down to the lobby.
   - A ryokan has shoe lockers at the entrance (shoes off), a tatami room with a futon, a pot of tea and a yukata, and a bath down the corridor. Wash at the taps first, then soak; get in unwashed and the old man in the bath will tell you.
@@ -295,7 +307,10 @@ Every TAKE A PHOTO spot gives you an instant-photo card. The camera frames the l
 
 ## Local stations
 
-Every city with a train line (Tokyo, Kamakura, Kyoto, Osaka, Hiroshima, Sapporo and Okinawa) has station buildings you walk into. The TRAINS door leads inside.
+Every city with a train line (Tokyo, Kamakura, Kyoto, Osaka, Hiroshima, Sapporo and Okinawa) has station buildings you walk into. At the TRAINS sign you choose:
+
+- **Walk into the station** for everything below.
+- **Express: straight onto a train.** The line map opens at once, with no ticket machine, no gates and no wait for the doors. The sign remembers which you chose last time.
 
 - **The concourse:** ticket machines under a fare map (find your fare and press it), an IC card machine, a kiosk, coin lockers and the staff window.
 - **The ticket gates:** tap an IC card or feed in your ticket and the flaps open. With neither, they snap shut with a pin-pon. On the way out they always let you go.
@@ -360,6 +375,8 @@ src/
     airport.js          the airports: arrivals, departures, the observation deck, flights and the scrapbook ending
     daily.js            the time of day, the weather, konbinis, hotels and sleeping, the ticket machine
     stations.js         local stations: concourse, ticket machines, gates, platform and the train
+    shops.js            shops: shelves and a basket, the till and its rituals, the eat-in, bins, the toilet,
+                        capsule toy series, the fitting room, shoppers and staff who greet, call out and escort
     places.js           shared by the far cities: travel by plane and ship, the cruise scene, passing trains and crossings, snow, waves
     rides.js            rickshaw tours, the canal cruise, boats to steer, benches, bowing, shrine basins and racks, koi
     life.js             life in the streets: reactions, passing scenes, birds and butterflies, ambient sound, steam and leaves
@@ -387,9 +404,40 @@ src/
     main.js             the game loop: walking, doors, trains, the shinkansen, stamp book, photo cards, saving, drawing
   net/
     net.js              playing together: rooms, friends' avatars, SAY SOMETHING, and the moments made for two
+tests/
+  index.html            the test page: runs every suite, or ?only=maps,stations
+  run.ps1               runs the tests in headless Edge or Chrome and prints the results
+  harness.js            loads the game in a hidden frame per suite and the toolkit suites drive it with
+  suites/               sprites, maps and reach, stations, journeys (airport, Bangkok, express), everyday, shops, sakura, minigames, stuck
 ```
 
 Scripts are plain classic `<script>` tags that share one global scope, which is why the game works when opened straight from disk. Keep the load order in `index.html`: engine, art, world (with `station.js`), cities, then `minigames.js`, `changelog.js`, `net.js`, `menus.js` and finally `main.js`, which boots the game.
+
+## Tests
+
+The tests play the real game: each suite loads `index.html` in a hidden frame and drives it the way a player would, holding keys, pressing E and stepping frames by hand. They run with `?test`, which gives the game a save of its own, so they never touch yours.
+
+```
+powershell -File testsun.ps1                     every suite, about two minutes
+powershell -File testsun.ps1 -only maps,stations  just these
+```
+
+It needs Edge or Chrome, and exits with 1 if anything fails. To watch them in a browser instead, serve the folder (`npx serve .`) and open `/tests/`. A browser will not let a page opened straight from disk look inside its frames.
+
+| Suite | What it checks |
+|---|---|
+| `sprites` | a city's art is painted when you first get there, let go when you leave, and comes back pixel for pixel |
+| `maps` | every map builds, plays and draws for five seconds with no error, using only art it is entitled to |
+| `reach` | every spot, every NPC you can talk to and every cat can be walked to from where the map puts you |
+| `stations` | ticket machines outside the gates, gates that open for a ticket, the train's timetable, every station in and out |
+| `airport`, `bangkok`, `express` | the airport journeys from check-in to the baggage carousel, hotels, the ryokan bath, and the express lane |
+| `everyday` | the first ticket, seats on the train, the konbini's local special, sleeping, rain, and how many maps are kept |
+| `shops` | a konbini trip from basket to bins, the figure shop's capsules, floors and boxed-figure check, a boutique's fitting room and escort |
+| `sakura` | Ueno's cherries, weeping cherry, picnics and lanterns, the hanami stamp, catching a petal, and the moat |
+| `minigames` | a bot wins each of the newer minigames |
+| `stuck` | wherever a ride, flight, ship or door puts you down, you can walk away |
+
+When you fix a bug a player found, add the check that would have caught it.
 
 ## Adding a city
 
@@ -402,6 +450,8 @@ Scripts are plain classic `<script>` tags that share one global scope, which is 
    - `start` is where a new game begins, and `hub` is where the shinkansen arrives.
    - `line` lists the local train stations in order. Use `[]` if there are none, and give `areas: [[mapId, label], ...]` instead to lay out the stamp book.
    - `stamps` maps each stamp id to `[label, icon, area]`.
+   - `sprites()` paints the city's own art. It runs the first time one of the city's maps is built, not when the game starts, and the art is let go again once none of the city's maps are kept. `icons()` paints the small pictures for stamps and the bag, which are needed everywhere, so it runs at boot.
+   - Art more than one city uses belongs with the shared art (`buildSprites()` in `world.js`, or `RIDES.sprites()` for boats and rickshaws). If a map really must use another city's art, say so with `needs: ['nara']`. The `maps` test fails if a map borrows art without saying so.
    - Optional: `minis` adds minigames and `hud()` shows a small counter next to the stamps.
    - A map can set `lookUp: [y0, y1]` to lift the camera toward a view at its top (fully above `y0`, easing off by `y1`).
    - A photo spot (`act: 'snap'`) can set `aim()` to frame its photo, or `photo(g, w, h)` to paint the picture itself.
@@ -421,12 +471,19 @@ A map is a rectangle of terrain, but the part you can walk on is whatever shape 
 
 City streets can stay on a grid, since that's what they are. Parks, temples and old towns read better with these.
 
+### Making a room or a shop
+
+- A room is `indoor: 1` and calls `room({...})`. It is 20 x 12 tiles unless the map gives `tw` and `th`, the way out is the middle of the bottom edge, and `exit` names the mat (an upper floor says STAIRS DOWN). A door into it puts you just inside that exit.
+- An upper floor is a room behind a `door` spot, like a hotel room: walking out of the bottom takes you back down.
+- A shop adds `shop` (a name shared by all its floors, so they share one basket), `style` (`konbini`, `figures` or `boutique`, which picks the till's ritual), `front: 1` on the floor that opens onto the street, and `hud`, `tick` and `enter` from `SHOP`. In `deco()`, `SHOP.shelf(x, y, label, goods)` puts a shelf to browse and `SHOP.till(x, y)` the register. A clerk is an NPC with `clerk = 1`; other staff have `staff = 1` and call irasshaimase when someone comes in.
+
 ## Debug URL parameters
 
 | Parameter | Effect |
 |---|---|
 | `?map=asakusa&x=320&y=460` | start in a district or room at a position |
 | `?city=nara` | start in that city |
+| `?test` | play on a separate save (the tests use this) |
 | `?st=japan`, `?st=shink` | open the shinkansen map, or a shinkansen ride |
 | `?ov=1` | draw the whole map at once (with `map=`), to check its layout |
 | `?st=book`, `?st=line`, `?st=ride` | open the stamp book, the train line or a train ride |

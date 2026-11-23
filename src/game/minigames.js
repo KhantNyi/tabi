@@ -17,8 +17,8 @@ const DRINKS = [ // name, hot, price, colour, shape, the label on the shelf, wha
 ];
 const COINS = { 130: [100, 10, 10, 10], 140: [100, 10, 10, 10, 10], 150: [100, 50] };
 function drinkSpr(k, ghost) {
-  const key = (ghost ? 'drinkG' : 'drink') + k; if (SPR[key]) return SPR[key];
-  if (ghost) return SPR[key] = tint(drinkSpr(k), '#e4d8bc', 1);
+  const key = (ghost ? 'drinkG' : 'drink') + k; if (FUR[key]) return FUR[key];
+  if (ghost) return FUR[key] = tint(drinkSpr(k), '#e4d8bc', 1);
   const [, , , col, shape] = DRINKS[k], c = mk(9, 16), g = c.g, l = lite(col, 0.35), d = dark(col, 0.3);
   if (shape === 'bottle') {
     const liq = k === 0 ? '#b8d080' : '#dceef8';
@@ -35,7 +35,7 @@ function drinkSpr(k, ghost) {
     else if (k === 7) { disc(g, x + 3.5, y + 7, 2.2, '#f8f0e0'); for (const [a, b] of [[1.5, 3], [5, 4], [1.5, 10.5], [5.5, 10]]) p1(g, x + a, y + b, '#5a2028'); }
     R(g, x + U, y + 1.5, U, h - 2.5, l); R(g, x + w - 1, y + 1.5, 1, h - 2.5, d);
   }
-  return SPR[key] = outline(c);
+  return FUR[key] = outline(c);
 }
 function vendDone(m) {
   const gift = m.gift ? m.got.pop() : -1, kinds = [...new Set(m.got)], fresh = kinds.filter(k => !G.cans[k]); for (const k of kinds) G.cans[k] = 1; save();
@@ -155,6 +155,26 @@ const MG = {
       if (m.ph === 'pay' && m.coins.length) { const done = m.coins.length * 0.16 + 0.15; m.coins.forEach((v, j) => { const k = (m.pt - j * 0.16) / 0.14; if (k < 0 || k >= 1 || m.pt > done) return; const x = X + 100 - k * 42, y = 113 - Math.sin(k * 3.14) * 6; disc(ctx, x, y, 2.6, '#1d1626'); disc(ctx, x, y, 2.1, v === 10 ? '#d08a4a' : '#d8d4e0'); if (v === 50) disc(ctx, x, y, 0.7, '#1d1626'); p1(ctx, x - 1, y - 1, '#ffffff'); }); }
       const B = { pick: m.free ? 'ATARI! PICK ONE MORE, IT IS FREE' : '< > CHOOSE - E BUY', pay: m.pt > m.coins.length * 0.16 + 0.45 ? 'GACON!' : m.free ? '' : 'CLINK... CLINK...', roll: 'E TO STOP NUMBER ' + (m.stop + 1) + ' OF 4', judge: '...', atari: 'ATARI!! ATARI!!', take: m.pal ? 'E TAKE BOTH - > GIVE ONE TO ' + m.pal.name : m.atari ? 'E TO TAKE THEM BOTH' : 'NOT THIS TIME. E TO TAKE YOUR DRINK' };
       txtC(ctx, B[m.ph], 160, 136, '#3a2e40');
+    }
+  },
+  // catch a cherry petal before it touches the ground and your wish comes true, they say
+  petal: {
+    init(m) { m.hx = 160; m.p = []; m.next = 0.4; m.done = 0; m.got = 0; m.miss = 0; },
+    update(m, dt) {
+      if (m.done) { if (m.t > m.done + 1.3) endMini(false, m.got ? ['A PETAL LANDS IN YOUR CUPPED HANDS. THEY SAY IF YOU CATCH ONE BEFORE IT TOUCHES THE GROUND, YOUR WISH COMES TRUE.', 'YOU MAKE A WISH. YOU DO NOT TELL ANYONE WHAT IT WAS.'] : ['THE PETALS SLIP PAST YOUR FINGERS EVERY TIME, SWAYING JUST AS YOU REACH. HARDER THAN IT LOOKS.', 'A CHILD NEARBY CATCHES ONE FIRST TRY AND LOOKS AT YOU WITH PITY.']); return; }
+      if (K.l) m.hx = Math.max(64, m.hx - 80 * dt); if (K.r) m.hx = Math.min(256, m.hx + 80 * dt);
+      m.next -= dt; if (m.next <= 0 && m.p.length < 3) { m.p.push({ x: 72 + Math.random() * 176, y: 44, ph: Math.random() * 6.3, vy: 13 + Math.random() * 7, sw: 14 + Math.random() * 12 }); m.next = 0.9 + Math.random() * 1.1; }
+      for (const p of m.p) { p.y += p.vy * dt; p.x += Math.sin(m.t * 2.2 + p.ph) * p.sw * dt; if (!p.gone && p.y > 104 && p.y < 112 && Math.abs(p.x - m.hx) < 10) { p.gone = 1; m.got = 1; m.done = m.t; Snd.fx('yay'); } else if (!p.gone && p.y > 118) { p.gone = 1; m.miss++; Snd.fx('ui'); } }
+      m.p = m.p.filter(p => !p.gone); if (m.t > 18 && !m.done) m.done = m.t;
+    },
+    draw(m) {
+      txtC(ctx, 'CATCH A FALLING PETAL', 160, 26, '#c8486a');
+      for (let x = 52; x < 270; x += 9) { disc(ctx, x, 40 + Math.sin(x * 0.3) * 2, 4, '#eeb2c6'); disc(ctx, x - 1, 39 + Math.sin(x * 0.3) * 2, 2.2, '#fdebf1'); } line(ctx, 48, 42, 272, 38, '#46323a');
+      R(ctx, 52, 118, 216, 2, '#8a6a48'); for (let x = 56; x < 266; x += 7) R(ctx, x, 116 + (x % 3), 2, U, '#f9c8d8');
+      for (const p of m.p) { const f = Math.sin(m.t * 5 + p.ph); ell(ctx, p.x, p.y, 3.2, 1.6 + Math.abs(f) * 1.2, '#f4b0c8'); ell(ctx, p.x - 0.6, p.y - 0.4, 1.8, 0.9 + Math.abs(f) * 0.6, '#fdebf1'); R(ctx, p.x + 2.4, p.y - 0.5, 1, 1, '#f8f0e8'); }
+      const hx = m.hx; ell(ctx, hx, 111, 12, 4.5, '#d8a070'); ell(ctx, hx, 110, 11, 3.8, '#f6cfa6'); ell(ctx, hx, 109.5, 7, 1.8, '#e8b890'); R(ctx, hx - 0.5, 106.5, 1, 7, '#d8a070'); for (const s2 of [-1, 1]) R(ctx, hx + s2 * 11, 107, 2, 5, '#f6cfa6');
+      if (m.got) { ell(ctx, hx + 3, 108.5, 3, 1.6, '#f4b0c8'); txtC(ctx, 'CAUGHT ONE!', 160, 92, '#c8486a'); }
+      txtC(ctx, m.done ? '' : '< > MOVE YOUR HANDS UNDER A PETAL', 160, 129, '#8a7a6a');
     }
   },
   dress: {

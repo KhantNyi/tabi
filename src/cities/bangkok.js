@@ -258,6 +258,14 @@
 
   city({
     id: 'bangkok', name: 'BANGKOK', tagline: 'WHERE THE TRIP BEGINS', start: 'bkk_land', hub: 'bkk_land', line: [], areas: [['bkk_land', 'DEPARTURES HALL'], ['bkk_air', 'CONCOURSE D'], ['bkk_plane', 'ON BOARD']], stamps: STAMPS, cats: 1, prologue: 1, minis: { checkin: CHECKIN, tray: TRAY },
+    icons() { // the little pictures for the stamp book and the bag: painted at boot, since they show up everywhere
+      icon('spirit', g => { R(g, 5, 7, 2, 5, '#c8c0b4'); R(g, 2, 3, 8, 5, '#c8382e'); R(g, 1, 1, 10, 2, '#2f6a4a'); R(g, 5, 0, 2, 1, '#f2c14e'); R(g, 4, 5, 4, 3, '#2a1a18'); });
+      icon('bpass', g => { R(g, 0, 2, 12, 8, '#f4ead4'); R(g, 0, 2, 12, 1.5, '#2f5ab0'); R(g, 1, 5, 6, 1, '#3a2e40'); R(g, 1, 7, 4, 1, '#c8382e'); for (let x = 8; x < 11; x += 1) R(g, x, 4, U, 5, '#1d1626'); });
+      icon('naga', g => { for (let x = 1; x < 11; x++) R(g, x, 7 + Math.sin(x) * 1, 1, 2, '#3f8a4a'); disc(g, 2, 4, 2, '#6ab86a'); R(g, 5, 1, 2, 6, '#8a8496'); disc(g, 6, 1, 1.4, '#3a5ac8'); });
+      icon('mango', g => { ell(g, 7, 5, 4, 2.8, '#f2b030'); ell(g, 6, 4.5, 2.5, 1.5, '#f8d070'); ell(g, 4, 8.5, 3.5, 2, '#f4f1e6'); R(g, 1, 10, 10, 1, '#c8a070'); });
+      icon('seat', g => { R(g, 3, 1, 6, 6, '#2f3a6a'); R(g, 3, 1, 6, 1.5, '#4a5a9a'); R(g, 2, 7, 8, 4, '#2f3a6a'); txt(g, '27', 3, 2, '#f2c14e'); });
+      icon('tray', g => { R(g, 0, 3, 12, 8, '#c8c4cc'); R(g, 1, 4, 5, 4, '#f4f1e6'); disc(g, 3.5, 6, 1.5, '#5aa85a'); R(g, 7, 4, 4, 3, '#e8c060'); R(g, 7, 8, 4, 2, '#c8382e'); });
+    },
     sprites() {
       ISL.forEach(([L, name, , , c]) => one('isl' + L, 112, 48, g => { R(g, 4, 0, 104, 14, dark(c, 0.2)); R(g, 4, 0, 104, 2, lite(c, 0.3)); R(g, 6, 4, 100, 6, '#8a8496'); for (let x = 8; x < 104; x += 6) R(g, x, 6, 3, 1, '#5a5468'); R(g, 0, 14, 112, 18, '#f4f1e6'); R(g, 0, 14, 112, 2, '#ffffff'); R(g, 0, 30, 112, 2, c);
         for (const x of [26, 56, 86]) { R(g, x - 7, 16, 14, 9, '#2a2430'); R(g, x - 6, 17, 12, 6, '#5a8ae0'); R(g, x - 14, 32, 10, 8, '#c8c0d4'); R(g, x - 14, 32, 10, 1, '#ffffff'); } R(g, 0, 32, 112, 16, '#e8e4ec'); R(g, 0, 46, 112, 2, '#8a8496'); }, 1));
@@ -293,12 +301,7 @@
         // the serpent Vasuki through every pair of hands and round the mountain, its heads raised at the demons' end
         for (let x = 22; x < 304; x++) { const y = 76 + Math.sin(x / 15) * 1.5; R(g, x, y, 1, 6, '#3f8a4a'); R(g, x, y, 1, 1.5, '#7ac87a'); R(g, x, y + 5, 1, 1, '#2a5a32'); if (x % 4 === 0) R(g, x, y + 2, 1.5, 1.5, '#2f6a3a'); if (x % 4 === 2) p1(g, x, y + 3.5, '#c8d860'); }
         for (let k = 0; k < 7; k++) { const a = -2.3 + k * 0.42, hx = 18 + Math.cos(a) * 11, hy = 66 + Math.sin(a) * 13; line1(g, 22, 78, hx, hy, '#3f8a4a'); disc(g, hx, hy, 3.4, '#3f8a4a'); disc(g, hx - 0.5, hy - 0.8, 2.2, '#6ab86a'); p1(g, hx - 1, hy - 0.5, '#f2c14e'); } ell(g, 20, 72, 8, 9, '#3f8a4a'); ell(g, 20, 72, 5, 6, '#c8d860');
-        for (let k = 0; k < 10; k++) R(g, 304 + Math.cos(k * 0.7) * 6, 72 - k * 1.5, 2, 2, '#3f8a4a'); }, 1);      icon('spirit', g => { R(g, 5, 7, 2, 5, '#c8c0b4'); R(g, 2, 3, 8, 5, '#c8382e'); R(g, 1, 1, 10, 2, '#2f6a4a'); R(g, 5, 0, 2, 1, '#f2c14e'); R(g, 4, 5, 4, 3, '#2a1a18'); });
-      icon('bpass', g => { R(g, 0, 2, 12, 8, '#f4ead4'); R(g, 0, 2, 12, 1.5, '#2f5ab0'); R(g, 1, 5, 6, 1, '#3a2e40'); R(g, 1, 7, 4, 1, '#c8382e'); for (let x = 8; x < 11; x += 1) R(g, x, 4, U, 5, '#1d1626'); });
-      icon('naga', g => { for (let x = 1; x < 11; x++) R(g, x, 7 + Math.sin(x) * 1, 1, 2, '#3f8a4a'); disc(g, 2, 4, 2, '#6ab86a'); R(g, 5, 1, 2, 6, '#8a8496'); disc(g, 6, 1, 1.4, '#3a5ac8'); });
-      icon('mango', g => { ell(g, 7, 5, 4, 2.8, '#f2b030'); ell(g, 6, 4.5, 2.5, 1.5, '#f8d070'); ell(g, 4, 8.5, 3.5, 2, '#f4f1e6'); R(g, 1, 10, 10, 1, '#c8a070'); });
-      icon('seat', g => { R(g, 3, 1, 6, 6, '#2f3a6a'); R(g, 3, 1, 6, 1.5, '#4a5a9a'); R(g, 2, 7, 8, 4, '#2f3a6a'); txt(g, '27', 3, 2, '#f2c14e'); });
-      icon('tray', g => { R(g, 0, 3, 12, 8, '#c8c4cc'); R(g, 1, 4, 5, 4, '#f4f1e6'); disc(g, 3.5, 6, 1.5, '#5aa85a'); R(g, 7, 4, 4, 3, '#e8c060'); R(g, 7, 8, 4, 2, '#c8382e'); });
+        for (let k = 0; k < 10; k++) R(g, 304 + Math.cos(k * 0.7) * 6, 72 - k * 1.5, 2, 2, '#3f8a4a'); }, 1);
     }
   });
   // a flight back to Bangkok from any Japanese gate lands you at the kerb, ready to check in again
